@@ -22,6 +22,7 @@ var GameConfig = {
         "bomb-invalid": {x: 2267, y: 99, w: 67, h: 93},
         "confirmed": {x: 1133, y: 70, w: 46, h: 55},
         "possible": {x: 1206, y: 70, w: 46, h: 55},
+        "unknown": {x: 1279, y: 70, w: 46, h: 55},
         "player-1-red": {x: 1345, y: 70, w: 55, h: 55},
         "player-2-red": {x: 1417, y: 70, w: 55, h: 55},
         "player-3-red": {x: 1488, y: 70, w: 55, h: 55},
@@ -65,6 +66,11 @@ var GameConfig = {
         {x: 410, y: 670}, // 11
         {x: 139, y: 670}  // 12
     ],
+    dangerousBoard: {
+        x: 382,
+        y: 42,
+        step: 48
+    },
     roundBoard: {
         x: 538,
         y: 962
@@ -185,6 +191,7 @@ Player.prototype = {
         msg += '房间是最终危险的！';
         this.debug(msg);
         this.clue = clue;
+        this.markDangerous(clue);
     },
     gainClue: function(clue) {
         var msg = '获得了一张 ' + clue.level + ' 级线索卡';
@@ -213,6 +220,30 @@ Player.prototype = {
             clueMarker.style.position = 'absolute';
             clueMarker.style.bottom = '0px';
             this.playerMarker.appendChild(clueMarker);
+        }
+        if(clue.room)
+            this.markDangerous(clue);
+    },
+    markDangerous: function(clue) {
+        var i;
+        switch(clue.level) {
+            case 1:
+                Game.rooms[clue.room].markDangerous('confirmed');
+                break;
+            case 2:
+                for(i in Game.rooms) {
+                    if(Game.rooms.hasOwnProperty(i) && Game.rooms[i].color == clue.room) {
+                        Game.rooms[i].markDangerous('confirmed');
+                    }
+                }
+                break;
+            case 3:
+                for(i in Game.rooms) {
+                    if(Game.rooms.hasOwnProperty(i) && Game.rooms[i].hasLock == (clue.room == 'hasLock')) {
+                        Game.rooms[i].markDangerous('confirmed');
+                    }
+                }
+                break;
         }
     },
     loseClue: function() {
@@ -320,11 +351,19 @@ Room.prototype = {
         this.lockMarker.style.opacity = '0';
     },
 
-    markDangerous: function() {
-        if(this.dangerous == 'unknown') {
-            this.dangerous = 'possible';
-        } else if (this.dangerous == 'possible') {
-            this.dangerous = 'confirmed';
+    markDangerous: function(dangerous) {
+        if(dangerous) this.dangerous = dangerous;
+        else {
+            if(this.dangerous == 'unknown') {
+                this.dangerous = 'possible';
+            } else if (this.dangerous == 'possible') {
+                this.dangerous = 'confirmed';
+            } else if (this.dangerous == 'confirmed') {
+                this.dangerous = 'unknown';
+            }
+        }
+        if(this.dangerousMarker) {
+            this.dangerousMarker.className = this.dangerous;
         }
     },
     addPlayer: function(playerId) {

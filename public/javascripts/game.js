@@ -32,7 +32,7 @@ var initElementStyle = function() {
         'player-4-green', 'player-5-green', 'player-6-green',
         'player-7-green', 'player-8-green', 'player-9-green',
         'locked', 'unlocked', 'key', 'bomb', 'bomb-invalid',
-        'confirmed', 'possible', 'timer', 'round-board'
+        'confirmed', 'possible', 'unknown', 'timer', 'round-board'
     ];
     for(var i in elements) {
         if(elements.hasOwnProperty(i)) {
@@ -415,6 +415,7 @@ var initPlayGround = function(rooms, players) {
         for(i in Game.rooms) {
             if(Game.rooms.hasOwnProperty(i) && !!Game.rooms[i].lockMarker) {
                 Game.rooms[i].lockMarker.remove();
+                Game.rooms[i].dangerousMarker.remove();
             }
         }
         for(i in Game.players) {
@@ -439,6 +440,12 @@ var initPlayGround = function(rooms, players) {
             if(_room.function == 'hall') {
                 drawResource('hall-' + _room.rule, _roomPosition.x, _roomPosition.y);
             } else {
+                _room.dangerousMarker = drawElement(_room.dangerous, GameConfig.dangerousBoard.x + GameConfig.dangerousBoard.step * _room.id, GameConfig.dangerousBoard.y);
+                _room.dangerousMarker.onclick = (function(room) {
+                    return function() {
+                        room.markDangerous();
+                    };
+                })(_room);
                 // 房间颜色
                 drawResource(_room.color, _roomPosition.x, _roomPosition.y);
                 // 房间功能

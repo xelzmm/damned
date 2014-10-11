@@ -233,7 +233,7 @@ Game.prototype = {
                     for(i in safeRoom.players) {
                         if(safeRoom.players.hasOwnProperty(i)) {
                             player = _players[safeRoom.players[i] - 1];
-                            if(!player.injured) escapedPlayers.push(player);
+                            if(!player.injured && player.role == 'victim') escapedPlayers.push(player);
                         }
                     }
                     var traitor = undefined;

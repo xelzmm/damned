@@ -166,8 +166,14 @@ var init = function() {
     document.getElementById('input').onkeydown = function(e) {
         if(e.keyCode == 13) {
             if(Game.canSpeak) {
-                socket.emit('speak', e.target.value);
-                e.target.value = '';
+                if(e.target.value.trim() == "") {
+                    if(confirm('结束发言？')) {
+                        socket.emit('speak', 'over');
+                    }
+                } else {
+                    socket.emit('speak', e.target.value);
+                    e.target.value = '';
+                }
             } else {
                 info('你现在不能发言。');
             }
@@ -379,6 +385,7 @@ var init = function() {
             }
     });
     socket.on('over', function(result) {
+        info('安全房间是：【' + result.safeRoom + '】号房间。');
         if(me.role == result.winner) {
             info('你(' + (me.role == 'victim' ? '受害者' : '奸徒') + ')获得了胜利！');
         } else {

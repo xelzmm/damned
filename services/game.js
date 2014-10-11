@@ -245,7 +245,8 @@ Game.prototype = {
                     var winner = escapedPlayers.length >= _players.length - 3 ? 'victim' : 'traitor';
                     this.broadcast('over', {
                         traitor: traitor,
-                        winner: winner
+                        winner: winner,
+                        safeRoom: this.data.safeRoom
                     });
                     break;
                 } else {
@@ -460,7 +461,7 @@ Game.prototype = {
         socket.on('speak', function(msg) {
             player.debug('says: ' + msg);
             if(!_self.checkMsgType(msg, 'string')) return;
-            if(['over', 'pass'].indexOf(msg) >= 0) {
+            if(msg.indexOf('over') >= 0) {
                 socket.removeAllListeners('speak');
                 _self.nextBeforeTimeout();
                 return;

@@ -1,0 +1,75 @@
+html, body {
+    font: 12px "Lucida Grande", Helvetica, Arial, sans-serif;
+    width:  100%;
+    height: 100%;
+    margin: 0;
+}
+
+a {
+    color: #00B7FF;
+}
+
+#container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#mapArea{
+    float: left;
+    top: 0;
+    position: relative;
+}
+
+#canvasBoard{
+    position:absolute;
+    top: 0;
+    left: 0;
+}
+
+#elementBoard {
+    position:absolute;
+    z-index: 10;
+    top: 0;
+    left: 0;
+    width: 1091px;
+    height: 1091px;
+}
+
+#elementContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#roomMask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+
+#chatArea {
+    position: relative;
+    overflow: hidden;
+}
+
+#chatBoard {
+    overflow: scroll;
+    width: 100%;
+    background: cyan;
+    line-height: 20px;
+}
+
+#inputBox {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    /*height: 20px;*/
+    background: green;
+}
+
+#input {
+    width: 100%;
+    /*height: 100%*/
+}

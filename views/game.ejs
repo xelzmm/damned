@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+  <div id="container">
+      <div id="mapArea">
+          <div id="scaleContainer">
+              <canvas id="canvasBoard" width="1091" height="1091">
+              </canvas>
+              <div id="elementBoard">
+                  <div id="elementContainer">
+                      <div id="roomMask">
+                          <img src="/images/blank.gif" id='roomMap' width="1091" height="1091"/>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+      <div id="chatArea">
+          <div id="chatBoard">
+          </div>
+          <div id="inputBox">
+              <input id="input" type="text"/>
+          </div>
+      </div>
+  </div>
+  </body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/javascripts/resource.js"></script>
+  <script src="/javascripts/game.js"></script>
+</html>

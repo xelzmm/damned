@@ -230,6 +230,13 @@ var init = function() {
     });
     socket.on('update', function(progress) {
         Game.progress = progress;
+        var roomMap = document.getElementById('roomMask');
+        if(Game.canSpeak)delete Game.canSpeak;
+        if(Game.canMove) {
+            document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
+            delete Game.canMove;
+            roomMap.style.zIndex = '0';
+        }
         if(progress.room == null) {
             info('====== 进入【' + GameConfig.stage[progress.stage] + '】阶段 ======');
             if(['speak', 'move', 'perform'].indexOf(progress.stage) >= 0) {
@@ -254,7 +261,6 @@ var init = function() {
                 }
             }
         } else {
-            var roomMap = document.getElementById('roomMask');
             if(me.id == Game.order[progress.room][progress.player]) {
                 info('轮到你 [' + GameConfig.stage[progress.stage] + '] 了. 限时 ' + progress.time + ' 秒.');
                 switch(progress.stage) {
@@ -270,12 +276,6 @@ var init = function() {
                 }
             } else {
                 info('现在是 ' + Game.order[progress.room][progress.player] + ' 号玩家的 [' + GameConfig.stage[progress.stage] + '] 时间. 限时 ' + progress.time + ' 秒.');
-                if(Game.canSpeak)delete Game.canSpeak;
-                if(Game.canMove) {
-                    document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
-                    delete Game.canMove;
-                    roomMap.style.zIndex = '0';
-                }
             }
         }
     });

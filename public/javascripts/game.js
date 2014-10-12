@@ -161,12 +161,12 @@ var resize = function() {
     scaleContainer.style.transform = transform;
 
     var chatArea = document.getElementById('chatArea');
-    if(innerHeight > innerWidth) {
-        chatArea.style.width = innerWidth + 'px';
-        chatArea.style.height = (innerHeight - innerWidth - 1) + 'px';
+    if(height > width) {
+        chatArea.style.width = width + 'px';
+        chatArea.style.height = (height - width - 1) + 'px';
     } else {
-        chatArea.style.height = innerHeight + 'px';
-        chatArea.style.width = (innerWidth - innerHeight - 1) + 'px';
+        chatArea.style.height = height + 'px';
+        chatArea.style.width = (width - height - 1) + 'px';
     }
     document.getElementById('chatBoard').style.height = (chatArea.clientHeight - document.getElementById('inputBox').clientHeight) + 'px';
 

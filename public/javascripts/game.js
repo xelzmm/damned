@@ -109,6 +109,7 @@ var initRoomMap = function() {
 
 gameResource.src="/images/game.gif";
 gameResource.onload = function() {
+    document.getElementById('loading').remove();
     init();
 };
 var info = function(msg) {
@@ -198,10 +199,12 @@ var init = function() {
             info('游戏重新开始了！');
         }
         info('游戏开始了！总共有 ' + players.length + ' 名玩家。');
-        info('你是 ' + me.id + ' 号玩家，你的身份是 ' + GameConfig.role[me.role] + '，你处在 ' + me.room + ' 号房间！');
+        info('你是【' + me.id + '号】玩家，你的身份是【' + GameConfig.role[me.role] + '】，你处在【' + me.room + '号】房间！');
 //        info('rooms:');info(rooms);
 //        info('players:');info(players);
         initPlayGround(rooms, players);
+        info('提示1：点击线索标记区可以切换线索标记状态。');
+        info('提示2：发言中包含"over"字样或者提交空发言可以提前结束发言。');
         window.me = Game.players[id - 1];
         document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
         info('进入 第 1 回合.');
@@ -234,23 +237,23 @@ var init = function() {
         } else {
             var roomMap = document.getElementById('roomMask');
             if(me.id == Game.order[progress.room][progress.player]) {
-                info('轮到你 [' + GameConfig.stage[progress.stage] + '] 了.');
+                info('轮到你 [' + GameConfig.stage[progress.stage] + '] 了. 限时 ' + progress.time + ' 秒.');
                 switch(progress.stage) {
                     case 'speak':
                         Game.canSpeak = true;
                         break;
                     case 'move':
                         info('请点击房间进行移动。');
-                        document.title = '* Damned | Player ' + me.id + ' | ' + me.room;
+                        document.title = '* Damned | Player ' + me.id + ' | Room ' + me.room;
                         roomMap.style.zIndex = '100';
                         Game.canMove = true;
                         break;
                 }
             } else {
-                info('现在是 ' + Game.order[progress.room][progress.player] + ' 号玩家的 [' + GameConfig.stage[progress.stage] + '] 时间.');
+                info('现在是 ' + Game.order[progress.room][progress.player] + ' 号玩家的 [' + GameConfig.stage[progress.stage] + '] 时间. 限时 ' + progress.time + ' 秒.');
                 if(Game.canSpeak)delete Game.canSpeak;
                 if(Game.canMove) {
-                    document.title = 'Damned | Player ' + me.id + ' | ' + me.room;
+                    document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
                     delete Game.canMove;
                     roomMap.style.zIndex = '0';
                 }
@@ -267,7 +270,7 @@ var init = function() {
         var playerId = data.player;
 //        info(JSON.stringify(data, null, 0));
         _players[playerId - 1].move(data.movements, Game.rooms);
-        if(playerId == me.id)document.title = 'Damned | Player ' + me.id + ' | ' + me.room;
+        if(playerId == me.id)document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
     });
     socket.on('key', function(data) {
         var _players = Game.players;
@@ -312,7 +315,7 @@ var init = function() {
     });
     socket.on('challenge', function(type, options) {
 //        info('Got challenged with question: ' + type + '?');
-        document.title = '* Damned | Player ' + me.id + ' | ' + me.room;
+        document.title = '* Damned | Player ' + me.id + ' | Room ' + me.room;
         var decision;
         switch(type) {
             case 'destroy':
@@ -344,7 +347,7 @@ var init = function() {
                         decision = confirm('是否配合进行拆弹？' + (me.role == 'victim' ? '(你是受害者，必须配合，选哪个都一样)' : ''));
                 }
         }
-        document.title = 'Damned | Player ' + me.id + ' | ' + me.room;
+        document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
         socket.emit('challenge', decision);
     });
     socket.on('wait', function(actions) {

@@ -57,7 +57,7 @@ a {
 #chatBoard {
     overflow: scroll;
     width: 100%;
-    background: cyan;
+    background: lightcyan;
     line-height: 20px;
 }
 
@@ -65,11 +65,10 @@ a {
     position: absolute;
     bottom: 0;
     width: 100%;
-    /*height: 20px;*/
-    background: green;
+    line-height: 24px;
+    background: lightyellow;
 }
 
 #input {
     width: 100%;
-    /*height: 100%*/
 }

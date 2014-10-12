@@ -140,8 +140,8 @@ var info = function(msg) {
 };
 var resize = function() {
     // scale
-    var height = innerHeight || document.documentElement.clientHeight,
-        width = innerWidth || document.documentElement.clientWidth;
+    var height = window.innerHeight || document.documentElement.clientHeight,
+        width = window.innerWidth || document.documentElement.clientWidth;
     var edge = height > width ? width : height;
     var mapArea = document.getElementById('mapArea');
     mapArea.style.width = edge + 'px';

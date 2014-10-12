@@ -349,16 +349,16 @@ var init = function() {
             case 'who':
                 do {
                     decision = parseInt(prompt('你想与谁 ' +
-                            (Game.rooms[me.room].function == 'upgrade' ? '升级' : '降级') +
+                            (Game.rooms[me.room]["function"] == 'upgrade' ? '升级' : '降级') +
                             ' 线索卡 [' + options + ']?'));
                 } while (options.indexOf(decision) < 0);
                 break;
             case 'action':
-                switch (Game.rooms[me.room].function) {
+                switch (Game.rooms[me.room]["function"]) {
                     case 'upgrade':
                     case 'downgrade':
                         decision = confirm('是否配合' +
-                            (Game.rooms[me.room].function == 'upgrade' ? '升级' : '降级') +
+                            (Game.rooms[me.room]["function"] == 'upgrade' ? '升级' : '降级') +
                             ' 线索卡？ 合成后的线索卡将归 ' +
                             (me.id == options ? ' 你 ' : options + ' 号玩家') +
                             '所有！');
@@ -469,7 +469,7 @@ var initPlayGround = function(rooms, players) {
             Game.rooms.push(new Room(_room));
             _room = Game.rooms[i];
             var _roomPosition = GameConfig.roomPosition[i];
-            if(_room.function == 'hall') {
+            if(_room["function"] == 'hall') {
                 drawResource('hall-' + _room.rule, _roomPosition.x, _roomPosition.y);
             } else {
                 _room.dangerousMarker = drawElement(_room.dangerous, GameConfig.dangerousBoard.x + GameConfig.dangerousBoard.step * _room.id, GameConfig.dangerousBoard.y);
@@ -481,7 +481,7 @@ var initPlayGround = function(rooms, players) {
                 // 房间颜色
                 drawResource(_room.color, _roomPosition.x, _roomPosition.y);
                 // 房间功能
-                drawResource(_room.function + '-' + _room.rule, _roomPosition.x + 25, _roomPosition.y + 80);
+                drawResource(_room["function"] + '-' + _room.rule, _roomPosition.x + 25, _roomPosition.y + 80);
             }
             // 房间锁/钥匙状态
             if(_room.hasLock || _room.hasKey) {

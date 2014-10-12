@@ -187,7 +187,8 @@ var init = function() {
     socket.on('leave', function(name) {
         info(name + ' 离开了游戏房间。');
     });
-    socket.on('players', function(players) {
+    socket.on('room', function(room, players) {
+        info('您已进入【' + room + '】号游戏房间。')
         info('房间里的玩家有: ' + players);
     });
     socket.on('safe', function(room) {
@@ -406,9 +407,12 @@ var init = function() {
     fakeInit();
 };
 var fakeInit = function() {
-    var username = 'player_' + new Date().getTime() % 10000;
-    var room = '1314';
+    var username = prompt('请设定您的昵称(留空随机生成)：');
+    if(username == '') username = 'player_' + new Date().getTime() % 10000;
+    info(username + '，欢迎你进入密室惊魂。');
     socket.emit('name', username);
+    var room = window.location.search.substr(1, window.location.search.length - 1);
+    if(room == '') room = 1;
     socket.emit('join', room);
     socket.emit('ready');
 };

@@ -815,7 +815,7 @@ Game.prototype = {
                 _players.push(_clients[i].playerName);
             }
         }
-        socket.emit('players', _players);
+        socket.emit('room', _room, _players);
         socket.join(_room);
         _clients.push(socket);
         this.broadcast('join', socket.playerName);

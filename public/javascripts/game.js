@@ -17,7 +17,7 @@ var drawResource = function (resourceName, x, y) {
 };
 var removeNode = function(node) {
     node.parentNode.removeChild(node);
-}
+};
 var drawElement = function (resourceName, x, y) {
     var container = document.getElementById('elementContainer');
     var img = document.createElement('div');
@@ -132,7 +132,7 @@ Date.prototype.format = function (format) {
     return format;
 };
 var info = function(msg) {
-//    console.log(msg);
+    msg = msg.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     var chatBoard = document.getElementById('chatBoard');
     var autoScroll = chatBoard.scrollTop + chatBoard.clientHeight >= chatBoard.scrollHeight - 5;
     chatBoard.innerHTML += '[' + new Date().format('hh:mm:ss') + '] ' +  msg + '<br />';
@@ -426,8 +426,10 @@ var init = function() {
     fakeInit();
 };
 var fakeInit = function() {
-    var username = prompt('请设定您的昵称(留空随机生成)：');
-    if(username == '') username = 'player_' + new Date().getTime() % 10000;
+    var username = 'player_' + new Date().getTime() % 10000;
+    do {
+        username = prompt('请设定您的昵称：', username);
+    } while (username == '');
     info(username + '，欢迎你进入密室惊魂。');
     socket.emit('name', username);
     var room = window.location.search.substr(1, window.location.search.length - 1);

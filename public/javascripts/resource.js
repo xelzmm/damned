@@ -135,21 +135,21 @@ var GameConfig = {
 };
 
 var Player = function (player) {
-    for(var prop in player) {
-        if(player.hasOwnProperty(prop))
+    for (var prop in player) {
+        if (player.hasOwnProperty(prop))
             this[prop] = player[prop];
     }
 };
 
 Player.prototype = {
-    debug: function(msg) {
+    debug: function (msg) {
         msg = (this.id == me.id ? '你' : (this.id + ' 号玩家(' + this.name + ')')) + ' ' + msg;
         info(msg);
     },
-    gainKey: function() {
+    gainKey: function () {
         this.debug('获得了 ' + this.room + ' 号房间的钥匙.');
         this.hasKey = true;
-        if(!this.keyMarker) {
+        if (!this.keyMarker) {
             var keyMarker = this.keyMarker = document.createElement('img');
             keyMarker.src = '/images/key.png';
             keyMarker.style.position = 'absolute';
@@ -157,27 +157,27 @@ Player.prototype = {
             this.playerMarker.appendChild(keyMarker);
         }
     },
-    loseKey: function() {
+    loseKey: function () {
         this.debug('失去了钥匙.');
         this.hasKey = false;
-        if(this.keyMarker) {
+        if (this.keyMarker) {
             this.keyMarker.remove();
             delete this.keyMarker;
         }
     },
-    detoxify: function() {
+    detoxify: function () {
         this.debug('获得了治疗.');
         this.injured = false;
         this.playerMarker.className = 'player-' + this.id + '-green';
     },
-    injure: function() {
+    injure: function () {
         this.debug('受到毒雾感染.');
         this.injured = true;
         this.playerMarker.className = 'player-' + this.id + '-red';
     },
-    sawClue: function(playerId, clue) {
-        var msg = '看到了 ' + playerId + ' 号玩家的 '+ clue.level + ' 级线索卡, 上面写着：';
-        switch(clue.level) {
+    sawClue: function (playerId, clue) {
+        var msg = '看到了 ' + playerId + ' 号玩家的 ' + clue.level + ' 级线索卡, 上面写着：';
+        switch (clue.level) {
             case 1:
                 msg += '【' + clue.room + '号】';
                 break;
@@ -193,13 +193,13 @@ Player.prototype = {
         this.clue = clue;
         this.markDangerous(clue);
     },
-    gainClue: function(clue) {
+    gainClue: function (clue) {
         var msg = '获得了一张 ' + clue.level + ' 级线索卡';
-        if(!clue.room) {
+        if (!clue.room) {
             msg += '.';
         } else {
             msg += ', 上面写着：';
-            switch(clue.level) {
+            switch (clue.level) {
                 case 1:
                     msg += '【' + clue.room + '号】';
                     break;
@@ -214,52 +214,52 @@ Player.prototype = {
         }
         this.debug(msg);
         this.clue = clue;
-        if(!this.clueMarker) {
+        if (!this.clueMarker) {
             var clueMarker = this.clueMarker = document.createElement('img');
             clueMarker.src = '/images/level' + clue.level + '.png';
             clueMarker.style.position = 'absolute';
             clueMarker.style.bottom = '0px';
             this.playerMarker.appendChild(clueMarker);
         }
-        if(clue.room)
+        if (clue.room)
             this.markDangerous(clue);
     },
-    markDangerous: function(clue) {
+    markDangerous: function (clue) {
         var i;
-        switch(clue.level) {
+        switch (clue.level) {
             case 1:
                 Game.rooms[clue.room].markDangerous('confirmed');
                 break;
             case 2:
-                for(i in Game.rooms) {
-                    if(Game.rooms.hasOwnProperty(i) && Game.rooms[i].color == clue.room) {
+                for (i in Game.rooms) {
+                    if (Game.rooms.hasOwnProperty(i) && Game.rooms[i].color == clue.room) {
                         Game.rooms[i].markDangerous('confirmed');
                     }
                 }
                 break;
             case 3:
-                for(i in Game.rooms) {
-                    if(Game.rooms.hasOwnProperty(i) && Game.rooms[i].hasLock == (clue.room == 'hasLock')) {
+                for (i in Game.rooms) {
+                    if (Game.rooms.hasOwnProperty(i) && Game.rooms[i].hasLock == (clue.room == 'hasLock')) {
                         Game.rooms[i].markDangerous('confirmed');
                     }
                 }
                 break;
         }
     },
-    loseClue: function() {
+    loseClue: function () {
         this.debug('失去了线索卡.');
         this.clue = undefined;
-        if(this.clueMarker) {
+        if (this.clueMarker) {
             this.clueMarker.remove();
             delete this.clueMarker;
         }
     },
-    move: function(movements, rooms) {
+    move: function (movements, rooms) {
         var _room = rooms[this.room], msg, _self = this;
         var movement = movements[0],
             _toRoom = rooms[movement.to],
             lockAction = movement.lockAction;
-        if(!!_toRoom) {
+        if (!!_toRoom) {
             msg = '离开了 ' + _room.id + ' 号房间，进入 ' + _toRoom.id + ' 号房间';
             _self.room = _toRoom.id;
             _room.removePlayer(_self.id);
@@ -288,12 +288,12 @@ Player.prototype = {
                 break;
         }
         _self.debug(msg);
-        if(movements.length == 2) {
+        if (movements.length == 2) {
             _room = _toRoom;
             movement = movements[1];
             _toRoom = rooms[movement.to];
             lockAction = movement.lockAction;
-            setTimeout(function() {
+            setTimeout(function () {
                 msg = '离开了 ' + _room.id + ' 号房间，进入 ' + _toRoom.id + ' 号房间';
                 _self.room = _toRoom.id;
                 _room.removePlayer(_self.id);
@@ -325,36 +325,36 @@ Player.prototype = {
 };
 
 var Room = function (room) {
-    for(var prop in room) {
-        if(room.hasOwnProperty(prop))
+    for (var prop in room) {
+        if (room.hasOwnProperty(prop))
             this[prop] = room[prop];
     }
 };
 
 Room.prototype = {
-    debug: function(msg) {
+    debug: function (msg) {
         msg = this.id + ' 号房间 ' + msg;
         info(msg);
     },
-    lock: function() {
+    lock: function () {
         this.debug('被锁上.');
         this.locked = true;
         this.lockMarker.className = 'locked';
     },
-    unlock: function() {
+    unlock: function () {
         this.debug('被打开.');
         this.locked = false;
         this.lockMarker.className = 'unlocked';
     },
-    loseKey: function() {
+    loseKey: function () {
         this.hasKey = false;
         this.lockMarker.style.opacity = '0';
     },
 
-    markDangerous: function(dangerous) {
-        if(dangerous) this.dangerous = dangerous;
+    markDangerous: function (dangerous) {
+        if (dangerous) this.dangerous = dangerous;
         else {
-            if(this.dangerous == 'unknown') {
+            if (this.dangerous == 'unknown') {
                 this.dangerous = 'possible';
             } else if (this.dangerous == 'possible') {
                 this.dangerous = 'confirmed';
@@ -362,29 +362,21 @@ Room.prototype = {
                 this.dangerous = 'unknown';
             }
         }
-        if(this.dangerousMarker) {
+        if (this.dangerousMarker) {
             this.dangerousMarker.className = this.dangerous;
         }
     },
-    addPlayer: function(playerId) {
+    addPlayer: function (playerId) {
         var _players = this.players;
-        var large = function(a, b) { return b - a; };
-        var small = function(a, b) { return a - b; };
+        var large = function (a, b) {
+            return b - a;
+        };
+        var small = function (a, b) {
+            return a - b;
+        };
         _players.push(playerId);
         _players.sort(this.rule == 'small' ? small : large);
-        for(var i in _players) {
-            if(_players.hasOwnProperty(i)) {
-                var player = Game.players[_players[i] - 1];
-                var position = this.genPosition(player.id);
-                player.playerMarker.style.left = position.x + 'px';
-                player.playerMarker.style.top = position.y + 'px';
-            }
-        }
-    },
-    removePlayer: function(playerId) {
-        var _players = this.players;
-        _players.splice(_players.indexOf(playerId), 1);
-        for(var i in _players) {
+        for (var i in _players) {
             if (_players.hasOwnProperty(i)) {
                 var player = Game.players[_players[i] - 1];
                 var position = this.genPosition(player.id);
@@ -393,13 +385,25 @@ Room.prototype = {
             }
         }
     },
-    nearBy: function(anotherRoom) {
+    removePlayer: function (playerId) {
+        var _players = this.players;
+        _players.splice(_players.indexOf(playerId), 1);
+        for (var i in _players) {
+            if (_players.hasOwnProperty(i)) {
+                var player = Game.players[_players[i] - 1];
+                var position = this.genPosition(player.id);
+                player.playerMarker.style.left = position.x + 'px';
+                player.playerMarker.style.top = position.y + 'px';
+            }
+        }
+    },
+    nearBy: function (anotherRoom) {
         return Room.route[this.id].indexOf(anotherRoom.id) >= 0;
     },
-    routes: function() {
+    routes: function () {
         return Room.route[this.id];
     },
-    routesToRoom: function(roomId, hasKey) {
+    routesToRoom: function (roomId, hasKey) {
         var optionalMovements = [];
         var build = function (movements, desc) {
             return {
@@ -407,28 +411,48 @@ Room.prototype = {
                 desc: desc
             };
         };
-        if(roomId == this.id) {
+        var lockedRoomCount = 0;
+        for (var i in Game.rooms) {
+            if (Game.rooms.hasOwnProperty(i) && Game.rooms[i].locked) {
+                lockedRoomCount += 1;
+            }
+        }
+        var canLock = lockedRoomCount < 3;
+        if (roomId == this.id) {
             var _routes = this.routes(), canStay = true;
-            for (var i in _routes) {
-                if(_routes.hasOwnProperty(i)) {
+            for (i in _routes) {
+                if (_routes.hasOwnProperty(i)) {
                     var _room = Game.rooms[_routes[i]];
-                    if(!_room.locked) {
+                    if (!_room.locked) {
                         canStay = false;
                         break;
                     }
                 }
             }
-            if(canStay || roomId == 0 || this.locked || Game.progress.round == (Game.progress.bomb == 2 ? 8 : 7)) {
-                optionalMovements.push(build([{
-                    to: undefined,
-                    lockAction: undefined
-                }], '留在 ' + this.id + ' 号房间。'));
+            if (canStay || roomId == 0 || this.locked || Game.progress.round == (Game.progress.bomb == 2 ? 8 : 7)) {
+                optionalMovements.push(build([
+                    {
+                        to: undefined,
+                        lockAction: undefined
+                    }
+                ], '留在 ' + this.id + ' 号房间。'));
             }
-            if(this.hasLock && hasKey) {
-                optionalMovements.push(build([{
-                    to: undefined,
-                    lockAction: this.locked ? 'unlock' : 'lock'
-                }], '留在 ' + this.id + ' 号房间，并将其 ' + (this.locked ? '解锁' : '锁上') + '。'));
+            if (this.hasLock && hasKey) {
+                if (!this.locked && canLock) {
+                    optionalMovements.push(build([
+                        {
+                            to: undefined,
+                            lockAction: 'lock'
+                        }
+                    ], '留在 ' + this.id + ' 号房间，并将其【锁上】。'));
+                } else if (this.locked) {
+                    optionalMovements.push(build([
+                        {
+                            to: undefined,
+                            lockAction: 'unlock'
+                        }
+                    ], '留在 ' + this.id + ' 号房间，并将其【解锁】。'));
+                }
             }
         } else {
             _routes = this.routes();
@@ -436,24 +460,39 @@ Room.prototype = {
                 if (_routes.hasOwnProperty(i)) {
                     _room = Game.rooms[_routes[i]];
                     if (_room.id == roomId) {
-                        if(!this.locked){
-                            if(!_room.locked) {
-                                optionalMovements.push(build([{
-                                    to: _room.id,
-                                    lockAction: undefined
-                                }], '进入 ' + _room.id + ' 号房间。'));
+                        if (!this.locked) {
+                            if (!_room.locked) {
+                                optionalMovements.push(build([
+                                    {
+                                        to: _room.id,
+                                        lockAction: undefined
+                                    }
+                                ], '进入 ' + _room.id + ' 号房间。'));
                             }
-                            if(_room.hasLock && hasKey) {
-                                optionalMovements.push(build([{
-                                    to: _room.id,
-                                    lockAction: _room.locked ? 'unlock' : 'lock'
-                                }], '进入 ' + _room.id + ' 号房间，并将其 ' + (_room.locked ? '解锁' : '锁上') + '。'));
-                            }
-                            if(this.hasLock && !_room.locked && hasKey) {
-                                optionalMovements.push(build([{
+                            if (_room.hasLock && hasKey) {
+                                if (!_room.locked && canLock) {
+                                    optionalMovements.push(build([
+                                        {
                                             to: _room.id,
-                                            lockAction: '-lock'
-                                        }], '进入 ' + _room.id + ' 号房间，并回头锁上 ' + this.id + ' 号房间。'));
+                                            lockAction: 'lock'
+                                        }
+                                    ], '进入 ' + _room.id + ' 号房间，并将其【锁上】。'));
+                                } else if (_room.locked) {
+                                    optionalMovements.push(build([
+                                        {
+                                            to: _room.id,
+                                            lockAction: 'unlock'
+                                        }
+                                    ], '进入 ' + _room.id + ' 号房间，并将其【解锁】。'));
+                                }
+                            }
+                            if (this.hasLock && !_room.locked && hasKey && canLock) {
+                                optionalMovements.push(build([
+                                    {
+                                        to: _room.id,
+                                        lockAction: '-lock'
+                                    }
+                                ], '进入 ' + _room.id + ' 号房间，并回头【锁上】 ' + this.id + ' 号房间。'));
                             }
                         }
                     } else {
@@ -461,34 +500,41 @@ Room.prototype = {
                         for (var j in _routes2) {
                             if (_routes2.hasOwnProperty(j) && roomId == _routes2[j]) {
                                 var _room2 = Game.rooms[_routes2[j]];
-                                if(!this.locked){
-                                    if(!_room.locked){
-                                        if(!_room2.locked) {
+                                if (!this.locked) {
+                                    if (!_room.locked) {
+                                        if (!_room2.locked) {
                                             optionalMovements.push(build([
                                                 {to: _room.id, lockAction: undefined},
                                                 {to: _room2.id, lockAction: undefined}
                                             ], '经过 ' + _room.id + ' 号房间到达 ' + _room2.id + ' 号房间。'));
                                         }
-                                        if(hasKey) {
+                                        if (hasKey) {
                                             if (!_room2.locked) {
-                                                if (this.hasLock) {
+                                                if (this.hasLock && canLock) {
                                                     optionalMovements.push(build([
                                                         {to: _room.id, lockAction: '-lock'},
                                                         {to: _room2.id, lockAction: undefined}
-                                                    ], '经过 ' + _room.id + ' 号房间到达 ' + _room2.id + ' 号房间，并回头锁上 ' + this.id + ' 号房间。'));
+                                                    ], '经过 ' + _room.id + ' 号房间到达 ' + _room2.id + ' 号房间，并回头【锁上】 ' + this.id + ' 号房间。'));
                                                 }
-                                                if (_room.hasLock) {
+                                                if (_room.hasLock && canLock) {
                                                     optionalMovements.push(build([
                                                         {to: _room.id, lockAction: undefined},
                                                         {to: _room2.id, lockAction: '-lock'}
-                                                    ], '经过 ' + _room.id + ' 号房间到达 ' + _room2.id + ' 号房间，并回头锁上 ' + _room.id + ' 号房间。'));
+                                                    ], '经过 ' + _room.id + ' 号房间到达 ' + _room2.id + ' 号房间，并回头【锁上】 ' + _room.id + ' 号房间。'));
                                                 }
                                             }
-                                            if(_room2.hasLock) {
-                                                optionalMovements.push(build([
-                                                    {to: _room.id, lockAction: undefined},
-                                                    {to: _room2.id, lockAction: _room2.locked ? 'unlock' : 'lock'}
-                                                ], '经过 ' + _room.id + ' 号房间到达 ' + _room2.id + ' 号房间，并将其' + (_room2.locked ? '解锁' : '锁上') + '。'));
+                                            if (_room2.hasLock) {
+                                                if (!_room2.locked && canLock) {
+                                                    optionalMovements.push(build([
+                                                        {to: _room.id, lockAction: undefined},
+                                                        {to: _room2.id, lockAction: 'lock'}
+                                                    ], '经过 ' + _room.id + ' 号房间到达 ' + _room2.id + ' 号房间，并将其【锁上】。'));
+                                                } else if (_room2.locked) {
+                                                    optionalMovements.push(build([
+                                                        {to: _room.id, lockAction: undefined},
+                                                        {to: _room2.id, lockAction: 'unlock'}
+                                                    ], '经过 ' + _room.id + ' 号房间到达 ' + _room2.id + ' 号房间，并将其【解锁】。'));
+                                                }
                                             }
                                         }
                                     }
@@ -501,7 +547,7 @@ Room.prototype = {
         }
         return optionalMovements;
     },
-    genPosition: function(playerId) {
+    genPosition: function (playerId) {
         var index = this.players.indexOf(playerId),
             seats = GameConfig.seats[this.players.length];
         return {

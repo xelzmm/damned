@@ -1,13 +1,23 @@
-var canvas = document.getElementById('canvasBoard');
-var context = canvas.getContext && canvas.getContext('2d');
-window.context = context;
+var roomBoard = document.getElementById('roomBoard');
+//var canvas = document.getElementById('roomBoard');
+//var context = canvas.getContext && canvas.getContext('2d');
+//window.context = context;
 window.Game = {rooms: [], players: [], elements: [], started: false};
 var gameResource = new Image();
-var drawResource = function (resourceName, x, y, context) {
-    context = context || window.context;
-    var _bounds = GameConfig.resourceBounds[resourceName];
-    context.drawImage(gameResource, _bounds.x, _bounds.y, _bounds.w, _bounds.h, x, y, _bounds.w, _bounds.h);
+var drawResource = function (resourceName, x, y) {
+//    context = context || window.context;
+//    var _bounds = GameConfig.resourceBounds[resourceName];
+//    context.drawImage(gameResource, _bounds.x, _bounds.y, _bounds.w, _bounds.h, x, y, _bounds.w, _bounds.h);
+    var container = document.getElementById('roomContainer');
+    var img = document.createElement('div');
+    img.className = resourceName;
+    img.style.left = x + 'px';
+    img.style.top = y + 'px';
+    container.appendChild(img);
 };
+var removeNode = function(node) {
+    node.parentNode.removeChild(node);
+}
 var drawElement = function (resourceName, x, y) {
     var container = document.getElementById('elementContainer');
     var img = document.createElement('div');
@@ -25,18 +35,9 @@ var drawElement = function (resourceName, x, y) {
 var initElementStyle = function() {
     var style = document.createElement('style');
     style.type = 'text/css';
-    var elements = ['player-1-red', 'player-2-red', 'player-3-red',
-        'player-4-red', 'player-5-red', 'player-6-red',
-        'player-7-red', 'player-8-red', 'player-9-red',
-        'player-1-green', 'player-2-green', 'player-3-green',
-        'player-4-green', 'player-5-green', 'player-6-green',
-        'player-7-green', 'player-8-green', 'player-9-green',
-        'locked', 'unlocked', 'key', 'bomb', 'bomb-invalid',
-        'confirmed', 'possible', 'unknown', 'timer', 'round-board'
-    ];
-    for(var i in elements) {
-        if(elements.hasOwnProperty(i)) {
-            var element = elements[i];
+    for(var i in GameConfig.resourceBounds) {
+        if(GameConfig.resourceBounds.hasOwnProperty(i)) {
+            var element = i;
             var _bounds = GameConfig.resourceBounds[element];
             style.innerHTML +=
                 '.' + element + '{ \n' +
@@ -109,7 +110,7 @@ var initRoomMap = function() {
 
 gameResource.src="/images/game.gif";
 gameResource.onload = function() {
-    document.getElementById('loading').remove();
+    removeNode(document.getElementById('loading'));
     init();
 };
 Date.prototype.format = function (format) {
@@ -143,7 +144,7 @@ var resize = function() {
     var mapArea = document.getElementById('mapArea');
     mapArea.style.width = edge + 'px';
     mapArea.style.height = edge + 'px';
-    var transform = 'scale(' + edge / canvas.width + ')',
+    var transform = 'scale(' + edge / roomBoard.clientWidth + ')',
         transformOrigin = 'left top';
     var scaleContainer = document.getElementById('scaleContainer');
     scaleContainer.style.webkitTransformOrigin = transformOrigin;
@@ -174,10 +175,7 @@ var init = function() {
     window.onresize = resize;
     initElementStyle();
     initRoomMap();
-    if(!context) {
-        info('暂不支持您的浏览器！');
-        return;
-    }
+
     drawResource("playground", 0, 0);
 
     window.socket = io('ws://' + window.location.host);
@@ -197,6 +195,9 @@ var init = function() {
                 info('你现在不能发言。');
             }
         }
+    };
+    document.onkeydown = function() {
+        document.getElementById('input').focus();
     };
 
     socket.on('join', function(name) {
@@ -439,19 +440,23 @@ var initPlayGround = function(rooms, players) {
     if(Game.started) {
         for(i in Game.rooms) {
             if(Game.rooms.hasOwnProperty(i) && !!Game.rooms[i].lockMarker) {
-                Game.rooms[i].lockMarker.remove();
-                Game.rooms[i].dangerousMarker.remove();
+                removeNode(Game.rooms[i].lockMarker);
+                removeNode(Game.rooms[i].dangerousMarker);
             }
         }
         for(i in Game.players) {
             if(Game.players.hasOwnProperty(i) && !!Game.players[i].playerMarker) {
-                Game.players[i].playerMarker.remove();
+                removeNode(Game.players[i].playerMarker);
             }
         }
         for(i in Game.elements) {
             if(Game.elements.hasOwnProperty(i)) {
-                Game.elements[i].remove();
+                removeNode(Game.elements[i]);
             }
+        }
+        var container = document.getElementById('roomContainer');
+        while (container.childElementCount > 1) {
+            container.removeChild(container.lastChild);
         }
     }
     Game.started = true;

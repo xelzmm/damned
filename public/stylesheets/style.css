@@ -21,10 +21,12 @@ a {
     position: relative;
 }
 
-#canvasBoard{
+#roomBoard{
     position:absolute;
     top: 0;
     left: 0;
+    width: 1091px;
+    height: 1091px;
 }
 
 #elementBoard {

@@ -35,11 +35,12 @@ var drawElement = function (resourceName, x, y) {
 var initElementStyle = function() {
     var style = document.createElement('style');
     style.type = 'text/css';
+    var styleText = '';
     for(var i in GameConfig.resourceBounds) {
         if(GameConfig.resourceBounds.hasOwnProperty(i)) {
             var element = i;
             var _bounds = GameConfig.resourceBounds[element];
-            style.innerHTML +=
+            styleText +=
                 '.' + element + '{ \n' +
                 '    position: absolute; \n' +
                 '    background-image: url(\'/images/game.gif\'); \n' +
@@ -49,6 +50,7 @@ var initElementStyle = function() {
                 '}\n';
         }
     }
+    style.innerHTML = styleText;
     document.getElementsByTagName('HEAD').item(0).appendChild(style);
 };
 
@@ -180,7 +182,7 @@ var init = function() {
 
     drawResource("playground", 0, 0);
 
-    window.socket = io('ws://' + window.location.host);
+    window.socket = io('ws://' + window.location.hostname + ':4000');
 
     document.getElementById('input').onkeydown = function(e) {
         if(e.keyCode == 13) {

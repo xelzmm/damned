@@ -229,7 +229,8 @@ var init = function() {
     });
     socket.on('leave', function(name) {
         info(name + ' 离开了游戏房间。');
-        info('游戏结束。');
+        if(Game.started)
+            info('游戏结束。');
     });
     socket.on('room', function(room, players) {
         info('您已进入【' + room + '】号游戏房间。');

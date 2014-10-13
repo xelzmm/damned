@@ -842,9 +842,11 @@ Game.prototype = {
             this.reset();
         }
         var _self = this;
-        setTimeout(function() {
-            _self.pendingClose();
-        }, 30000);
+        if(this.clients.length == 0) {
+            setTimeout(function () {
+                _self.pendingClose();
+            }, 30000);
+        }
     },
     pendingClose: function() {
         if(this.clients.length == 0) {

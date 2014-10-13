@@ -220,8 +220,18 @@ var init = function() {
     };
 
     socket.on('join', function(name) {
-        if(!name) {
-            alert('该房间不存在！');
+        if(typeof(name) == 'object') {
+            switch(name.reason) {
+                case 'nosuchroom':
+                    alert('该房间不存在！');
+                    break;
+                case 'full':
+                    alert('房间已满员！');
+                    break;
+                case 'started':
+                    alert('游戏已经开始，暂不支持观战。');
+                    break;
+            }
             window.location.href = '/';
         } else {
             info(name + ' 进入了游戏房间。');

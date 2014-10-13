@@ -30,7 +30,7 @@ var server = function() {
             debug('socket[' + socket.id + '] join ' + room);
             if(!(room in games)) {
                 debug('socket[' + socket.id + '] join: room ' + room + ' not exists');
-                socket.emit('join', undefined);
+                socket.emit('join', {reason: 'nosuchroom'});
             } else {
                 games[room].add(socket);
             }

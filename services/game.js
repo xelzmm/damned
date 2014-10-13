@@ -470,12 +470,12 @@ Game.prototype = {
         socket.on('speak', function(msg) {
             player.debug('says: ' + msg);
             if(!_self.checkMsgType(msg, 'string')) return;
+            _self.broadcast('speak', {player: socket.playerId, content: msg});
             if(msg.indexOf('over') >= 0) {
                 socket.removeAllListeners('speak');
                 _self.nextBeforeTimeout();
                 return;
             }
-            _self.broadcast('speak', {player: socket.playerId, content: msg});
         });
         _self.updateGameAndAwaitNext(function() {
             socket.removeAllListeners('speak');
@@ -807,14 +807,19 @@ Game.prototype = {
         var _room = this.socketRoom;
         gameDebug('add client ' + socket.id + ' to room ' + _room);
         var _clients = this.clients;
+        var reason = undefined;
         if(this.started) {
             gameDebug('failed because game is started');
-            return false;
+            reason = 'started';
         } else if(_clients.length == Config.maximumPlayerCount) {
             gameDebug('failed because room is full.');
-            return false;
+            reason = 'full';
         } else if (_clients.indexOf(socket) >= 0) {
             gameDebug('failed because client already in this room.');
+            reason = 'unknown';
+        }
+        if(!!reason) {
+            socket.emit('join', {reason: reason});
             return false;
         }
         socket.socketRoom = _room;

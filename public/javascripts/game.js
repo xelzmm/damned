@@ -100,7 +100,7 @@ var initRoomMap = function() {
                     }
                     do {
                         var decision = prompt(msg);
-                        if(decision == '')
+                        if(decision == '' || decision == null)
                             decision = 1;
                         else
                             decision = parseInt(decision);
@@ -215,14 +215,39 @@ var init = function() {
     };
 
     socket.on('join', function(name) {
-        info(name + ' 进入了游戏房间。');
+        if(!name) {
+            alert('该房间不存在！');
+            window.open("","_self").close();
+        } else {
+            info(name + ' 进入了游戏房间。');
+        }
     });
     socket.on('leave', function(name) {
         info(name + ' 离开了游戏房间。');
     });
     socket.on('room', function(room, players) {
-        info('您已进入【' + room + '】号游戏房间。')
-        info('房间里的玩家有: ' + players);
+        info('您已进入【' + room + '】号游戏房间。');
+        var roomKeeper = true;
+        for(var i in players) {
+            if(players.hasOwnProperty(i)) {
+                info('玩家：' + players[i].name + (players[i].ready ? ' 已准备就绪。' : ' 尚未准备就绪。'));
+                roomKeeper = false;
+            }
+        }
+        if(roomKeeper) {
+            info('复制本页地址 ' + window.location.href + ' 给好友一起来玩吧！');
+        }
+        info('点击游戏区完成准备。');
+        document.getElementById('scaleContainer').onclick = function() {
+            if(!confirm('您已准备就绪？'))return;
+            socket.emit('ready');
+            document.getElementById('scaleContainer').onclick = null;
+        };
+    });
+    socket.on('ready', function(name){
+        if(typeof (name) =='string') {
+            info(name + ' 已准备就绪。');
+        }
     });
     socket.on('safe', function(room) {
         info('安全房间是 ' + room + ' 号房间！');
@@ -439,17 +464,37 @@ var init = function() {
     });
     fakeInit();
 };
+var getCookie = function(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1);
+        if (c.indexOf(name) != -1) return c.substring(name.length, c.length);
+    }
+    return "";
+};
+var setCookie = function (cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    var expires = "expires="+d.toUTCString();
+    document.cookie = cname + "=" + cvalue + "; " + expires;
+};
 var fakeInit = function() {
-    var username = 'player_' + new Date().getTime() % 10000;
-    do {
-        username = prompt('请设定您的昵称：', username);
-    } while (username == '');
+    var username = getCookie('name');
+    if(username == '') {
+        do {
+            username = 'player_' + new Date().getTime() % 10000;
+            username = prompt('请设定您的昵称：', username);
+        } while (username == '' || username == null);
+        setCookie("name", username, 365);
+    }
     info(username + '，欢迎你进入密室惊魂。');
     socket.emit('name', username);
     var room = window.location.search.substr(1, window.location.search.length - 1);
-    if(room == '') room = 1;
+    if(room == '') room = 0;
     socket.emit('join', room);
-    socket.emit('ready');
+//    socket.emit('ready');
 };
 var initPlayGround = function(rooms, players) {
     var i;

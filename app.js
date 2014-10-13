@@ -8,11 +8,10 @@ var sio = require('socket.io');
 var debug = require('debug');
 debug.useColors = function() {return true};
 debug.log = console.log.bind(console);
-var gameServer = require('./services/server');
+var data = require('./services/data');
 
-//var routes = require('./routes/index');
+var routes = require('./routes/index');
 //var users = require('./routes/users');
-var game = require('./routes/game');
 
 var app = express();
 
@@ -28,9 +27,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-//app.use('/', routes);
+app.use('/', routes);
 //app.use('/users', users);
-app.use('/', game);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -69,7 +67,7 @@ var httpServer = require('http').Server(app);
 httpServer.listen(app.get('port'), function() {
     debug('damned:app')('Express server listening on port ' + httpServer.address().port);
 });
-var io = sio(httpServer);
-gameServer(io);
+data.io = sio(httpServer);
+require('./services/server')();
 
 module.exports = app;

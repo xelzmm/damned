@@ -2,10 +2,65 @@
 <html>
   <head>
     <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel='stylesheet' href='/stylesheets/index.css' />
+     <script>
+         function setCookie(cname, cvalue, exdays) {
+             var d = new Date();
+             d.setTime(d.getTime() + (exdays*24*60*60*1000));
+             var expires = "expires="+d.toUTCString();
+             document.cookie = cname + "=" + cvalue + "; " + expires;
+         }
+
+         function getCookie(cname) {
+             var name = cname + "=";
+             var ca = document.cookie.split(';');
+             for(var i=0; i<ca.length; i++) {
+                 var c = ca[i];
+                 while (c.charAt(0)==' ') c = c.substring(1);
+                 if (c.indexOf(name) != -1) return c.substring(name.length, c.length);
+             }
+             return "";
+         }
+         var username = getCookie("name");
+         if(username == '') {
+             do {
+                 username = 'player_' + new Date().getTime() % 10000;
+                 username = prompt('请设定您的昵称：', username);
+             } while (username == '' || username == null);
+             setCookie("name", username, 365);
+         }
+         function setName() {
+             document.getElementById('name').innerHTML = '昵称：' + getCookie("name");
+         }
+         window.onload = setName;
+         function alter() {
+             username = getCookie('name');
+             do {
+                 username = prompt('请设定您的昵称：', username);
+             } while (username == '');
+             setCookie("name", username, 7);
+             setName();
+         }
+     </script>
   </head>
   <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
+  <div id="board">
+      <div id="header">
+          <div id="name"></div>
+          <div id="action">
+              <a href="/create" target="_self"> 创建房间 </a>
+              <a href="#" onclick="alter()"> 改名 </a>
+          </div>
+      </div>
+      <div id="rooms">
+          <ul class="list">
+              <li class="list-header">游戏房间</li>
+              <% for (var roomId in games) {
+                      if(games.hasOwnProperty(roomId)) {%>
+              <li><a href='/game/?<%= roomId %>' target="_self"><%= roomId %> 号房间 [<%= games[roomId].clients.length %>人]</a></li>
+              <% }}%>
+          </ul>
+      </div>
+  </div>
   </body>
 </html>

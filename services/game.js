@@ -1,6 +1,8 @@
 /**
  * Created by xelz on 14-10-3.
  */
+var data = require('./data');
+var games = data.games;
 var debug = require('debug'),
     gameDebug = debug('damned:game'),
     playerDebug = debug('damned:player'),
@@ -27,7 +29,13 @@ var Game = function(room, io) {
     }
     this.socketRoom = room;
     this.io = io;
+    debug('room created: ' + room);
+    debug(io);
     this.started = false;
+    var _self = this;
+    setTimeout(function() {
+        _self.pendingClose();
+    }, 30000);
 };
 
 Game.prototype = {
@@ -812,7 +820,7 @@ Game.prototype = {
         var _players = [];
         for(var i in _clients) {
             if(_clients.hasOwnProperty(i)) {
-                _players.push(_clients[i].playerName);
+                _players.push({name: _clients[i].playerName, ready: _clients[i].playerReady});
             }
         }
         socket.emit('room', _room, _players);
@@ -832,10 +840,18 @@ Game.prototype = {
         if(this.started) {
             this.reset();
         }
+        this.pendingClose();
+    },
+    pendingClose: function() {
+        if(this.clients.length == 0) {
+            gameDebug('No players in this room, gonna closed.');
+            delete games[this.socketRoom];
+        }
     },
     readyToStart: function(socket) {
         var ready = true, _clients = this.clients;
         socket.playerReady = true;
+        this.broadcast('ready', socket.playerName);
         if(_clients.length < Config.minimumPlayerCount) {
             return;
         }

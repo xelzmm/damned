@@ -2,9 +2,9 @@
  * Created by xelz on 14-10-3.
  */
 var debug = require('debug')('damned:server');
-var game = require('./game');
-var games = {};
-var server = function(io) {
+var data = require('./data');
+var games = data.games, io = data.io;
+var server = function() {
     io.sockets.on('connection', function(socket) {
         debug('client connected, socket id: ' + socket.id);
         socket.on('connect', function() {
@@ -29,9 +29,11 @@ var server = function(io) {
             }
             debug('socket[' + socket.id + '] join ' + room);
             if(!(room in games)) {
-                games[room] = new game(room, io);
+                debug('socket[' + socket.id + '] join: room ' + room + ' not exists');
+                socket.emit('join', undefined);
+            } else {
+                games[room].add(socket);
             }
-            games[room].add(socket);
         });
         socket.on('ready', function() {
             var _room = socket.socketRoom;

@@ -275,7 +275,9 @@ Game.prototype = {
                     this.functionPerformed = true; // 标记-1号房间功能执行完毕
                     gameDebug('Perform order ' + JSON.stringify(_order, null, 0));
                 }
-                if(!this.functionPerformed && _progress.player < _order[_progress.room].length - 1) { // 房间功能尚未执行且存在其他玩家
+                if((!this.functionPerformed
+                    || _rooms[_progress.room].hasKey)
+                    && _progress.player < _order[_progress.room].length - 1) { // (房间功能尚未执行或房间有钥匙)且存在其他玩家
                     _progress.player += 1; // 下一个玩家执行房间功能
                 } else { // 上一个房间功能执行完毕
                     _progress.player = null;

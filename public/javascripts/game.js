@@ -205,6 +205,11 @@ var init = function() {
                     socket.emit('speak', e.target.value);
                     e.target.value = '';
                 }
+            } else if(!Game.started) {
+                if(e.target.value.trim() != "") {
+                    socket.emit('speak', e.target.value);
+                    e.target.value = '';
+                }
             } else {
                 info('你现在不能发言。');
             }
@@ -217,13 +222,14 @@ var init = function() {
     socket.on('join', function(name) {
         if(!name) {
             alert('该房间不存在！');
-            window.open("","_self").close();
+            window.location.href = '/';
         } else {
             info(name + ' 进入了游戏房间。');
         }
     });
     socket.on('leave', function(name) {
         info(name + ' 离开了游戏房间。');
+        info('游戏结束。');
     });
     socket.on('room', function(room, players) {
         info('您已进入【' + room + '】号游戏房间。');
@@ -320,9 +326,13 @@ var init = function() {
         }
     });
     socket.on('speak', function(data) {
-        var _players = Game.players;
-        var playerId = data.player;
-        info(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 说: ' + data.content);
+        if(Game.started) {
+            var _players = Game.players;
+            var playerId = data.player;
+            info(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 说: ' + data.content);
+        } else {
+            info(data.player + ' 说: ' + data.content);
+        }
     });
     socket.on('move', function(data) {
         var _players = Game.players;

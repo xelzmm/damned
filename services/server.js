@@ -53,6 +53,14 @@ var server = function() {
             debug('socket[' + socket.id + '] leave ' + _room);
             games[_room].remove(socket);
         };
+        socket.on('speak', function(msg) {
+            var _room = socket.socketRoom;
+            if(!_room) {
+                debug('socket[' + socket.id + '] speak: join a room needed!');
+                return;
+            }
+            games[_room].broadcast('speak', {player: socket.playerName, content: msg});
+        });
         socket.on('disconnect', function() {
             debug('client disconnected, socket id: ' + socket.id);
             if(!!socket.socketRoom)

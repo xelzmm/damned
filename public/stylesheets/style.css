@@ -15,6 +15,13 @@ a {
     overflow: hidden;
 }
 
+#loading {
+    width: 100%;
+    margin-top: 100px;
+    text-align: center;
+    font-size: 24px;
+}
+
 #mapArea{
     float: left;
     top: 0;
@@ -54,6 +61,7 @@ a {
 #chatArea {
     position: relative;
     overflow: hidden;
+    display: none;
 }
 
 #chatBoard {

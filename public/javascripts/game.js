@@ -33,25 +33,34 @@ var drawElement = function (resourceName, x, y) {
     return img;
 };
 var initElementStyle = function() {
-    var style = document.createElement('style');
-    style.type = 'text/css';
+    var style;
+    if(document.createStyleSheet) {
+        style = document.createStyleSheet();
+    } else {
+        style = document.createElement('style');
+        style.type = 'text/css';
+    }
     var styleText = '';
     for(var i in GameConfig.resourceBounds) {
         if(GameConfig.resourceBounds.hasOwnProperty(i)) {
             var element = i;
             var _bounds = GameConfig.resourceBounds[element];
-            styleText +=
-                '.' + element + '{ \n' +
-                '    position: absolute; \n' +
-                '    background-image: url(\'/images/game.gif\'); \n' +
-                '    background-position: -' + _bounds.x + 'px -' + _bounds.y + 'px; \n' +
-                '    width: ' + _bounds.w + 'px; \n' +
-                '    height: ' + _bounds.h + 'px; \n' +
-                '}\n';
+            var aStyleText =  'position: absolute;' +
+                'background-image: url(\'/images/game.gif\');' +
+                'background-position: -' + _bounds.x + 'px -' + _bounds.y + 'px;' +
+                'width: ' + _bounds.w + 'px;' +
+                'height: ' + _bounds.h + 'px;';
+            if(document.createStyleSheet) {
+                style.addRule('.' + element, aStyleText);
+            } else {
+                styleText += '.' + element + '{' + aStyleText + '}\n';
+            }
         }
     }
-    style.innerHTML = styleText;
-    document.getElementsByTagName('HEAD').item(0).appendChild(style);
+    if(!document.createStyleSheet) {
+        style.innerHTML = styleText;
+        document.getElementsByTagName('HEAD').item(0).appendChild(style);
+    }
 };
 
 var initRoomMap = function() {
@@ -113,6 +122,7 @@ var initRoomMap = function() {
 gameResource.src="/images/game.gif";
 gameResource.onload = function() {
     removeNode(document.getElementById('loading'));
+    document.getElementById('chatArea').style.display = 'block';
     init();
 };
 Date.prototype.format = function (format) {

@@ -57,7 +57,7 @@
               <li class="list-header">游戏房间</li>
               <% for (var roomId in games) {
                       if(games.hasOwnProperty(roomId)) {%>
-              <li><a href='/game/?<%= roomId %>' target="_self"><%= roomId %> 号房间 [<%= games[roomId].clients.length %>人]</a></li>
+              <li><a href='/game?<%= roomId %>' target="_self"><%= roomId %> 号房间 [<%= games[roomId].clients.length %>人]</a></li>
               <% }}%>
           </ul>
       </div>

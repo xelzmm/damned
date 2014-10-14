@@ -215,8 +215,9 @@ var init = function() {
             }
         }
     };
-    document.onkeydown = function() {
-        document.getElementById('input').focus();
+    document.onkeydown = function(e) {
+        if(!(e.metaKey || e.ctrlKey || e.altKey || e.shiftKey))
+            document.getElementById('input').focus();
     };
 
     socket.on('join', function(name) {

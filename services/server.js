@@ -43,7 +43,7 @@ var server = function() {
             }
             debug('socket[' + socket.id + '] ready');
             socket.playerReady = true;
-            io.broadcast('ready', socket.playerName);
+            io.to(_room).emit('ready', socket.playerName);
             games[_room].readyToStart();
         });
         var leave = function() {

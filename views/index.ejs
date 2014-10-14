@@ -55,10 +55,13 @@
       <div id="rooms">
           <ul class="list">
               <li class="list-header">游戏房间</li>
+              <% var count = 0;%>
               <% for (var roomId in games) {
-                      if(games.hasOwnProperty(roomId)) {%>
+                     if(games.hasOwnProperty(roomId)) {
+                         count ++;%>
               <li><a href='/game?<%= roomId %>' target="_self"><%= roomId %> 号房间 [<%= games[roomId].clients.length %>人]</a></li>
               <% }}%>
+              <li class="list-header">共 <%= count %> 个房间</li>
           </ul>
       </div>
   </div>

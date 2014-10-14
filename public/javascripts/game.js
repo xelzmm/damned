@@ -239,8 +239,10 @@ var init = function() {
     });
     socket.on('leave', function(name) {
         info(name + ' 离开了游戏房间。');
-        if(Game.started)
+        if(Game.started) {
             info('游戏结束。');
+            Game.started = false;
+        }
     });
     socket.on('room', function(room, players) {
         info('您已进入【' + room + '】号游戏房间。');
@@ -271,9 +273,6 @@ var init = function() {
     });
     socket.on('start', function(rooms, players, id) {
         var me = players[id - 1];
-        if(Game.started) {
-            info('游戏重新开始了！');
-        }
         info('游戏开始了！总共有 ' + players.length + ' 名玩家。');
         info('你是【' + me.id + '号】玩家，你的身份是【' + GameConfig.role[me.role] + '】，你处在【' + me.room + '号】房间！');
 //        info('rooms:');info(rooms);
@@ -319,7 +318,7 @@ var init = function() {
             }
         } else {
             if(me.id == Game.order[progress.room][progress.player]) {
-                info('轮到你 [' + GameConfig.stage[progress.stage] + '] 了. 限时 ' + progress.time + ' 秒.');
+                info('轮到你 [' + GameConfig.stage[progress.stage] + '] 了.' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
                 switch(progress.stage) {
                     case 'speak':
                         Game.canSpeak = true;
@@ -332,7 +331,7 @@ var init = function() {
                         break;
                 }
             } else {
-                info('现在是 ' + Game.order[progress.room][progress.player] + ' 号玩家的 [' + GameConfig.stage[progress.stage] + '] 时间. 限时 ' + progress.time + ' 秒.');
+                info('现在是 ' + Game.order[progress.room][progress.player] + ' 号玩家的 [' + GameConfig.stage[progress.stage] + '] 时间. ' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
             }
         }
     });
@@ -469,11 +468,14 @@ var init = function() {
     });
     socket.on('over', function(result) {
         info('安全房间是：【' + result.safeRoom + '】号房间。');
-        if(me.role == result.winner) {
-            info('你(' + (me.role == 'victim' ? '受害者' : '奸徒') + ')获得了胜利！');
-        } else {
-            info('你失败了！');
-            info((me.role != 'victim' ? '受害者' : '奸徒') + '获得了胜利！');
+        if(Game.started) {
+            if (me.role == result.winner) {
+                info('你(' + (me.role == 'victim' ? '受害者' : '奸徒') + ')获得了胜利！');
+            } else {
+                info('你失败了！');
+                info((me.role != 'victim' ? '受害者' : '奸徒') + '获得了胜利！');
+            }
+            Game.started = false;
         }
         if(me.role == 'victim') {
             if (!!result.traitor) {

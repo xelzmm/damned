@@ -242,7 +242,8 @@ var init = function() {
         info(name + ' 离开了游戏房间。');
         if(Game.started) {
             info('游戏结束。');
-            Game.started = false;
+            Game.canSpeak = true;
+//            Game.started = false;
         }
     });
     socket.on('room', function(room, players) {

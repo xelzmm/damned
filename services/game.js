@@ -35,7 +35,6 @@ var Game = function(room, io) {
     this.closeTimeout = setTimeout(function() {
         _self.pendingClose();
     }, 30000);
-    this.reset();
 };
 
 Game.prototype = {
@@ -54,6 +53,7 @@ Game.prototype = {
         }
     },
     start: function() {
+        this.reset();
         gameDebug('starting game...');
         var _clients = this.clients;
         var _players = this.players;

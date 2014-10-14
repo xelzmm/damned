@@ -42,7 +42,9 @@ var server = function() {
                 return;
             }
             debug('socket[' + socket.id + '] ready');
-            games[_room].readyToStart(socket);
+            socket.playerReady = true;
+            io.broadcast('ready', socket.playerName);
+            games[_room].readyToStart();
         });
         var leave = function() {
             var _room = socket.socketRoom;

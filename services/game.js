@@ -29,11 +29,10 @@ var Game = function(room, io) {
     }
     this.socketRoom = room;
     this.io = io;
-    debug('room created: ' + room);
-    debug(io);
+    gameDebug('room created: ' + room);
     this.started = false;
     var _self = this;
-    setTimeout(function() {
+    this.closeTimeout = setTimeout(function() {
         _self.pendingClose();
     }, 30000);
     this.reset();
@@ -847,24 +846,25 @@ Game.prototype = {
         _clients.splice(_clients.indexOf(socket), 1);
         if(this.started) {
             this.reset();
+        } else {
+            this.readyToStart();
         }
-        var _self = this;
-        if(this.clients.length == 0) {
-            setTimeout(function () {
-                _self.pendingClose();
-            }, 30000);
-        }
+        this.pendingClose();
     },
     pendingClose: function() {
         if(this.clients.length == 0) {
             gameDebug('No players in this room, gonna closed.');
+            if(this.closeTimeout != undefined) {
+                clearTimeout(this.closeTimeout);
+                delete this.closeTimeout;
+            }
             delete games[this.socketRoom];
         }
     },
-    readyToStart: function(socket) {
+    readyToStart: function() {
         var ready = true, _clients = this.clients;
-        socket.playerReady = true;
-        this.broadcast('ready', socket.playerName);
+//        socket.playerReady = true;
+//        this.broadcast('ready', socket.playerName);
         if(_clients.length < Config.minimumPlayerCount) {
             return;
         }

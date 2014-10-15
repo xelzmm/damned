@@ -242,8 +242,7 @@ var init = function() {
         info(name + ' 离开了游戏房间。');
         if(Game.started) {
             info('游戏结束。');
-            Game.canSpeak = true;
-//            Game.started = false;
+            Game.started = false;
         }
     });
     socket.on('room', function(room, players) {
@@ -523,7 +522,7 @@ var fakeInit = function() {
 };
 var initPlayGround = function(rooms, players) {
     var i;
-    if(Game.started) {
+    if(!!Game.rooms) {
         for(i in Game.rooms) {
             if(Game.rooms.hasOwnProperty(i) && !!Game.rooms[i].lockMarker) {
                 removeNode(Game.rooms[i].lockMarker);

@@ -46,14 +46,14 @@ Game.prototype = {
         clearTimeout(this.chooseTimeoutId);
         for(var i in this.clients) {
             if (this.clients.hasOwnProperty(i)) {
-                this.clients[i].removeAllListeners('speak');
+//                this.clients[i].removeAllListeners('speak');
                 this.clients[i].removeAllListeners('move');
                 this.clients[i].removeAllListeners('challenge');
+                this.clients[i].playerReady = false;
             }
         }
     },
     start: function() {
-        this.reset();
         gameDebug('starting game...');
         var _clients = this.clients;
         var _players = this.players;
@@ -176,6 +176,32 @@ Game.prototype = {
 //        }
         this.nextStep();
     },
+    over: function () {
+        var _rooms = this.data.rooms;
+        var _players = this.players;
+        var _clients = this.clients;
+        var safeRoom = _rooms[this.data.safeRoom];
+        var escapedPlayers = [], i, player;
+        for(i in safeRoom.players) {
+            if(safeRoom.players.hasOwnProperty(i)) {
+                player = _players[safeRoom.players[i] - 1];
+                if(!player.injured && player.role == 'victim') escapedPlayers.push(player);
+            }
+        }
+        var traitor = undefined;
+        for(i in _players) {
+            if(_players.hasOwnProperty(i) && _players[i].role == 'traitor') {
+                traitor = _players[i].id;
+            }
+        }
+        var winner = escapedPlayers.length >= _players.length - 3 ? 'victim' : 'traitor';
+        this.broadcast('over', {
+            traitor: traitor,
+            winner: winner,
+            safeRoom: this.data.safeRoom
+        });
+        this.reset();
+    },
     nextStep: function() {
         var _self = this, i, roomId, playerId, player, client;
         var _rooms = this.data.rooms;
@@ -236,26 +262,7 @@ Game.prototype = {
                 return;
             case 'time':
                 if(_progress.round == (_progress.bomb == 2 ? 9 : 8)) {
-                    var safeRoom = _rooms[this.data.safeRoom];
-                    var escapedPlayers = [];
-                    for(i in safeRoom.players) {
-                        if(safeRoom.players.hasOwnProperty(i)) {
-                            player = _players[safeRoom.players[i] - 1];
-                            if(!player.injured && player.role == 'victim') escapedPlayers.push(player);
-                        }
-                    }
-                    var traitor = undefined;
-                    for(i in _players) {
-                        if(_players.hasOwnProperty(i) && _players[i].role == 'traitor') {
-                            traitor = _players[i].id;
-                        }
-                    }
-                    var winner = escapedPlayers.length >= _players.length - 3 ? 'victim' : 'traitor';
-                    this.broadcast('over', {
-                        traitor: traitor,
-                        winner: winner,
-                        safeRoom: this.data.safeRoom
-                    });
+                    this.over();
                     break;
                 } else {
                     _progress.stage = 'perform';
@@ -845,7 +852,7 @@ Game.prototype = {
         socket.leave(_room);
         _clients.splice(_clients.indexOf(socket), 1);
         if(this.started) {
-            this.reset();
+            this.over();
         } else {
             this.readyToStart();
         }

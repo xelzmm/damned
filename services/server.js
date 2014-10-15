@@ -61,6 +61,9 @@ var server = function() {
                 debug('socket[' + socket.id + '] speak: join a room needed!');
                 return;
             }
+            if(games[_room].started) {
+                return;
+            }
             games[_room].broadcast('speak', {player: socket.playerName, content: msg});
         });
         socket.on('disconnect', function() {

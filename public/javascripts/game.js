@@ -258,12 +258,13 @@ var init = function() {
             info('复制本页地址 ' + window.location.href + ' 给好友一起来玩吧！');
         }
         info('点击游戏区完成准备。');
-        document.getElementById('scaleContainer').onclick = function() {
-            if(!confirm('您已准备就绪？'))return;
-            socket.emit('ready');
-            document.getElementById('scaleContainer').onclick = null;
-        };
+        document.getElementById('scaleContainer').onclick = readyHook;
     });
+    var readyHook = function() {
+        if(!confirm('您已准备就绪？'))return;
+        socket.emit('ready');
+        document.getElementById('scaleContainer').onclick = null;
+    };
     socket.on('ready', function(name){
         if(typeof (name) =='string') {
             info(name + ' 已准备就绪。');
@@ -485,6 +486,8 @@ var init = function() {
                 info('本场游戏没有奸徒。');
             }
         }
+        info('点击游戏区完成准备。');
+        document.getElementById('scaleContainer').onclick = readyHook;
     });
     fakeInit();
 };

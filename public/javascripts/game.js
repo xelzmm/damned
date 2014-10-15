@@ -243,6 +243,7 @@ var init = function() {
         if(Game.started) {
             info('游戏结束。');
             Game.started = false;
+            window.onbeforeunload = null;
         }
     });
     socket.on('room', function(room, players) {
@@ -271,7 +272,8 @@ var init = function() {
         }
     });
     socket.on('safe', function(room) {
-        info('安全房间是 ' + room + ' 号房间！');
+        info('安全房间是 【' + room + '】 号房间！');
+        alert('你的身份是【奸徒】，安全房间是 【' + room + '】 号房间！');
     });
     socket.on('start', function(rooms, players, id) {
         var me = players[id - 1];
@@ -285,6 +287,9 @@ var init = function() {
         window.me = Game.players[id - 1];
         document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
         info('进入 第 1 回合.');
+        window.onbeforeunload = function() {
+            return '游戏正在进行，此操作将会断开游戏并令该局游戏终止。';
+        };
     });
     socket.on('update', function(progress) {
         Game.progress = progress;
@@ -478,6 +483,7 @@ var init = function() {
                 info((me.role != 'victim' ? '受害者' : '奸徒') + '获得了胜利！');
             }
             Game.started = false;
+            window.onbeforeunload = null;
         }
         if(me.role == 'victim') {
             if (!!result.traitor) {

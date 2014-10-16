@@ -192,7 +192,7 @@ var init = function() {
 
     drawResource("playground", 0, 0);
 
-    window.socket = io('ws://' + window.location.hostname + ':4000');
+    window.socket = io('ws://' + window.location.hostname + (window.location.hostname == 'msjh.aliapp.com' ? '' : ':4000'));
 
     document.getElementById('input').onkeydown = function(e) {
         if(e.keyCode == 13) {

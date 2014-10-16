@@ -519,7 +519,7 @@ var fakeInit = function() {
         do {
             username = 'player_' + new Date().getTime() % 10000;
             username = prompt('请设定您的昵称：', username);
-        } while (username == '' || username == null);
+        } while (username == null || username.trim() == '');
         setCookie("name", username, 365);
     }
     info(username + '，欢迎你进入密室惊魂。');

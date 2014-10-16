@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= title %></title>
+    <title>密室惊魂 - Online</title>
     <link rel='stylesheet' href='/stylesheets/index.css' />
      <script>
          function setCookie(cname, cvalue, exdays) {
@@ -26,7 +26,7 @@
              do {
                  username = 'player_' + new Date().getTime() % 10000;
                  username = prompt('请设定您的昵称：', username);
-             } while (username == '' || username == null);
+             } while (username == null || username.trim() == '');
              setCookie("name", username, 365);
          }
          function setName() {
@@ -36,8 +36,9 @@
          function alter() {
              username = getCookie('name');
              do {
+                 username = 'player_' + new Date().getTime() % 10000;
                  username = prompt('请设定您的昵称：', username);
-             } while (username == '');
+             } while (username == null || username.trim() == '');
              setCookie("name", username, 7);
              setName();
          }
@@ -45,6 +46,9 @@
   </head>
   <body>
   <div id="board">
+      <div id="logo">
+          <img src="/images/logo.png" />
+      </div>
       <div id="header">
           <div id="name"></div>
           <div id="action">
@@ -59,11 +63,17 @@
               <% for (var roomId in games) {
                      if(games.hasOwnProperty(roomId)) {
                          count ++;%>
-              <li><a href='/game?<%= roomId %>' target="_self"><%= roomId %> 号房间 [<%= games[roomId].clients.length %>人]</a></li>
+              <li>
+                  <a href="<% if (!games[roomId].started){ %>/game?<%= roomId %><%} else {%>#<%}%>" target="_self">
+                      <%= roomId %> 号房间 [<%= games[roomId].clients.length %>人]
+                      <% if (games[roomId].started){ %> [游戏中]<%}%>
+                  </a>
+              </li>
               <% }}%>
               <li class="list-header">共 <%= count %> 个房间</li>
           </ul>
       </div>
+      <span id="copyright">BY-NC-SA <a href="http://weibo.com/xelz">xelz</a>. 游戏版权归<a href="http://weibo.com/13room">创游文化</a>所有</span>
   </div>
   </body>
 </html>

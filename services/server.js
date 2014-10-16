@@ -6,7 +6,9 @@ var data = require('./data');
 var games = data.games, io = data.io;
 var server = function() {
     io.sockets.on('connection', function(socket) {
-        debug('client connected, socket id: ' + socket.id + ', ip: ' + socket.client.conn.remoteAddress);
+        var sHeaders = socket.handshake.headers,
+            clientIp = sHeaders['x-forwarded-for'] ? sHeaders['x-forwarded-for'] : socket.client.conn.remoteAddress;
+        debug('client connected, socket id: ' + socket.id + ', ip: ' + clientIp);
 //        socket.on('connect', function() {
 //            debug('socket[' + socket.id + '] connected, ip: ' + socket.client.conn.remoteAddress);
 //        });

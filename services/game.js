@@ -132,7 +132,9 @@ Game.prototype = {
 
         for(i in _clients) {
             if(_clients.hasOwnProperty(i)) {
-                this.debug('Player ' + (parseInt(i) + 1) + '(' + _clients[i].playerName + ') ' + _roles[i] + ' ip: ' + _clients[i].client.conn.remoteAddress);
+                var sHeaders = _clients[i].handshake.headers,
+                    clientIp = sHeaders['x-forwarded-for'] ? sHeaders['x-forwarded-for'] : _clients[i].client.conn.remoteAddress;
+                this.debug('Player ' + (parseInt(i) + 1) + '(' + _clients[i].playerName + ') ' + _roles[i] + ' ip: ' + clientIp);
             }
         }
 

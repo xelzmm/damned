@@ -6,10 +6,10 @@ var data = require('./data');
 var games = data.games, io = data.io;
 var server = function() {
     io.sockets.on('connection', function(socket) {
-        debug('client connected, socket id: ' + socket.id);
-        socket.on('connect', function() {
-            debug('socket[' + socket.id + '] connected.');
-        });
+        debug('client connected, socket id: ' + socket.id + ', ip: ' + socket.client.conn.remoteAddress);
+//        socket.on('connect', function() {
+//            debug('socket[' + socket.id + '] connected, ip: ' + socket.client.conn.remoteAddress);
+//        });
         socket.on('name', function(name) {
             if(!!socket.playerName) {
                 debug('socket[' + socket.id + '] set name: name already set.');

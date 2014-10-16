@@ -6,8 +6,7 @@ var games = data.games;
 var debug = require('debug'),
     gameDebug = debug('damned:game'),
     playerDebug = debug('damned:player'),
-    roomDebug = debug('damned:room'),
-    socketDebug = debug('damned:socket');
+    roomDebug = debug('damned:room');
 var Config = {
     stageChangeNotifyTime: 3,
     speakTime: 120,
@@ -29,7 +28,7 @@ var Game = function(room, io) {
     }
     this.socketRoom = room;
     this.io = io;
-    gameDebug('room created: ' + room);
+    this.debug('room created: ' + room);
     this.started = false;
     var _self = this;
     this.closeTimeout = setTimeout(function() {
@@ -38,6 +37,9 @@ var Game = function(room, io) {
 };
 
 Game.prototype = {
+    debug: function(msg) {
+        gameDebug('Game [' + this.socketRoom + '] ' + msg);
+    },
     reset: function() {
         this.data = {};
         this.players = [];
@@ -54,7 +56,7 @@ Game.prototype = {
         }
     },
     start: function() {
-        gameDebug('starting game...');
+        this.debug('starting game...');
         var _clients = this.clients;
         var _players = this.players;
         var _playerCount = _clients.length;
@@ -86,7 +88,7 @@ Game.prototype = {
 
         var _rooms = _data.rooms = [];
         // 大厅
-        _rooms[0] = new Room(0, 'hall-' + ['small', 'large'][parseInt(Math.random() * 2)],
+        _rooms[0] = new Room(0, this.socketRoom, 'hall-' + ['small', 'large'][parseInt(Math.random() * 2)],
             'black', 'empty', 'confirmed', []);
 
         roomColors.unshift('black');
@@ -101,7 +103,7 @@ Game.prototype = {
                 _lockedCount ++;
                 roomLocks[i] = 'unlocked';
             }
-            _rooms[i] = new Room(i, roomFunctions[i], roomColors[i], roomLocks[i], 'unknown', []);
+            _rooms[i] = new Room(i, this.socketRoom, roomFunctions[i], roomColors[i], roomLocks[i], 'unknown', []);
         }
 
         var _clues = _data.clues = {
@@ -122,17 +124,23 @@ Game.prototype = {
             if(_clients.hasOwnProperty(i)) {
                 var playerId = parseInt(i) + 1;
                 _clients[i].playerId = playerId;
-                var player = new Player(playerId, _clients[i].playerName, _roles[i], _clients[i].id);
+                var player = new Player(playerId, _clients[i].playerName, _roles[i], _clients[i].id, this.socketRoom);
                 _players.push(player);
                 _rooms[player.room].addPlayer(playerId);
             }
         }
 
-        gameDebug('==============Game Config Start==============');
-        gameDebug('rooms: \n' + JSON.stringify(_rooms, null, 4));
-        gameDebug('players: \n' + JSON.stringify(_players, null, 4));
-        gameDebug('clues: ' + JSON.stringify(_clues, null, 0));
-        gameDebug('===============Game Config End===============');
+        for(i in _clients) {
+            if(_clients.hasOwnProperty(i)) {
+                this.debug('Player ' + (parseInt(i) + 1) + '(' + _clients[i].playerName + ') ' + _roles[i] + ' ip: ' + _clients[i].client.conn.remoteAddress);
+            }
+        }
+
+        this.debug('==============Game Config Start==============');
+        this.debug('rooms: \n' + JSON.stringify(_rooms, null, 4));
+        this.debug('players: \n' + JSON.stringify(_players, null, 4));
+        this.debug('clues: ' + JSON.stringify(_clues, null, 0));
+        this.debug('===============Game Config End===============');
 
         this.started = true;
 
@@ -162,7 +170,7 @@ Game.prototype = {
         // 告诉奸徒安全房间
         for(i in _players) {
             if (_players.hasOwnProperty(i) && _players[i].role == 'traitor') {
-                socketDebug('tell safe room to player ' + _players[i].id + ' through socket ' + _players[i].socket);
+                this.debug('tell safe room [' + safeRoomId + '] to player ' + _players[i].id + ' through socket ' + _players[i].socket);
                 this.io.to(_players[i].socket).emit('safe', safeRoomId);
             }
         }
@@ -228,7 +236,7 @@ Game.prototype = {
                             _order[i] = _rooms[i].players.slice(0);
                         }
                     }
-                    gameDebug('Action order ' + JSON.stringify(_order, null, 0));
+                    this.debug('Action order ' + JSON.stringify(_order, null, 0));
                 }
                 // 下一个玩家
                 if(_progress.player != null && _progress.player < _order[_progress.room].length - 1) { // 房间里还有其他玩家
@@ -279,7 +287,7 @@ Game.prototype = {
                         }
                     }
                     this.functionPerformed = true; // 标记-1号房间功能执行完毕
-                    gameDebug('Perform order ' + JSON.stringify(_order, null, 0));
+                    this.debug('Perform order ' + JSON.stringify(_order, null, 0));
                 }
                 if((!this.functionPerformed
                     || _progress.room != -1 && _rooms[_progress.room].hasKey)
@@ -374,7 +382,7 @@ Game.prototype = {
                                 }
                             }
                         }
-                        gameDebug('Players that can be watched: ' + JSON.stringify(alternativePlayers, null, 0));
+                        this.debug('Players that can be watched: ' + JSON.stringify(alternativePlayers, null, 0));
                         this.functionPerformed = true;
                         if(alternativePlayers.length == 0) {
                             this.nextStep();
@@ -616,7 +624,7 @@ Game.prototype = {
                 });
                 break;
         }
-        socketDebug('Challenge player ' + player.id + ' with [' + question + ']');
+        this.debug('Challenge player ' + player.id + ' with [' + question + ']');
         socket.emit('challenge', question, options);
     },
     askForAction: function(masterId, slavePlayerIds) {
@@ -647,7 +655,7 @@ Game.prototype = {
                     }
                     _self.broadcast('timeout', i);
                     _self.clients[parseInt(i) - 1].removeAllListeners('challenge');
-                    gameDebug('Player ' + i + ' response [action] timeout, auto action: ' + _self.actions[i]);
+                    this.debug('Player ' + i + ' response [action] timeout, auto action: ' + _self.actions[i]);
                 }
             }
             _self.performAction();
@@ -666,10 +674,10 @@ Game.prototype = {
                 }
             }
         }
-        gameDebug('Actions: ' + JSON.stringify(this.actions, null, 4));
+        this.debug('Actions: ' + JSON.stringify(this.actions, null, 4));
         if(allResponsed) {
             clearTimeout(this.chooseTimeoutId);
-            gameDebug('All players responsed, action result: ' + actionResult);
+            this.debug('All players responsed, action result: ' + actionResult);
             var roomFunction = this.data.rooms[this.data.progress.room].function;
             switch (roomFunction) {
                 case 'upgrade':
@@ -735,35 +743,35 @@ Game.prototype = {
 //            return;
 //        }
 //        socket.serving = true;
-//        gameDebug('begin to serve player ' +socket.playerId + '[' + socket.id + ']' );
+//        this.debug('begin to serve player ' +socket.playerId + '[' + socket.id + ']' );
 //        var _self = this, _rooms = this.data.rooms, _players = this.players, _player = _players[socket.playerId - 1];
 //        var _progress = this.data.progress;
 //        var abilityTo = function (stage) {
 //            if(_progress.stage != stage || _progress.room == null || _progress.player == null
 //                || _rooms[_progress.room].players[_progress.player] != socket.playerId) {
-//                gameDebug('Player ' + socket.playerName + '(id:' + socket.playerId + ') ' + stage + ' not permitted');
+//                this.debug('Player ' + socket.playerName + '(id:' + socket.playerId + ') ' + stage + ' not permitted');
 //                return false;
 //            }
 //            return true;
 //        };
 //        socket.on('speak', function(msg) {
-//            gameDebug('Player ' + socket.playerName + '(id:' + socket.playerId + ') says: ' + msg);
+//            this.debug('Player ' + socket.playerName + '(id:' + socket.playerId + ') says: ' + msg);
 //            if(!_self.checkMsgType(msg, 'string')) return;
 //            if(!abilityTo('speak'))return;
 //            _self.broadcast('speak', {player: socket.playerId, content: msg});
 //        });
 //        socket.on('speak over', function() {
-//            gameDebug('Player ' + socket.playerName + '(id:' + socket.playerId + ') speak over.');
+//            this.debug('Player ' + socket.playerName + '(id:' + socket.playerId + ') speak over.');
 //            if(!abilityTo('speak'))return;
 //            _self.nextBeforeTimeout();
 //        });
 //        socket.on('move', function(movements) {
-//            gameDebug('Player ' + socket.playerName + '(id:' + socket.playerId + ') move: '
+//            this.debug('Player ' + socket.playerName + '(id:' + socket.playerId + ') move: '
 //                + JSON.stringify(movements, null, 0));
 //            if(!_self.checkMsgType(movements, 'object')) return;
 //            if(!abilityTo('move'))return;
 //            var checkedMovements = _player.checkMovements(movements, _self.data);
-//            gameDebug('Player ' + _player.id + ' move: ' + checkedMovements);
+//            this.debug('Player ' + _player.id + ' move: ' + checkedMovements);
 //            if(!!checkedMovements) {
 //                _player.move(checkedMovements, _self.data);
 //                _self.broadcast('move', {player: socket.playerId, movements: checkedMovements});
@@ -773,7 +781,7 @@ Game.prototype = {
 //    },
     checkMsgType: function(msg, type) {
         if(typeof(msg) != type) {
-            gameDebug('Event message type mismatch, type "'+ typeof(msg) + '",' + 'expected "' + type +'"');
+            this.debug('Event message type mismatch, type "'+ typeof(msg) + '",' + 'expected "' + type +'"');
             return false;
         }
         return true;
@@ -804,26 +812,26 @@ Game.prototype = {
         this.broadcast('update', this.data.progress);
     },
     broadcast: function(event, msg) {
-        socketDebug('broadcast event [' + event + ']: ' + JSON.stringify(msg, null, 0));
+        this.debug('broadcast event [' + event + ']: ' + JSON.stringify(msg, null, 0));
         this.io.to(this.socketRoom).emit(event, msg);
     },
     notify: function(playerId, event, msg) {
-        socketDebug('notify player ' + playerId + ' [' + event + ']: ' + JSON.stringify(msg, null, 0));
+        this.debug('notify player ' + playerId + ' [' + event + ']: ' + JSON.stringify(msg, null, 0));
         this.io.to(this.players[playerId - 1].socket).emit(event, msg);
     },
     add: function(socket) {
         var _room = this.socketRoom;
-        gameDebug('add client ' + socket.id + ' to room ' + _room);
+        this.debug('add client ' + socket.id + ' to room ' + _room);
         var _clients = this.clients;
         var reason = undefined;
         if(this.started) {
-            gameDebug('failed because game is started');
+            this.debug('failed because game is started');
             reason = 'started';
         } else if(_clients.length == Config.maximumPlayerCount) {
-            gameDebug('failed because room is full.');
+            this.debug('failed because room is full.');
             reason = 'full';
         } else if (_clients.indexOf(socket) >= 0) {
-            gameDebug('failed because client already in this room.');
+            this.debug('failed because client already in this room.');
             reason = 'unknown';
         }
         if(!!reason) {
@@ -845,7 +853,7 @@ Game.prototype = {
     },
     remove: function(socket) {
         var _room = this.socketRoom;
-        gameDebug('remove client ' + socket.id + ' from room ' + _room);
+        this.debug('remove client ' + socket.id + ' from room ' + _room);
         var _clients = this.clients;
         delete socket.socketRoom;
         this.broadcast('leave', socket.playerName);
@@ -860,7 +868,7 @@ Game.prototype = {
     },
     pendingClose: function() {
         if(this.clients.length == 0) {
-            gameDebug('No players in this room, gonna closed.');
+            this.debug('No players in this room, gonna closed.');
             if(this.closeTimeout != undefined) {
                 clearTimeout(this.closeTimeout);
                 delete this.closeTimeout;
@@ -882,13 +890,13 @@ Game.prototype = {
             }
         }
         if(ready) {
-            gameDebug('player count enough and all ready, now starting the game.');
+            this.debug('player count enough and all ready, now starting the game.');
             this.start();
         }
     }
 };
 
-var Player = function (id, name, role, socket) {
+var Player = function (id, name, role, socket, gameRoom) {
     this.id = id;
     this.name = name;
     this.hasKey = false;
@@ -897,11 +905,12 @@ var Player = function (id, name, role, socket) {
     this.room = 0;
     this.socket = socket;
     this.clue = undefined;
+    this.gameRoom = gameRoom;
 };
 
 Player.prototype = {
     debug: function(msg) {
-        playerDebug('Player ' + this.id + ' ' + msg);
+        playerDebug('Game [' + this.gameRoom + '] Player ' + this.id + ' ' + msg);
     },
     gainKey: function() {
         this.debug('got a key.');
@@ -1125,8 +1134,9 @@ Player.prototype = {
     }
 };
 
-var Room = function (id, roomFunction, color, lock, dangerous, players) {
+var Room = function (id, gameRoom, roomFunction, color, lock, dangerous, players) {
     this.id = id;
+    this.gameRoom = gameRoom;
     roomFunction = roomFunction.split('-');
     this.function = roomFunction[0];
     this.rule = roomFunction[1];
@@ -1159,7 +1169,7 @@ var Room = function (id, roomFunction, color, lock, dangerous, players) {
 
 Room.prototype = {
     debug: function(msg) {
-        roomDebug('Room ' + this.id + ' ' + msg);
+        roomDebug('Game [' + this.gameRoom + '] Room ' + this.id + ' ' + msg);
     },
     lock: function() {
         this.debug('locked.');

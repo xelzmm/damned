@@ -6,8 +6,6 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var sio = require('socket.io');
 var debug = require('debug');
-debug.useColors = function() {return true};
-debug.log = console.log.bind(console);
 var data = require('./services/data');
 
 var routes = require('./routes/index');
@@ -20,8 +18,8 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // uncomment after placing your favicon in /public
-//app.use(favicon(__dirname + '/public/favicon.ico'));
-app.use(logger('dev'));
+app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use(logger('combined'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());

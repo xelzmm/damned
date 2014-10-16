@@ -1,2 +1,6 @@
 #!/usr/bin/env node
+// for local debug with idea/node debugger
+var debug = require('debug');
+debug.useColors = function() {return true};
+debug.log = console.log;
 require('../app');

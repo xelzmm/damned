@@ -66,15 +66,14 @@ a {
 
 #chatBoard {
     overflow: scroll;
-    width: 100%;
+    padding: 0 10px;
     background: lightcyan;
     line-height: 20px;
 }
 
 #inputBox {
-    position: absolute;
     bottom: 0;
-    width: 100%;
+    padding: 0 10px;
     line-height: 24px;
     background: lightyellow;
 }

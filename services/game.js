@@ -657,7 +657,7 @@ Game.prototype = {
                     }
                     _self.broadcast('timeout', i);
                     _self.clients[parseInt(i) - 1].removeAllListeners('challenge');
-                    this.debug('Player ' + i + ' response [action] timeout, auto action: ' + _self.actions[i]);
+                    _self.debug('Player ' + i + ' response [action] timeout, auto action: ' + _self.actions[i]);
                 }
             }
             _self.performAction();

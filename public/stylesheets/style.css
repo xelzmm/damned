@@ -66,18 +66,56 @@ a {
 
 #chatBoard {
     overflow: scroll;
-    padding: 0 10px;
-    background: lightcyan;
+    background: #444;
     line-height: 20px;
+    color: white;
 }
 
 #inputBox {
     bottom: 0;
     padding: 0 10px;
     line-height: 24px;
-    background: lightyellow;
+    background: #222;
+    color: darkorange;
+    overflow-x: hidden;
+    white-space: nowrap;
 }
 
 #input {
     width: 100%;
+    background-color: #444;
+    color: white;
+}
+
+#chatBoard>div {
+    display: block;
+    margin-top: 1px;
+}
+
+#chatBoard>div>span {
+    margin-left: 10px;
+}
+
+#chatBoard>div>span.player {
+    color: turquoise;
+}
+
+#chatBoard>div>span.self {
+    color: greenyellow;
+}
+
+#chatBoard>div>span.stage {
+    color: orange;
+    border: orange 1px dashed;
+    border-radius: 4px;
+    margin: 2px 10px;
+    padding: 2px 3px;
+}
+
+#chatBoard>div>span.notice {
+    color: yellow;
+    border: yellow 1px dotted;
+    border-radius: 4px;
+    margin: 2px 10px;
+    padding: 2px 3px;
 }

@@ -144,7 +144,7 @@ var Player = function (player) {
 Player.prototype = {
     debug: function (msg) {
         msg = (this.id == me.id ? '你' : (this.id + ' 号玩家(' + this.name + ')')) + ' ' + msg;
-        info(msg);
+        print(msg, this.id == me.id ? 'self' : 'player');
     },
     gainKey: function () {
         this.debug('获得了 ' + this.room + ' 号房间的钥匙.');
@@ -334,7 +334,7 @@ var Room = function (room) {
 Room.prototype = {
     debug: function (msg) {
         msg = this.id + ' 号房间 ' + msg;
-        info(msg);
+        print(msg);
     },
     lock: function () {
         this.debug('被锁上.');

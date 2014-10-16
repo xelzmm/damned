@@ -79,9 +79,8 @@ var initRoomMap = function() {
                 return function() {
                     if(!Game.canMove) return;
                     var optionalMovements = Game.rooms[me.room].routesToRoom(roomId, me.hasKey);
-//                    console.log(JSON.stringify(optionalMovements, null, 4));
                     if(optionalMovements.length == 0) {
-                        info('您无法' + (roomId == me.room ? '留在 ' : '移动到 ') + roomId + ' 号房间，请重新选择！');
+                        print('您无法' + (roomId == me.room ? '留在 ' : '移动到 ') + roomId + ' 号房间，请重新选择！');
                         return;
                     }
                     if(!confirm('确定' + (roomId == me.room ? '留在 ' : '移动到 ') + roomId + ' 号房间？')) return;
@@ -143,13 +142,16 @@ Date.prototype.format = function (format) {
                 ("00" + o[k]).substr(("" + o[k]).length));
     return format;
 };
-var info = function(msg) {
+var print = function(msg, style) {
     msg = msg.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     var chatBoard = document.getElementById('chatBoard');
     var autoScroll = chatBoard.scrollTop + chatBoard.clientHeight >= chatBoard.scrollHeight - 5;
-    chatBoard.innerHTML += '[' + new Date().format('hh:mm:ss') + '] ' +  msg + '<br />';
+    var msgBox = document.createElement('div');
+    msgBox.innerHTML = '<span style="color: #aaa;">[' + new Date().format('hh:mm:ss') + ']</span><span class="' + style + '">' +  msg + '</span>';
+    chatBoard.appendChild(msgBox);
     if(autoScroll) chatBoard.scrollTop = chatBoard.scrollHeight;
 };
+var notice = function(msg){print(msg, 'notice');};
 var resize = function() {
     // scale
     var height = window.innerHeight || document.documentElement.clientHeight,
@@ -211,7 +213,7 @@ var init = function() {
                     e.target.value = '';
                 }
             } else {
-                info('你现在不能发言。');
+                print('你现在不能发言。');
             }
         }
     };
@@ -235,30 +237,30 @@ var init = function() {
             }
             window.location.href = '/';
         } else {
-            info(name + ' 进入了游戏房间。');
+            print(name + ' 进入了游戏房间。');
         }
     });
     socket.on('leave', function(name) {
-        info(name + ' 离开了游戏房间。');
+        print(name + ' 离开了游戏房间。');
         if(Game.started) {
-            info('游戏结束。');
+            notice('游戏结束。');
             Game.started = false;
             window.onbeforeunload = null;
         }
     });
     socket.on('room', function(room, players) {
-        info('您已进入【' + room + '】号游戏房间。');
+        print('你已加入【' + room + '】号游戏房间。');
         var roomKeeper = true;
         for(var i in players) {
             if(players.hasOwnProperty(i)) {
-                info('玩家：' + players[i].name + (players[i].ready ? ' 已准备就绪。' : ' 尚未准备就绪。'));
+                print('玩家：' + players[i].name + (players[i].ready ? ' 已准备就绪。' : ' 尚未准备就绪。'));
                 roomKeeper = false;
             }
         }
         if(roomKeeper) {
-            info('复制本页地址 ' + window.location.href + ' 给好友一起来玩吧！');
+            print('复制本页地址 ' + window.location.href + ' 给好友一起来玩吧！');
         }
-        info('点击游戏区完成准备。');
+        notice('点击游戏区完成准备。');
         document.getElementById('scaleContainer').onclick = readyHook;
     });
     var readyHook = function() {
@@ -268,25 +270,25 @@ var init = function() {
     };
     socket.on('ready', function(name){
         if(typeof (name) =='string') {
-            info(name + ' 已准备就绪。');
+            notice(name + ' 已准备就绪。');
         }
     });
     socket.on('safe', function(room) {
-        info('安全房间是 【' + room + '】 号房间！');
+        notice('安全房间是 【' + room + '】 号房间！');
         alert('你的身份是【奸徒】，安全房间是 【' + room + '】 号房间！');
     });
     socket.on('start', function(rooms, players, id) {
         var me = players[id - 1];
-        info('游戏开始了！总共有 ' + players.length + ' 名玩家。');
-        info('你是【' + me.id + '号】玩家，你的身份是【' + GameConfig.role[me.role] + '】，你处在【' + me.room + '号】房间！');
-//        info('rooms:');info(rooms);
-//        info('players:');info(players);
+        print('游戏开始了！总共有 ' + players.length + ' 名玩家。');
+        notice('你是【' + me.id + '号】玩家，你的身份是【' + GameConfig.role[me.role] + '】!');
+//        print('rooms:');print(rooms);
+//        print('players:');print(players);
         initPlayGround(rooms, players);
-        info('提示1：点击线索标记区可以切换线索标记状态。');
-        info('提示2：发言中包含"over"字样或者提交空发言可以提前结束发言。');
+        print('提示1：点击线索标记区可以切换线索标记状态。', 'self');
+        print('提示2：发言中包含"over"字样或者提交空发言可以提前结束发言。', 'self');
         window.me = Game.players[id - 1];
         document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
-        info('进入 第 1 回合.');
+        print('进入 第 1 回合.');
         window.onbeforeunload = function() {
             return '游戏正在进行，此操作将会断开游戏并令该局游戏终止。';
         };
@@ -301,7 +303,7 @@ var init = function() {
             roomMap.style.zIndex = '0';
         }
         if(progress.room == null) {
-            info('====== 进入【' + GameConfig.stage[progress.stage] + '】阶段 ======');
+            print('====== 进入【' + GameConfig.stage[progress.stage] + '】阶段 ======', 'stage');
             if(['speak', 'move', 'perform'].indexOf(progress.stage) >= 0) {
                 var _rooms = Game.rooms, _order = Game.order = [];
                 var _orderString = '';
@@ -311,50 +313,56 @@ var init = function() {
                         if(_order[i].length > 0)_orderString += _order[i] + ',';
                     }
                 }
-                info('行动顺序：' + _orderString.substr(0, _orderString.length - 1));
+                print('行动顺序：' + _orderString.substr(0, _orderString.length - 1));
             } else {
                 Game.order = [];
                 if(progress.stage == 'time') {
-                    info('进入 第 ' + progress.round + ' 回合.');
+                    print('进入 第 ' + progress.round + ' 回合.');
                     if(progress.round == 8 && progress.bomb != 2) {
                         Game.elements.timer.style.left = (GameConfig.timerBoard.x + 7.5 * GameConfig.timerBoard.step) + 'px';
                     } else {
                         Game.elements.timer.style.left = (GameConfig.timerBoard.x + (progress.round - 1) * GameConfig.timerBoard.step) + 'px';
                     }
+                } else if(progress.stage == 'think') {
+                    print('思考 ' + progress.time + ' 秒，考虑接下来如何行动。');
                 }
             }
         } else {
             if(me.id == Game.order[progress.room][progress.player]) {
-                info('轮到你 [' + GameConfig.stage[progress.stage] + '] 了.' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
+                notice('轮到你 [' + GameConfig.stage[progress.stage] + '] 了.' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
                 switch(progress.stage) {
                     case 'speak':
                         Game.canSpeak = true;
                         break;
                     case 'move':
-                        info('请点击房间进行移动。');
+                        notice('请点击房间进行移动。');
                         document.title = '* Damned | Player ' + me.id + ' | Room ' + me.room;
                         roomMap.style.zIndex = '100';
                         Game.canMove = true;
                         break;
                 }
             } else {
-                info('现在是 ' + Game.order[progress.room][progress.player] + ' 号玩家的 [' + GameConfig.stage[progress.stage] + '] 时间. ' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
+                print('现在是 ' + Game.order[progress.room][progress.player] + ' 号玩家的 [' + GameConfig.stage[progress.stage] + '] 时间. ' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
             }
         }
     });
     socket.on('speak', function(data) {
         if(Game.started) {
+            if(data.content == 'over') return;
             var _players = Game.players;
             var playerId = data.player;
-            info(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 说: ' + data.content);
+            if(me.id == playerId) {
+                print('你说: ' + data.content, 'self');
+            } else {
+                print(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 说: ' + data.content, 'player');
+            }
         } else {
-            info(data.player + ' 说: ' + data.content);
+            print(data.player + ' 说: ' + data.content, 'player', 'player');
         }
     });
     socket.on('move', function(data) {
         var _players = Game.players;
         var playerId = data.player;
-//        info(JSON.stringify(data, null, 0));
         _players[playerId - 1].move(data.movements, Game.rooms);
         if(playerId == me.id)document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
     });
@@ -381,15 +389,15 @@ var init = function() {
                 break;
             case 'destroy':
                 if(data.destroy) {
-                    info(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 销毁了他(她)的线索卡.');
+                    notice(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 销毁了他(她)的线索卡.');
                     _players[playerId - 1].loseClue();
                 }
                 else {
-                    info(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 选择不销毁他(她)的线索卡.');
+                    notice(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 选择不销毁他(她)的线索卡.');
                 }
                 break;
             case 'watch':
-                info(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 查看了 ' + data.target + ' 号玩家的线索卡.');
+                notice(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 查看了 ' + data.target + ' 号玩家的线索卡.');
                 break;
             case 'saw':
                 me.sawClue(playerId, data.clue);
@@ -400,7 +408,6 @@ var init = function() {
         Game.players[playerId - 1].debug('行动超时');
     });
     socket.on('challenge', function(type, options) {
-//        info('Got challenged with question: ' + type + '?');
         document.title = '* Damned | Player ' + me.id + ' | Room ' + me.room;
         var decision;
         switch(type) {
@@ -444,16 +451,16 @@ var init = function() {
             }
         }
         if(actionPlayers.indexOf(me.id) >= 0) {
-            info('请做出选择。');
+            print('请做出选择。');
         } else {
-            info('请等待 [' + actionPlayers + '] 号玩家行动');
+            print('请等待 [' + actionPlayers + '] 号玩家行动');
         }
     });
     socket.on('action', function(action) {
             switch(action.type) {
                 case 'upgrade':
                 case 'downgrade':
-                    info((action.type == 'upgrade' ? '升级' : '降级') + '线索卡' + (action.result ? '成功！' : '失败！'));
+                    notice((action.type == 'upgrade' ? '升级' : '降级') + '线索卡' + (action.result ? '成功！' : '失败！'));
                     if(action.result) {
                         Game.players[action.participants[0] - 1].loseClue();
                         Game.players[action.participants[1] - 1].loseClue();
@@ -461,38 +468,38 @@ var init = function() {
                     }
                     break;
                 case 'disarm':
-                    info('拆弹第 ' + (Game.progress.bomb == 0 ? '一' : '二') + ' 次' + (action.result ? '成功！' : '失败！'));
+                    notice('拆弹第 ' + (Game.progress.bomb == 0 ? '一' : '二') + ' 次' + (action.result ? '成功！' : '失败！'));
                     if(!action.result) {
                         Game.elements.bomb.className = 'bomb-invalid';
                     } else {
                         Game.elements.bomb.style.left = (GameConfig.bombBoard.x + action.bomb * GameConfig.bombBoard.step) + 'px';
                         if(action.bomb == 2) {
                             Game.elements.roundBoard.style.opacity = '0';
-                            info('游戏将在第 9 回合结束！');
+                            notice('游戏将在第 9 回合结束！');
                         }
                     }
             }
     });
     socket.on('over', function(result) {
-        info('安全房间是：【' + result.safeRoom + '】号房间。');
+        notice('安全房间是：【' + result.safeRoom + '】号房间。');
         if(Game.started) {
             if (me.role == result.winner) {
-                info('你(' + (me.role == 'victim' ? '受害者' : '奸徒') + ')获得了胜利！');
+                notice('你(' + (me.role == 'victim' ? '受害者' : '奸徒') + ')获得了胜利！');
             } else {
-                info('你失败了！');
-                info((me.role != 'victim' ? '受害者' : '奸徒') + '获得了胜利！');
+                notice('你失败了！');
+                notice((me.role != 'victim' ? '受害者' : '奸徒') + '获得了胜利！');
             }
             Game.started = false;
             window.onbeforeunload = null;
         }
         if(me.role == 'victim') {
             if (!!result.traitor) {
-                info(result.traitor + ' 号玩家是【奸徒】。');
+                notice(result.traitor + ' 号玩家是【奸徒】。');
             } else {
-                info('本场游戏没有奸徒。');
+                notice('本场游戏没有奸徒。');
             }
         }
-        info('点击游戏区完成准备。');
+        print('点击游戏区完成准备。');
         document.getElementById('scaleContainer').onclick = readyHook;
     });
     fakeInit();
@@ -522,7 +529,7 @@ var fakeInit = function() {
         } while (username == null || username.trim() == '');
         setCookie("name", username, 365);
     }
-    info(username + '，欢迎你进入密室惊魂。');
+    print(username + '，欢迎你进入密室惊魂。');
     socket.emit('name', username);
     var room = window.location.search.substr(1, window.location.search.length - 1);
     if(room == '') room = 0;

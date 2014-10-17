@@ -460,8 +460,11 @@ Game.prototype = {
                             break;
                         }
                         var minPlayerCount = 2;
-                        if((_progress.bomb > 0 && this.players.length >= 5) || this.players.length == 9)
+                        if((_progress.bomb == 1 && this.players.length >=6 && this.players.length <= 8) // 6-8人第二次
+                            || (_progress.bomb == 0 && this.players.length >= 8 && this.players.length <= 9)) // 8-9人第一次
                             minPlayerCount = 3;
+                        if(_progress.bomb == 1 && this.players.length ==9) // 9人第二次
+                            minPlayerCount = 4;
                         if(room.players.length < 1 || anotherDisarmRoom.players.length < 1 ||
                             room.players.length + anotherDisarmRoom.players.length < minPlayerCount) { // 人数不足
                             this.nextStep();

@@ -147,16 +147,17 @@ Player.prototype = {
         print(msg, this.id == me.id ? 'self' : 'player');
     },
     getDisplayName: function() {
-        return this.id == me.id ? '你' : ('【' + this.id + '】号玩家( ' + this.name + ' )');
+        return this.id == me.id ? '你' : ('【' + this.id + '】号玩家 (' + this.name + ') ');
     },
     gainKey: function () {
-        this.debug('获得了 ' + this.room + ' 号房间的钥匙.');
+        this.debug('获得了【' + this.room + '】号房间的钥匙.');
         this.hasKey = true;
         if (!this.keyMarker) {
             var keyMarker = this.keyMarker = document.createElement('img');
             keyMarker.src = '/images/key.png';
             keyMarker.style.position = 'absolute';
             keyMarker.style.right = '0px';
+            keyMarker.title = keyMarker.alt = '【' + this.room + '】号房间的钥匙';
             this.playerMarker.appendChild(keyMarker);
         }
     },
@@ -179,21 +180,35 @@ Player.prototype = {
         this.playerMarker.className = 'player-' + this.id + '-red';
     },
     sawClue: function (playerId, clue) {
-        var msg = '看到了 ' + Game.players[playerId - 1].getDisplayName() + '的【' + clue.level + '】级线索卡, 上面写着: ';
-        switch (clue.level) {
-            case 1:
-                msg += '【' + clue.room + '号】';
-                break;
-            case 2:
-                msg += '【' + GameConfig.color[clue.room] + '】的';
-                break;
-            case 3:
-                msg += clue.room == 'hasLock' ? '【有锁】的' : '【无锁】的';
-                break;
+        var targetPlayer = Game.players[playerId - 1];
+        if(!clue) {
+            this.debug('查看了' + targetPlayer.getDisplayName() + '的线索卡.');
+        } else {
+            var msg = '看到了 ' + targetPlayer.getDisplayName() + '的【' + clue.level + '】级线索卡, 上面写着: ';
+            switch (clue.level) {
+                case 1:
+                    msg += '【' + clue.room + '号】';
+                    break;
+                case 2:
+                    msg += '【' + GameConfig.color[clue.room] + '】的';
+                    break;
+                case 3:
+                    msg += clue.room == 'hasLock' ? '【有锁】的' : '【无锁】的';
+                    break;
+            }
+            msg += '房间是最终危险的!';
+            this.debug(msg);
+            this.markDangerous(clue);
         }
-        msg += '房间是最终危险的!';
-        this.debug(msg);
-        this.markDangerous(clue);
+        if (!targetPlayer.watchedMarker) {
+            var watchedMarker = targetPlayer.watchedMarker = document.createElement('img');
+            watchedMarker.src = '/images/watched.png';
+            watchedMarker.style.position = 'absolute';
+            watchedMarker.style.right = '0px';
+            watchedMarker.style.bottom = '0px';
+            watchedMarker.title = watchedMarker.alt = '线索已被查看过';
+            targetPlayer.playerMarker.appendChild(watchedMarker);
+        }
     },
     gainClue: function (clue) {
         var msg = '获得了一张【' + clue.level + '】级线索卡';
@@ -221,6 +236,7 @@ Player.prototype = {
             clueMarker.src = '/images/level' + clue.level + '.png';
             clueMarker.style.position = 'absolute';
             clueMarker.style.bottom = '0px';
+            clueMarker.title = clueMarker.alt = '【' + clue.level + '】级线索卡';
             this.playerMarker.appendChild(clueMarker);
         }
         if (clue.room)
@@ -252,8 +268,12 @@ Player.prototype = {
         this.debug('失去了线索卡.');
         this.clue = undefined;
         if (this.clueMarker) {
-            this.clueMarker.remove();
+            removeNode(this.clueMarker);
             delete this.clueMarker;
+        }
+        if (this.watchedMarker) {
+            removeNode(this.watchedMarker);
+            delete this.watchedMarker;
         }
     },
     move: function (movements, rooms) {

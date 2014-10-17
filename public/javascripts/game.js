@@ -32,6 +32,20 @@ var drawElement = function (resourceName, x, y) {
     container.appendChild(img);
     return img;
 };
+var drawPlayer = function (player) {
+    var position = Game.rooms[player.room].genPosition(player.id);
+    var resourceName = 'player-' + player.id + '-' + (player.injured ? 'red' : 'green');
+    var playerMarker = drawElement(resourceName, position.x, position.y);
+    var holder = document.createElement('img');
+    holder.src = '/images/blank.gif';
+    holder.style.position = 'absolute';
+    holder.style.width = '100%';
+    holder.style.height = '100%';
+    holder.title = player.name;
+    holder.alt = player.name;
+    playerMarker.appendChild(holder);
+    return playerMarker;
+};
 var initElementStyle = function() {
     var style;
     if(document.createStyleSheet) {
@@ -411,7 +425,8 @@ var init = function() {
                 break;
             case 'watch':
                 if(playerId != me.id)
-                    player.debug('查看了' + _players[data.target - 1].getDisplayName() + '的线索卡.');
+//                    player.debug('查看了' + _players[data.target - 1].getDisplayName() + '的线索卡.');
+                    player.sawClue(data.target);
                 break;
             case 'saw':
                 me.sawClue(playerId, data.clue);
@@ -615,9 +630,7 @@ var initPlayGround = function(rooms, players) {
             var _player = players[i];
             if(players.hasOwnProperty(i)) {
                 Game.players.push(new Player(_player));
-                var position = Game.rooms[0].genPosition(_player.id);
-                Game.players[i].playerMarker = drawElement('player-' + _player.id + '-red',
-                    position.x, position.y);
+                Game.players[i].playerMarker = drawPlayer(_player);
             }
         }
     }

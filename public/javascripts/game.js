@@ -354,6 +354,8 @@ var init = function() {
             var currentPlayer = Game.players[Game.order[progress.room][progress.player] - 1];
             if(me.id == currentPlayer.id) {
                 notice('轮到你【' + GameConfig.stage[progress.stage] + '】了.' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
+                var chatBoard = document.getElementById('chatBoard');
+                chatBoard.scrollTop = chatBoard.scrollHeight;
                 switch(progress.stage) {
                     case 'speak':
                         Game.canSpeak = true;

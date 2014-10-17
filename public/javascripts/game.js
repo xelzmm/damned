@@ -319,10 +319,10 @@ var init = function() {
                 for (var i in _rooms) { // 获取行动顺序
                     if (_rooms.hasOwnProperty(i)) {
                         _order[i] = _rooms[i].players.slice(0);
-                        if(_order[i].length > 0)_orderString += _order[i] + ', ';
+                        if(_order[i].length > 0)_orderString += _order[i] + ',';
                     }
                 }
-                print('行动顺序：' + _orderString.substr(0, _orderString.length - 2));
+                print('行动顺序：' + _orderString.substr(0, _orderString.length - 1));
             } else {
                 Game.order = [];
                 if(progress.stage == 'time') {
@@ -352,7 +352,7 @@ var init = function() {
                         break;
                 }
             } else {
-                print('现在是' + currentPlayer.getDisplayName() + '的 [' + GameConfig.stage[progress.stage] + '] 时间. ' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
+                print('现在是' + currentPlayer.getDisplayName() + '的【' + GameConfig.stage[progress.stage] + '】时间. ' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
             }
         }
     });
@@ -411,7 +411,7 @@ var init = function() {
                 break;
             case 'watch':
                 if(playerId != me.id)
-                    player.debug('查看了【' + data.target + '】号玩家的线索卡.');
+                    player.debug('查看了' + _players[data.target - 1].getDisplayName() + '的线索卡.');
                 break;
             case 'saw':
                 me.sawClue(playerId, data.clue);

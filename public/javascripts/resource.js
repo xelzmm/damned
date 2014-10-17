@@ -147,7 +147,7 @@ Player.prototype = {
         print(msg, this.id == me.id ? 'self' : 'player');
     },
     getDisplayName: function() {
-        return this.id == me.id ? '你' : ('【' + this.id + '】号玩家(' + this.name + ')');
+        return this.id == me.id ? '你' : ('【' + this.id + '】号玩家( ' + this.name + ' )');
     },
     gainKey: function () {
         this.debug('获得了 ' + this.room + ' 号房间的钥匙.');
@@ -179,7 +179,7 @@ Player.prototype = {
         this.playerMarker.className = 'player-' + this.id + '-red';
     },
     sawClue: function (playerId, clue) {
-        var msg = '看到了 ' + playerId + ' 号玩家的 ' + clue.level + ' 级线索卡, 上面写着：';
+        var msg = '看到了 ' + Game.players[playerId - 1].getDisplayName() + '的【' + clue.level + '】级线索卡, 上面写着: ';
         switch (clue.level) {
             case 1:
                 msg += '【' + clue.room + '号】';
@@ -191,16 +191,16 @@ Player.prototype = {
                 msg += clue.room == 'hasLock' ? '【有锁】的' : '【无锁】的';
                 break;
         }
-        msg += '房间是最终危险的！';
+        msg += '房间是最终危险的!';
         this.debug(msg);
         this.markDangerous(clue);
     },
     gainClue: function (clue) {
-        var msg = '获得了一张 ' + clue.level + ' 级线索卡';
+        var msg = '获得了一张【' + clue.level + '】级线索卡';
         if (!clue.room) {
             msg += '.';
         } else {
-            msg += ', 上面写着：';
+            msg += ', 上面写着: ';
             switch (clue.level) {
                 case 1:
                     msg += '【' + clue.room + '号】';
@@ -212,7 +212,7 @@ Player.prototype = {
                     msg += clue.room == 'hasLock' ? '【有锁】的' : '【无锁】的';
                     break;
             }
-            msg += '房间是最终危险的！';
+            msg += '房间是最终危险的!';
         }
         this.debug(msg);
         this.clue = clue;

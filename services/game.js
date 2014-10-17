@@ -113,8 +113,7 @@ Game.prototype = {
         var safeRoomId = this.data.safeRoom = parseInt(Math.random() * 12) + 1;
         _clues.level1.splice(_clues.level1.indexOf(safeRoomId), 1);
         _clues.level2.splice(_clues.level2.indexOf(_rooms[safeRoomId].color), 1);
-        _clues.level3 = [!(_rooms[safeRoomId].lock == 'locked' || _rooms[safeRoomId].lock == 'unlocked')
-                            ? 'hasLock' : 'noLock'];
+        _clues.level3 = [_rooms[safeRoomId].hasLock ? 'noLock' : 'hasLock'];
 
         var _roles = ['traitor'];
         for (i=0; i<=_playerCount; i++ ) _roles.push('victim');
@@ -492,7 +491,6 @@ Game.prototype = {
             if(msg.indexOf('over') >= 0) {
                 socket.removeAllListeners('speak');
                 _self.nextBeforeTimeout();
-                return;
             }
         });
         _self.updateGameAndAwaitNext(function() {

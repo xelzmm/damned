@@ -323,7 +323,7 @@ var init = function() {
                     } else {
                         Game.elements.timer.style.left = (GameConfig.timerBoard.x + (progress.round - 1) * GameConfig.timerBoard.step) + 'px';
                     }
-                } else if(progress.stage == 'think') {
+                } else if(progress.stage == 'thinking') {
                     print('思考 ' + progress.time + ' 秒，考虑接下来如何行动。');
                 }
             }

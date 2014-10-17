@@ -80,10 +80,10 @@ var initRoomMap = function() {
                     if(!Game.canMove) return;
                     var optionalMovements = Game.rooms[me.room].routesToRoom(roomId, me.hasKey);
                     if(optionalMovements.length == 0) {
-                        print('您无法' + (roomId == me.room ? '留在 ' : '移动到 ') + roomId + ' 号房间，请重新选择！');
+                        print('您无法' + (roomId == me.room ? '留在 ' : '移动到【') + roomId + '】号房间，请重新选择！');
                         return;
                     }
-                    if(!confirm('确定' + (roomId == me.room ? '留在 ' : '移动到 ') + roomId + ' 号房间？')) return;
+                    if(!confirm('确定' + (roomId == me.room ? '留在 ' : '移动到【') + roomId + '】号房间？')) return;
                     var emitMove = function(movements) {
                         socket.emit('move', movements);
                     };
@@ -238,11 +238,11 @@ var init = function() {
             }
             window.location.href = '/';
         } else {
-            print(name + ' 进入了游戏房间。');
+            print('玩家：' + name + ' 进入了游戏房间。');
         }
     });
     socket.on('leave', function(name) {
-        print(name + ' 离开了游戏房间。');
+        print('玩家：' + name + ' 离开了游戏房间。');
         if(Game.started) {
             notice('游戏结束。');
             Game.started = false;
@@ -261,17 +261,17 @@ var init = function() {
         if(roomKeeper) {
             print('复制本页地址 ' + window.location.href + ' 给好友一起来玩吧！');
         }
-        notice('点击游戏区完成准备。');
+        notice('请点击游戏区完成准备。');
         document.getElementById('scaleContainer').onclick = readyHook;
     });
     var readyHook = function() {
-        if(!confirm('您已准备就绪？'))return;
+        if(!confirm('确认准备就绪？'))return;
         socket.emit('ready');
         document.getElementById('scaleContainer').onclick = null;
     };
     socket.on('ready', function(name){
         if(typeof (name) =='string') {
-            notice(name + ' 已准备就绪。');
+            notice('玩家：' + name + ' 已准备就绪。');
         }
     });
     socket.on('safe', function(room) {
@@ -297,7 +297,7 @@ var init = function() {
         }
         window.me = Game.players[id - 1];
         document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
-        print('进入 第 1 回合.');
+        print('进入第【1】回合.');
         window.onbeforeunload = function() {
             return '游戏正在进行，此操作将会断开游戏并令该局游戏终止。';
         };
@@ -319,14 +319,14 @@ var init = function() {
                 for (var i in _rooms) { // 获取行动顺序
                     if (_rooms.hasOwnProperty(i)) {
                         _order[i] = _rooms[i].players.slice(0);
-                        if(_order[i].length > 0)_orderString += _order[i] + ',';
+                        if(_order[i].length > 0)_orderString += _order[i] + ', ';
                     }
                 }
-                print('行动顺序：' + _orderString.substr(0, _orderString.length - 1));
+                print('行动顺序：' + _orderString.substr(0, _orderString.length - 2));
             } else {
                 Game.order = [];
                 if(progress.stage == 'time') {
-                    print('进入 第 ' + progress.round + ' 回合.');
+                    print('进入第【' + progress.round + '】回合.');
                     if(progress.round == 8 && progress.bomb != 2) {
                         Game.elements.timer.style.left = (GameConfig.timerBoard.x + 7.5 * GameConfig.timerBoard.step) + 'px';
                     } else {
@@ -337,8 +337,9 @@ var init = function() {
                 }
             }
         } else {
-            if(me.id == Game.order[progress.room][progress.player]) {
-                notice('轮到你 [' + GameConfig.stage[progress.stage] + '] 了.' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
+            var currentPlayer = Game.players[Game.order[progress.room][progress.player] - 1];
+            if(me.id == currentPlayer.id) {
+                notice('轮到你【' + GameConfig.stage[progress.stage] + '】了.' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
                 switch(progress.stage) {
                     case 'speak':
                         Game.canSpeak = true;
@@ -351,7 +352,7 @@ var init = function() {
                         break;
                 }
             } else {
-                print('现在是 ' + Game.order[progress.room][progress.player] + ' 号玩家的 [' + GameConfig.stage[progress.stage] + '] 时间. ' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
+                print('现在是' + currentPlayer.getDisplayName() + '的 [' + GameConfig.stage[progress.stage] + '] 时间. ' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
             }
         }
     });
@@ -360,13 +361,14 @@ var init = function() {
             if(data.content == 'over') return;
             var _players = Game.players;
             var playerId = data.player;
-            if(me.id == playerId) {
-                print('你说: ' + data.content, 'self');
-            } else {
-                print(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 说: ' + data.content, 'player');
-            }
+            _players[playerId - 1].debug('说: ' + data.content);
+//            if(me.id == playerId) {
+//                print('你说: ' + data.content, 'self');
+//            } else {
+//                print(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 说: ' + data.content, 'player');
+//            }
         } else {
-            print(data.player + ' 说: ' + data.content, 'player', 'player');
+            print(data.player + ' 说: ' + data.content, 'player');
         }
     });
     socket.on('move', function(data) {
@@ -388,25 +390,28 @@ var init = function() {
     });
     socket.on('clue', function(data) {
         var _players = Game.players;
-        var playerId = data.player, type = data.type;
+        var playerId = data.player, type = data.type, player = _players[playerId - 1];
         switch(type) {
             case 'gain':
-                _players[playerId - 1].gainClue(data.clue);
+                if(playerId != me.id)
+                    player.gainClue(data.clue);
                 break;
             case 'receive':
-                me.gainClue(data.clue);
+                if(playerId != me.id)
+                    me.gainClue(data.clue);
                 break;
             case 'destroy':
                 if(data.destroy) {
-                    notice(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 销毁了他(她)的线索卡.');
-                    _players[playerId - 1].loseClue();
+                    player.debug('选择了销毁手中的线索卡.');
+                    player.loseClue();
                 }
                 else {
-                    notice(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 选择不销毁他(她)的线索卡.');
+                    player.debug('选择不销毁手中的线索卡.');
                 }
                 break;
             case 'watch':
-                notice(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 查看了 ' + data.target + ' 号玩家的线索卡.');
+                if(playerId != me.id)
+                    player.debug('查看了【' + data.target + '】号玩家的线索卡.');
                 break;
             case 'saw':
                 me.sawClue(playerId, data.clue);
@@ -441,8 +446,8 @@ var init = function() {
                     case 'downgrade':
                         decision = confirm('是否配合' +
                             (Game.rooms[me.room]["function"] == 'upgrade' ? '升级' : '降级') +
-                            ' 线索卡？ 合成后的线索卡将归 ' +
-                            (me.id == options ? ' 你 ' : options + ' 号玩家') +
+                            ' 线索卡？ 合成后的线索卡将归【' +
+                            (me.id == options ? '你】' : options + '】号玩家') +
                             '所有！');
                         break;
                     case 'disarm':
@@ -462,14 +467,14 @@ var init = function() {
         if(actionPlayers.indexOf(me.id) >= 0) {
             print('请做出选择。');
         } else {
-            print('请等待 [' + actionPlayers + '] 号玩家行动');
+            print('请等待 [' + actionPlayers + '] 号玩家行动。');
         }
     });
     socket.on('action', function(action) {
             switch(action.type) {
                 case 'upgrade':
                 case 'downgrade':
-                    notice((action.type == 'upgrade' ? '升级' : '降级') + '线索卡' + (action.result ? '成功！' : '失败！'));
+                    notice((action.type == 'upgrade' ? '【升级】' : '【降级】') + '线索卡' + (action.result ? '【成功】！' : '【失败】！'));
                     if(action.result) {
                         Game.players[action.participants[0] - 1].loseClue();
                         Game.players[action.participants[1] - 1].loseClue();
@@ -477,14 +482,14 @@ var init = function() {
                     }
                     break;
                 case 'disarm':
-                    notice('拆弹第 ' + (Game.progress.bomb == 0 ? '一' : '二') + ' 次' + (action.result ? '成功！' : '失败！'));
+                    notice('拆弹第【' + (Game.progress.bomb == 0 ? '一' : '二') + '】次' + (action.result ? '【成功】！' : '【失败】！'));
                     if(!action.result) {
                         Game.elements.bomb.className = 'bomb-invalid';
                     } else {
                         Game.elements.bomb.style.left = (GameConfig.bombBoard.x + action.bomb * GameConfig.bombBoard.step) + 'px';
                         if(action.bomb == 2) {
                             Game.elements.roundBoard.style.opacity = '0';
-                            notice('游戏将在第 9 回合结束！');
+                            notice('游戏将在第【9】回合结束！');
                         }
                     }
             }
@@ -534,7 +539,7 @@ var fakeInit = function() {
     if(username == '') {
         do {
             username = 'player_' + new Date().getTime() % 10000;
-            username = prompt('请设定您的昵称：', username);
+            username = prompt('请设定你的昵称：', username);
         } while (username == null || username.trim() == '');
         setCookie("name", username, 365);
     }

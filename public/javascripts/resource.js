@@ -143,8 +143,11 @@ var Player = function (player) {
 
 Player.prototype = {
     debug: function (msg) {
-        msg = (this.id == me.id ? '你' : (this.id + ' 号玩家(' + this.name + ')')) + ' ' + msg;
+        msg = this.getDisplayName() + ' ' + msg;
         print(msg, this.id == me.id ? 'self' : 'player');
+    },
+    getDisplayName: function() {
+        return this.id == me.id ? '你' : ('【' + this.id + '】号玩家(' + this.name + ')');
     },
     gainKey: function () {
         this.debug('获得了 ' + this.room + ' 号房间的钥匙.');
@@ -190,7 +193,6 @@ Player.prototype = {
         }
         msg += '房间是最终危险的！';
         this.debug(msg);
-        this.clue = clue;
         this.markDangerous(clue);
     },
     gainClue: function (clue) {
@@ -333,7 +335,7 @@ var Room = function (room) {
 
 Room.prototype = {
     debug: function (msg) {
-        msg = this.id + ' 号房间 ' + msg;
+        msg = '【' + this.id + '】号房间 ' + msg;
         print(msg);
     },
     lock: function () {

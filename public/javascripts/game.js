@@ -276,17 +276,25 @@ var init = function() {
     });
     socket.on('safe', function(room) {
         notice('安全房间是 【' + room + '】 号房间！');
-        alert('你的身份是【奸徒】，安全房间是 【' + room + '】 号房间！');
+        alert('你是【' + me.id + '号】玩家，你的身份是【奸徒】，安全房间是 【' + room + '】 号房间！');
     });
     socket.on('start', function(rooms, players, id) {
         var me = players[id - 1];
         print('游戏开始了！总共有 ' + players.length + ' 名玩家。');
         notice('你是【' + me.id + '号】玩家，你的身份是【' + GameConfig.role[me.role] + '】!');
+        if(me.role == 'victim') {
+            alert('你是【' + me.id + '号】玩家，你的身份是【' + GameConfig.role[me.role] + '】!');
+        }
 //        print('rooms:');print(rooms);
 //        print('players:');print(players);
         initPlayGround(rooms, players);
         print('提示1：点击线索标记区可以切换线索标记状态。', 'self');
         print('提示2：发言中包含"over"字样或者提交空发言可以提前结束发言。', 'self');
+        for(var i in players) {
+            if(players.hasOwnProperty(i)) {
+                print('【' + players[i].id + '】号玩家：' + players[i].name, 'player');
+            }
+        }
         window.me = Game.players[id - 1];
         document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
         print('进入 第 1 回合.');

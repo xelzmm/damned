@@ -147,7 +147,8 @@ var print = function(msg, style) {
     var chatBoard = document.getElementById('chatBoard');
     var autoScroll = chatBoard.scrollTop + chatBoard.clientHeight >= chatBoard.scrollHeight - 5;
     var msgBox = document.createElement('div');
-    msgBox.innerHTML = '<span style="color: #aaa;">[' + new Date().format('hh:mm:ss') + ']</span><span class="' + style + '">' +  msg + '</span>';
+    style = !!style ? style : '';
+    msgBox.innerHTML = '<span class="time">[' + new Date().format('hh:mm:ss') + ']</span><span class="' + style + '">' +  msg + '</span>';
     chatBoard.appendChild(msgBox);
     if(autoScroll) chatBoard.scrollTop = chatBoard.scrollHeight;
 };

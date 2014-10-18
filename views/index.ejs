@@ -36,7 +36,7 @@
          function alter() {
              username = getCookie('name');
              do {
-                 username = 'player_' + new Date().getTime() % 10000;
+                 if(username == '') username = 'player_' + new Date().getTime() % 10000;
                  username = prompt('请设定您的昵称：', username);
              } while (username == null || username.trim() == '');
              setCookie("name", username, 7);

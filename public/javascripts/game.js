@@ -366,7 +366,9 @@ var init = function() {
         document.getElementById('readyButton').removeAttribute('ready');
         document.getElementById('readyButton').innerHTML = '准备';
         var me = players[id - 1];
-        print('游戏开始了！总共有 ' + players.length + ' 名玩家。');
+        print('游戏开始了！总共有【' + players.length + '】名玩家。');
+        notice('本局【拆弹】第一次需要【' + (players.length >= 8 ? 3 : 2) + '】人配合，第二次需要【' +
+            (players.length >= 9 ? 4 : (players.length >= 6 ? 3 : 2)) + '】人配合!');
         notice('你是【' + me.id + '号】玩家，你的身份是【' + GameConfig.role[me.role] + '】!');
         if(me.role == 'victim') {
             alert('你是【' + me.id + '号】玩家，你的身份是【' + GameConfig.role[me.role] + '】!');
@@ -712,7 +714,6 @@ var joinGame = function() {
         });
         setCookie('guid', guid, 365);
     }
-//
     socket.emit('name', username, guid);
     var room = window.location.search.substr(1, window.location.search.length - 1);
     if(room == '') room = 0;

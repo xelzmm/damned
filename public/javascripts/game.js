@@ -314,7 +314,6 @@ var init = function() {
     socket.on('room', function(room, players) {
         print('你已加入【' + room + '】号游戏房间。');
         window.gameRoom = new GameRoom(room);
-        gameRoom.display();
         var roomKeeper = true;
         for(var i in players) {
             if(players.hasOwnProperty(i)) {
@@ -682,7 +681,7 @@ var resetGame = function() {
     Game.started = false;
     window.onbeforeunload = null;
     gameRoom.display();
-}
+};
 var getCookie = function(cname) {
     var name = cname + "=";
     var ca = document.cookie.split(';');
@@ -798,6 +797,7 @@ var GameRoom = function(room) {
     this.room = room;
     this.players = {};
     this.infoBoard = document.getElementById('infoBoard');
+    this.display();
 };
 
 GameRoom.prototype = {
@@ -828,6 +828,7 @@ GameRoom.prototype = {
     display: function() {
         this.infoBoard.style.display = 'block';
         document.getElementById('infoHeader').innerHTML = '密室惊魂【'+this.room+'】号房间';
+        resize();
     },
     hide: function() {
         this.infoBoard.style.display = 'none';

@@ -30,7 +30,7 @@ a {
     border: 2px solid rgb(227, 227, 227);
     opacity: 0.9;
     padding-bottom: 8px;
-    /*display: none;*/
+    display: none;
 }
 
 #infoHeader {

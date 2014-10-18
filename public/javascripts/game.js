@@ -525,24 +525,24 @@ var init = function() {
                 decision = confirm('是否销毁手中的线索卡?');
                 break;
             case 'watch':
-                do {
-                    for(i in options) {
-                        if(options.hasOwnProperty(i)) {
-                            player = Game.players[options[i] - 1];
-                            choices += '\n' + player.getDisplayName() + (!!player.watchedMarker ? ', 已被查看过' : '');
-                        }
+                for(i in options) {
+                    if(options.hasOwnProperty(i)) {
+                        player = Game.players[options[i] - 1];
+                        choices += '\n' + player.getDisplayName() + (!!player.watchedMarker ? ', 已被查看过' : '');
                     }
+                }
+                do {
                     decision = parseInt(prompt('你想查看谁的线索卡?' + choices));
                 } while (options.indexOf(decision) < 0);
                 break;
             case 'who':
-                do {
-                    for(i in options) {
-                        if(options.hasOwnProperty(i)) {
-                            player = Game.players[options[i] - 1];
-                            choices += '\n' + player.getDisplayName() + ', 【' + player.clue.level + '】级线索卡';
-                        }
+                for(i in options) {
+                    if(options.hasOwnProperty(i)) {
+                        player = Game.players[options[i] - 1];
+                        choices += '\n' + player.getDisplayName() + ', 【' + player.clue.level + '】级线索卡';
                     }
+                }
+                do {
                     decision = parseInt(prompt('你想与谁【' +
                             (Game.rooms[me.room]["function"] == 'upgrade' ? '升级' : '降级') +
                             '】线索卡?' + choices));

@@ -143,11 +143,11 @@ var Player = function (player) {
 
 Player.prototype = {
     debug: function (msg) {
-        msg = this.getDisplayName() + ' ' + msg;
+        msg = this.getDisplayName() + msg;
         print(msg, this.id == me.id ? 'self' : 'player');
     },
     getDisplayName: function() {
-        return this.id == me.id ? '你' : ('【' + this.id + '】号玩家 (' + this.name + ') ');
+        return this.id == me.id ? '【你】' : ('【' + this.id + '】号玩家 (' + this.name + ') ');
     },
     gainKey: function () {
         this.debug('获得了【' + this.room + '】号房间的钥匙.');

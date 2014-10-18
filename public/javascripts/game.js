@@ -105,10 +105,10 @@ var initRoomMap = function() {
                         emitMove(optionalMovements[0].movements);
                         return;
                     }
-                    var msg = '请选择移动方案, 留空默认第一种:\n';
+                    var msg = '请选择移动方案, 留空默认第一种:';
                     for (var i in optionalMovements) {
                         if (optionalMovements.hasOwnProperty(i)) {
-                            msg += (parseInt(i) + 1) + ': ' + optionalMovements[i].desc + '\n';
+                            msg += '\n【' + (parseInt(i) + 1) + '】: ' + optionalMovements[i].desc;
                         }
                     }
                     do {
@@ -439,25 +439,37 @@ var init = function() {
         }
     });
     socket.on('timeout', function(playerId) {
-        Game.players[playerId - 1].debug('行动超时');
+        Game.players[playerId - 1].debug('行动超时!');
     });
     socket.on('challenge', function(type, options) {
         document.title = '* Damned | Player ' + me.id + ' | Room ' + me.room;
-        var decision;
+        var decision, choices = '', i, player;
         switch(type) {
             case 'destroy':
                 decision = confirm('是否销毁手中的线索卡?');
                 break;
             case 'watch':
                 do {
-                    decision = parseInt(prompt('你想查看谁的线索卡 [' + options + ']?'));
+                    for(i in options) {
+                        if(options.hasOwnProperty(i)) {
+                            player = Game.players[options[i] - 1];
+                            choices += '\n' + player.getDisplayName() + ', ' + (!!player.watchedMarker ? '已被查看' : '未被查看');
+                        }
+                    }
+                    decision = parseInt(prompt('你想查看谁的线索卡?' + choices));
                 } while (options.indexOf(decision) < 0);
                 break;
             case 'who':
                 do {
+                    for(i in options) {
+                        if(options.hasOwnProperty(i)) {
+                            player = Game.players[options[i] - 1];
+                            choices += '\n' + player.getDisplayName() + ', 【' + player.clue.level + '】级线索卡';
+                        }
+                    }
                     decision = parseInt(prompt('你想与谁 ' +
                             (Game.rooms[me.room]["function"] == 'upgrade' ? '升级' : '降级') +
-                            ' 线索卡 [' + options + ']?'));
+                            ' 线索卡?' + choices));
                 } while (options.indexOf(decision) < 0);
                 break;
             case 'action':
@@ -466,12 +478,16 @@ var init = function() {
                     case 'downgrade':
                         decision = confirm('是否配合' +
                             (Game.rooms[me.room]["function"] == 'upgrade' ? '升级' : '降级') +
-                            ' 线索卡？ 合成后的线索卡将归【' +
-                            (me.id == options ? '你】' : options + '】号玩家') +
-                            '所有！');
+                            ' 线索卡\n合成后的线索卡将归' + Game.players[options - 1].getDisplayName() + '所有！' +
+                            '\n【确定】代表配合，【取消】代表不配合。');
                         break;
                     case 'disarm':
-                        decision = confirm('是否配合进行拆弹？' + (me.role == 'victim' ? '(你是受害者，必须配合，选哪个都一样)' : ''));
+                        if(me.role == 'victim') {
+                            alert('即将进行拆弹，你是受害者，点击确定予以配合！');
+                            decision = true;
+                        } else {
+                            decision = confirm('是否配合进行拆弹？\n【确定】代表配合，【取消】代表不配合。');
+                        }
                 }
         }
         document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;

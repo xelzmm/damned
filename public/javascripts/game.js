@@ -206,7 +206,9 @@ var resize = function() {
         chatArea.style.width = (width - height - 1) + 'px';
     }
     document.getElementById('chatBoard').style.height = (chatArea.clientHeight - document.getElementById('inputBox').clientHeight) + 'px';
-
+    var infoBoard = document.getElementById('infoBoard');
+    infoBoard.style.left = (edge - infoBoard.clientWidth) / 2 + 'px';
+    infoBoard.style.top = (edge - infoBoard.clientHeight) / 2 + 'px';
 };
 var stopTimer = function() {
     if(Game.timer) {
@@ -280,63 +282,89 @@ var init = function() {
         if(!(e.metaKey || e.ctrlKey || e.altKey || e.shiftKey))
             document.getElementById('input').focus();
     };
-
-    socket.on('join', function(name) {
-        if(typeof(name) == 'object') {
-            switch(name.reason) {
-                case 'nosuchroom':
-                    alert('该房间不存在！');
-                    break;
-                case 'full':
-                    alert('房间已满员！');
-                    break;
-                case 'started':
-                    alert('游戏已经开始，暂不支持观战。');
-                    break;
-            }
-            window.location.href = '/';
-        } else {
-            print('玩家：' + name + ' 进入了游戏房间。');
+    socket.on('join failed', function(reason) {
+        switch(reason) {
+            case 'nosuchroom':
+                alert('该房间不存在！');
+                break;
+            case 'full':
+                alert('房间已满员！');
+                break;
+            case 'started':
+                alert('游戏已经开始，暂不支持观战。');
+                break;
+            case 'duplicated':
+                alert('您已经在此房间内，请不要重复加入。');
+                break;
         }
+        window.location.href = '/';
     });
-    socket.on('leave', function(name) {
-        print('玩家：' + name + ' 离开了游戏房间。');
+    socket.on('join', function(data) {
+        print('玩家：' + data.name + ' 进入了游戏房间。');
+        gameRoom.addPlayer(data.name, data.guid, false);
+    });
+    socket.on('leave', function(data) {
+        print('玩家：' + data.name + ' 离开了游戏房间。');
+        gameRoom.removePlayer(data.guid);
         if(Game.started) {
             notice('游戏结束。');
-            Game.started = false;
-            window.onbeforeunload = null;
+            resetGame();
         }
     });
     socket.on('room', function(room, players) {
         print('你已加入【' + room + '】号游戏房间。');
+        window.gameRoom = new GameRoom(room);
+        gameRoom.display();
         var roomKeeper = true;
         for(var i in players) {
             if(players.hasOwnProperty(i)) {
-                print('玩家：' + players[i].name + (players[i].ready ? ' 已准备就绪。' : ' 尚未准备就绪。'));
+//                print('玩家：' + players[i].name + (players[i].ready ? ' 已准备就绪。' : ' 尚未准备就绪。'));
                 roomKeeper = false;
+                var player = players[i];
+                gameRoom.addPlayer(player.name, player.guid, player.ready);
             }
         }
         if(roomKeeper) {
             print('复制本页地址 ' + window.location.href + ' 给好友一起来玩吧！');
         }
-        notice('请点击游戏区完成准备。');
-        document.getElementById('scaleContainer').onclick = readyHook;
+        document.getElementById('readyButton').onclick = function() {
+            if(!this.getAttribute('ready')) {
+                socket.emit('ready');
+                this.setAttribute('ready', 'ready');
+                this.innerHTML = '取消';
+            } else {
+                socket.emit('unready');
+                this.removeAttribute('ready');
+                this.innerHTML = '准备';
+            }
+        };
+        document.getElementById('exitButton').onclick = function() {
+            if(confirm('返回游戏大厅？')) window.location.href = '/';
+        };
+//        notice('请点击游戏区完成准备。');
+//        document.getElementById('scaleContainer').onclick = readyHook;
     });
-    var readyHook = function() {
-        if(!confirm('确认准备就绪？'))return;
-        socket.emit('ready');
-        document.getElementById('scaleContainer').onclick = null;
-    };
-    socket.on('ready', function(name){
-        if(typeof (name) =='string') {
-            notice('玩家：' + name + ' 已准备就绪。');
-        }
+//    var readyHook = function() {
+//        if(!confirm('确认准备就绪？'))return;
+//        socket.emit('ready');
+//        document.getElementById('scaleContainer').onclick = null;
+//    };
+    socket.on('ready', function(name, guid){
+        print('玩家：' + name + ' 已准备就绪。', 'player');
+        gameRoom.playerReady(guid);
+    });
+    socket.on('unready', function(name, guid){
+        print('玩家：' + name + ' 取消准备。', 'player');
+        gameRoom.playerUnready(guid);
     });
     socket.on('safe', function(room) {
         notice('安全房间是 【' + room + '】 号房间！');
         alert('你是【' + me.id + '号】玩家，你的身份是【奸徒】，安全房间是 【' + room + '】 号房间！');
     });
     socket.on('start', function(rooms, players, id) {
+        gameRoom.hide();
+        document.getElementById('readyButton').removeAttribute('ready');
+        document.getElementById('readyButton').innerHTML = '准备';
         var me = players[id - 1];
         print('游戏开始了！总共有 ' + players.length + ' 名玩家。');
         notice('你是【' + me.id + '号】玩家，你的身份是【' + GameConfig.role[me.role] + '】!');
@@ -623,7 +651,6 @@ var init = function() {
             }
     });
     socket.on('over', function(result) {
-        notice('安全房间是：【' + result.safeRoom + '】号房间。');
         if(Game.started) {
             if (me.role == result.winner) {
                 notice('你(' + (me.role == 'victim' ? '受害者' : '奸徒') + ')获得了胜利！');
@@ -631,21 +658,26 @@ var init = function() {
                 notice('你失败了！');
                 notice((me.role != 'victim' ? '受害者' : '奸徒') + '获得了胜利！');
             }
-            Game.started = false;
-            window.onbeforeunload = null;
+            resetGame();
         }
         if(me.role == 'victim') {
+            notice('安全房间是：【' + result.safeRoom + '】号房间。');
             if (!!result.traitor) {
                 notice(result.traitor + ' 号玩家是【奸徒】。');
             } else {
                 notice('本场游戏没有奸徒。');
             }
         }
-        print('点击游戏区完成准备。');
-        document.getElementById('scaleContainer').onclick = readyHook;
+//        print('点击游戏区完成准备。');
+//        document.getElementById('scaleContainer').onclick = readyHook;
     });
     joinGame();
 };
+var resetGame = function() {
+    Game.started = false;
+    window.onbeforeunload = null;
+    gameRoom.display();
+}
 var getCookie = function(cname) {
     var name = cname + "=";
     var ca = document.cookie.split(';');
@@ -672,7 +704,16 @@ var joinGame = function() {
         setCookie("name", username, 365);
     }
     print(username + '，欢迎你进入密室惊魂。');
-    socket.emit('name', username);
+    var guid = getCookie('guid');
+    if(guid == '') {
+        guid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+        setCookie('guid', guid, 365);
+    }
+//
+    socket.emit('name', username, guid);
     var room = window.location.search.substr(1, window.location.search.length - 1);
     if(room == '') room = 0;
     socket.emit('join', room);
@@ -744,6 +785,51 @@ var initPlayGround = function(rooms, players) {
             if(players.hasOwnProperty(i)) {
                 Game.players.push(new Player(_player));
                 Game.players[i].playerMarker = drawPlayer(Game.players[i]);
+            }
+        }
+    }
+};
+
+var GameRoom = function(room) {
+    this.room = room;
+    this.players = {};
+    this.infoBoard = document.getElementById('infoBoard');
+};
+
+GameRoom.prototype = {
+    addPlayer: function(name, guid, ready) {
+        this.players[guid] = {name: name, ready: false};
+        var roomPlayer = document.createElement('div');
+        roomPlayer.className = 'room-player';
+        roomPlayer.innerHTML = '<span>' + name + '</span>' + (ready ? '<span>已准备</span>' : '');
+        this.players[guid].marker = roomPlayer;
+        document.getElementById('roomPlayers').appendChild(roomPlayer);
+    },
+    removePlayer: function(guid) {
+        if(guid in this.players) {
+            removeNode(this.players[guid].marker);
+            delete this.players[guid];
+        }
+    },
+    playerReady: function(guid) {
+        if(guid in this.players) {
+            this.players[guid].marker.innerHTML += '<span>已准备</span>';
+        }
+    },
+    playerUnready: function(guid) {
+        if(guid in this.players) {
+            this.players[guid].marker.innerHTML = '<span>' + this.players[guid].name + '</span>';
+        }
+    },
+    display: function() {
+        this.infoBoard.style.display = 'block';
+        document.getElementById('infoHeader').innerHTML = '密室惊魂【'+this.room+'】号房间';
+    },
+    hide: function() {
+        this.infoBoard.style.display = 'none';
+        for(var i in this.players) {
+            if(this.players.hasOwnProperty(i)) {
+                this.playerUnready(i);
             }
         }
     }

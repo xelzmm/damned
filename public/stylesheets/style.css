@@ -22,6 +22,70 @@ a {
     font-size: 24px;
 }
 
+#infoBoard {
+    width: 200px;
+    position: absolute;
+    background-color: black;
+    border-radius: 12px;
+    border: 2px solid rgb(227, 227, 227);
+    opacity: 0.9;
+    padding-bottom: 8px;
+    /*display: none;*/
+}
+
+#infoHeader {
+    width: 100%;
+    font-size: 16px;
+    line-height: 24px;
+    color: white;
+    text-align: center;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+#roomPlayers {
+    width: 100%;
+    background-color: rgb(44, 44, 44);
+    border-top:1px solid rgb(227, 227, 227);
+    border-bottom:1px solid rgb(227, 227, 227);
+    color: rgb(222, 222, 222);
+    display: block;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    height: 140px;
+    line-height: 16px;
+    margin-bottom: 5px;
+    max-width: 340px;
+    min-height: 20px;
+    padding: 8px 0;
+    overflow: scroll;
+    text-align: center;
+}
+
+.room-player span{
+    margin: 0 5px;
+}
+
+.room-player span:first-child {
+    color: gold;
+}
+
+#roomActions {
+    text-align: center;
+    width: 100%;
+}
+
+#roomActions button {
+    background-color: rgb(44, 44, 44);
+    border-radius: 5px;
+    color: rgb(255, 255, 255);
+    font-size: 12px;
+    height: 24px;
+    line-height: 12px;
+    margin: 2px;
+    padding: 5px 12px;
+}
+
 #mapArea{
     float: left;
     top: 0;

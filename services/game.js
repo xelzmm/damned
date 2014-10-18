@@ -31,9 +31,6 @@ var Game = function(room, io) {
     this.debug('room created: ' + room);
     this.started = false;
     var _self = this;
-    this.closeTimeout = setTimeout(function() {
-        _self.pendingClose();
-    }, 30000);
 };
 
 Game.prototype = {
@@ -121,6 +118,7 @@ Game.prototype = {
         _clients.sort(shuffle);
         for(i in _clients) {
             if(_clients.hasOwnProperty(i)) {
+                _clients[i].playerReady = false;
                 var playerId = parseInt(i) + 1;
                 _clients[i].playerId = playerId;
                 var player = new Player(playerId, _clients[i].playerName, _roles[i], _clients[i].id, this.socketRoom);
@@ -861,21 +859,31 @@ Game.prototype = {
             this.debug('failed because client already in this room.');
             reason = 'unknown';
         }
+        for(var i in _clients) {
+            if(_clients.hasOwnProperty(i) && _clients[i].guid == socket.guid) {
+                reason = 'duplicated';
+                break;
+            }
+        }
         if(!!reason) {
-            socket.emit('join', {reason: reason});
+            socket.emit('join failed', reason);
             return false;
         }
         socket.socketRoom = _room;
         var _players = [];
-        for(var i in _clients) {
+        for(i in _clients) {
             if(_clients.hasOwnProperty(i)) {
-                _players.push({name: _clients[i].playerName, ready: _clients[i].playerReady});
+                _players.push({
+                    guid: _clients[i].guid,
+                    name: _clients[i].playerName,
+                    ready: _clients[i].playerReady
+                });
             }
         }
         socket.emit('room', _room, _players);
         socket.join(_room);
         _clients.push(socket);
-        this.broadcast('join', socket.playerName);
+        this.broadcast('join', {name: socket.playerName, guid: socket.guid});
         return true;
     },
     remove: function(socket) {
@@ -883,7 +891,7 @@ Game.prototype = {
         this.debug('remove client ' + socket.id + ' from room ' + _room);
         var _clients = this.clients;
         delete socket.socketRoom;
-        this.broadcast('leave', socket.playerName);
+        this.broadcast('leave', {name: socket.playerName, guid:socket.guid});
         socket.leave(_room);
         _clients.splice(_clients.indexOf(socket), 1);
         if(this.started) {
@@ -891,15 +899,20 @@ Game.prototype = {
         } else {
             this.readyToStart();
         }
-        this.pendingClose();
+        if(this.clients.length == 0) {
+            if(this.closeTimeout) {
+                clearTimeout(this.closeTimeout);
+            }
+            var _self = this;
+            this.closeTimeout = setTimeout(function() {
+                _self.pendingClose();
+            }, 30000);
+        }
     },
     pendingClose: function() {
         if(this.clients.length == 0) {
             this.debug('No players in this room, gonna closed.');
-            if(this.closeTimeout != undefined) {
-                clearTimeout(this.closeTimeout);
-                delete this.closeTimeout;
-            }
+            delete this.closeTimeout;
             delete games[this.socketRoom];
         }
     },

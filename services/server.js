@@ -12,13 +12,14 @@ var server = function() {
 //        socket.on('connect', function() {
 //            debug('socket[' + socket.id + '] connected, ip: ' + socket.client.conn.remoteAddress);
 //        });
-        socket.on('name', function(name) {
+        socket.on('name', function(name, guid) {
             if(!!socket.playerName) {
                 debug('socket[' + socket.id + '] set name: name already set.');
                 return false;
             }
-            debug('socket[' + socket.id + '] set name: ' + name);
+            debug('socket[' + socket.id + '] set name: ' + name + ', guid: ' + guid);
             socket.playerName = name;
+            socket.guid = guid;
         });
         socket.on('join', function(room) {
             if(!socket.playerName) {
@@ -32,7 +33,7 @@ var server = function() {
             debug('socket[' + socket.id + '] join ' + room);
             if(!(room in games)) {
                 debug('socket[' + socket.id + '] join: room ' + room + ' not exists');
-                socket.emit('join', {reason: 'nosuchroom'});
+                socket.emit('join failed', 'nosuchroom');
             } else {
                 games[room].add(socket);
             }
@@ -45,8 +46,18 @@ var server = function() {
             }
             debug('socket[' + socket.id + '] ready');
             socket.playerReady = true;
-            io.to(_room).emit('ready', socket.playerName);
+            io.to(_room).emit('ready', socket.playerName, socket.guid);
             games[_room].readyToStart();
+        });
+        socket.on('unready', function() {
+            var _room = socket.socketRoom;
+            if(!_room) {
+                debug('socket[' + socket.id + '] unready: join a room needed!');
+                return;
+            }
+            debug('socket[' + socket.id + '] unready');
+            socket.playerReady = false;
+            io.to(_room).emit('unready', socket.playerName, socket.guid);
         });
         var leave = function() {
             var _room = socket.socketRoom;

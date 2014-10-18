@@ -30,7 +30,9 @@
           <div id="chatBoard">
           </div>
           <div id="inputBox">
-              发言区：(直接回车可提前结束发言)<br/>
+              <div id="inputTitle">
+                  <span>发言区：(直接回车可提前结束发言)</span><button onclick="if(confirm('确定聊天区域所有内容？'))cls();">清屏</button>
+              </div>
               <input id="input" type="text"/>
           </div>
       </div>

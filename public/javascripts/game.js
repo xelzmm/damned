@@ -167,6 +167,9 @@ var print = function(msg, style) {
     if(autoScroll) chatBoard.scrollTop = chatBoard.scrollHeight;
 };
 var notice = function(msg){print(msg, 'notice');};
+var cls = function() {
+    document.getElementById('chatBoard').innerHTML = '';
+};
 var resize = function() {
     // scale
     var height = window.innerHeight || document.documentElement.clientHeight,
@@ -533,7 +536,7 @@ var init = function() {
         print('点击游戏区完成准备。');
         document.getElementById('scaleContainer').onclick = readyHook;
     });
-    fakeInit();
+    joinGame();
 };
 var getCookie = function(cname) {
     var name = cname + "=";
@@ -551,7 +554,7 @@ var setCookie = function (cname, cvalue, exdays) {
     var expires = "expires="+d.toUTCString();
     document.cookie = cname + "=" + encodeURIComponent(cvalue) + "; " + expires;
 };
-var fakeInit = function() {
+var joinGame = function() {
     var username = getCookie('name');
     if(username == '') {
         do {

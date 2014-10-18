@@ -657,8 +657,11 @@ var init = function() {
             if (me.role == result.winner) {
                 notice('你(' + (me.role == 'victim' ? '受害者' : '奸徒') + ')获得了胜利！');
             } else {
-                notice('你失败了！');
-                notice((me.role != 'victim' ? '受害者' : '奸徒') + '获得了胜利！');
+                if(!!result.traitor) {
+                    notice('你失败了！' + (me.role != 'victim' ? '受害者' : '奸徒') + '获得了胜利！');
+                } else {
+                    notice('你失败了！');
+                }
             }
             resetGame();
         }

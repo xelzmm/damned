@@ -186,7 +186,6 @@ Game.prototype = {
     over: function () {
         var _rooms = this.data.rooms;
         var _players = this.players;
-        var _clients = this.clients;
         var safeRoom = _rooms[this.data.safeRoom];
         var escapedPlayers = [], i, player;
         for(i in safeRoom.players) {
@@ -201,7 +200,7 @@ Game.prototype = {
                 traitor = _players[i].id;
             }
         }
-        var winner = escapedPlayers.length >= _players.length - 3 ? 'victim' : 'traitor';
+        var winner = escapedPlayers.length >= _players.length - (traitor == undefined ? 0 : 1) - 2 ? 'victim' : 'traitor';
         this.broadcast('over', {
             traitor: traitor,
             winner: winner,

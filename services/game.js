@@ -9,8 +9,8 @@ var debug = require('debug'),
     roomDebug = debug('damned:room');
 var Config = {
     stageChangeNotifyTime: 3,
-    speakTime: 120,
-    moveTime: 30,
+    speakTime: 90,
+    moveTime: 45,
     performTime: 30,
     thinkingTime: 15,
     notifyTime: 1,
@@ -530,7 +530,7 @@ Game.prototype = {
         socket.on('challenge', function(decision) {
             player.debug('response challenge [' + question + '] with ' + decision);
             switch(question) {
-                case 'destroy':
+                case 'destroy': // 执行销毁线索
                     if(!_self.checkMsgType(decision, 'boolean')) return;
                     socket.removeAllListeners('challenge');
                     if(decision) { // 销毁，房间功能被使用
@@ -550,7 +550,7 @@ Game.prototype = {
                     }
                     _self.nextBeforeTimeout();
                     break;
-                case 'watch':
+                case 'watch': // 执行查看线索
                     var targetPlayerId = decision;
                     if(!_self.checkMsgType(targetPlayerId, 'number')
                         || options.indexOf(decision) < 0) return;
@@ -567,7 +567,7 @@ Game.prototype = {
                     });
                     _self.nextBeforeTimeout();
                     break;
-                case 'who':
+                case 'who': // 选定升级/降级的配合者
                     targetPlayerId = decision;
                     if(!_self.checkMsgType(targetPlayerId, 'number')
                         || options.indexOf(decision) < 0) return;
@@ -575,7 +575,7 @@ Game.prototype = {
                     socket.removeAllListeners('challenge');
                     _self.askForAction(player.id, [targetPlayerId]);
                     break;
-                case 'action':
+                case 'action': // 打出行动卡
                     if(!_self.checkMsgType(decision, 'boolean')) return;
                     socket.removeAllListeners('challenge');
                     if(_self.data.rooms[_self.data.progress.room].function == 'disarm' && player.role == 'victim') {
@@ -587,8 +587,9 @@ Game.prototype = {
             }
         });
         switch(question) {
-            case 'who':
+            case 'who': // 设定选人的超时AI
                 _self.updateGame();
+                _self.broadcast('choose', player.id, Config.chooseTime);
                 _self.chooseTimeoutId = setTimeout(function () {
                     socket.removeAllListeners('challenge');
                     _self.broadcast('timeout', player.id);
@@ -597,7 +598,7 @@ Game.prototype = {
                     _self.askForAction(player.id, [targetPlayerId]);
                 }, Config.chooseTime * 1000);
                 break;
-            case 'destroy':
+            case 'destroy': // 设定销毁线索或查看线索的超时AI
             case 'watch':
                 _self.updateGameAndAwaitNext(function () {
                     socket.removeAllListeners('challenge');
@@ -628,7 +629,7 @@ Game.prototype = {
                 break;
         }
         this.debug('Challenge player ' + player.id + ' with [' + question + ']');
-        socket.emit('challenge', question, options);
+        socket.emit('challenge', question, options); // 送出问题
     },
     askForAction: function(masterId, slavePlayerIds) {
         this.actions = {};
@@ -638,7 +639,11 @@ Game.prototype = {
                 this.actions[slavePlayerIds[i]] = 'tbd';
             }
         }
-        this.broadcast('wait', this.actions);
+        this.broadcast('wait', {
+            type: this.data.rooms[this.data.progress.room].function,
+            actions: this.actions,
+            time: Config.performTime
+        });
         for(i in this.actions) {
             if(this.actions.hasOwnProperty(i)) {
                 var playerId = i,

@@ -141,3 +141,28 @@ a {
     margin: 2px 0;
     padding: 2px 3px;
 }
+
+.player-holder {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.count-down-container {
+    position: absolute;
+    width: 56px;
+    height: 5px;
+    left: 50%;
+    margin-left: -30px;
+    bottom: -6px;
+    border-radius: 8px;
+    border: dimgray 2px solid;
+    display: none;
+}
+
+.count-down {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    background-color: darkorange;
+}

@@ -38,12 +38,17 @@ var drawPlayer = function (player) {
     var playerMarker = drawElement(resourceName, position.x, position.y);
     var holder = document.createElement('img');
     holder.src = '/images/blank.gif';
-    holder.style.position = 'absolute';
-    holder.style.width = '100%';
-    holder.style.height = '100%';
+    holder.className = 'player-holder';
     holder.title = player.name;
     holder.alt = player.name;
     playerMarker.appendChild(holder);
+    var timerContainer = document.createElement('div');
+    timerContainer.className = 'count-down-container';
+    var timer = document.createElement('div');
+    timer.className = 'count-down';
+    timerContainer.appendChild(timer);
+    playerMarker.appendChild(timerContainer);
+    player.timer = timer;
     return playerMarker;
 };
 var initElementStyle = function() {
@@ -203,6 +208,42 @@ var resize = function() {
     document.getElementById('chatBoard').style.height = (chatArea.clientHeight - document.getElementById('inputBox').clientHeight) + 'px';
 
 };
+var stopTimer = function() {
+    if(Game.timer) {
+        for(var i in Game.players) {
+            if(Game.players.hasOwnProperty(i)) {
+                var player = Game.players[i];
+                player.timer.parentNode.style.display = 'none';
+                player.timer.style.width = '100%';
+            }
+        }
+        clearInterval(Game.timer);
+        delete Game.timer;
+    }
+};
+var updateTimer = function(players, timeLimit) {
+    stopTimer();
+    for(var i in players) {
+        if(players.hasOwnProperty(i)) {
+            var player = Game.players[players[i] - 1];
+            player.timer.parentNode.style.display = 'block';
+        }
+    }
+    var startTime = new Date();
+    Game.timer = setInterval(function() {
+        for(var i in players) {
+            if(players.hasOwnProperty(i)) {
+                var player = Game.players[players[i] - 1];
+                var timeLeftPercent = 100 - (new Date() - startTime) / timeLimit / 10;
+                if(timeLeftPercent < 0) {
+                    timeLeftPercent = 0;
+                    stopTimer();
+                }
+                player.timer.style.width = timeLeftPercent + '%';
+            }
+        }
+    }, 200);
+};
 var init = function() {
 
     resize();
@@ -321,6 +362,7 @@ var init = function() {
     });
     socket.on('update', function(progress) {
         Game.progress = progress;
+        stopTimer();
         var roomMap = document.getElementById('roomMask');
         if(Game.canSpeak)delete Game.canSpeak;
         if(Game.canMove) {
@@ -355,6 +397,9 @@ var init = function() {
             }
         } else {
             var currentPlayer = Game.players[Game.order[progress.room][progress.player] - 1];
+            if(progress.time != 1) {
+                updateTimer([currentPlayer.id], progress.time);
+            }
             if(me.id == currentPlayer.id) {
                 notice('轮到你【' + GameConfig.stage[progress.stage] + '】了.' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
                 var chatBoard = document.getElementById('chatBoard');
@@ -453,7 +498,7 @@ var init = function() {
                     for(i in options) {
                         if(options.hasOwnProperty(i)) {
                             player = Game.players[options[i] - 1];
-                            choices += '\n' + player.getDisplayName() + ', ' + (!!player.watchedMarker ? '已被查看' : '未被查看');
+                            choices += '\n' + player.getDisplayName() + (!!player.watchedMarker ? ', 已被查看过' : '');
                         }
                     }
                     decision = parseInt(prompt('你想查看谁的线索卡?' + choices));
@@ -467,18 +512,18 @@ var init = function() {
                             choices += '\n' + player.getDisplayName() + ', 【' + player.clue.level + '】级线索卡';
                         }
                     }
-                    decision = parseInt(prompt('你想与谁 ' +
+                    decision = parseInt(prompt('你想与谁【' +
                             (Game.rooms[me.room]["function"] == 'upgrade' ? '升级' : '降级') +
-                            ' 线索卡?' + choices));
+                            '】线索卡?' + choices));
                 } while (options.indexOf(decision) < 0);
                 break;
             case 'action':
                 switch (Game.rooms[me.room]["function"]) {
                     case 'upgrade':
                     case 'downgrade':
-                        decision = confirm('是否配合' +
+                        decision = confirm('是否配合【' +
                             (Game.rooms[me.room]["function"] == 'upgrade' ? '升级' : '降级') +
-                            ' 线索卡\n合成后的线索卡将归' + Game.players[options - 1].getDisplayName() + '所有！' +
+                            '】线索卡?\n合成后的线索卡将归' + Game.players[options - 1].getDisplayName() + '所有！' +
                             '\n【确定】代表配合，【取消】代表不配合。');
                         break;
                     case 'disarm':
@@ -493,17 +538,33 @@ var init = function() {
         document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
         socket.emit('challenge', decision);
     });
-    socket.on('wait', function(actions) {
+    socket.on('choose', function(playerId, time) {
+        updateTimer([playerId], time);
+        if(playerId != me.id) {
+            print('请等待' + Game.players[playerId - 1].getDisplayName() + '选择与谁合成线索。');
+        } else {
+            print('请选择与谁合成线索。');
+        }
+    });
+    socket.on('wait', function(data) {
+        var actions = data.actions, type = data.type, time = data.time;
         var actionPlayers = [];
         for(var i in actions) {
             if(actions.hasOwnProperty(i)) {
                 actionPlayers.push(parseInt(i));
             }
         }
-        if(actionPlayers.indexOf(me.id) >= 0) {
-            print('请做出选择。');
+        updateTimer(actionPlayers, time);
+        var action = {
+            'disarm': '拆弹',
+            'upgrade': '升级线索卡',
+            'downgrade': '降级线索卡'
+        }[type];
+        if(actionPlayers.indexOf(me.id) < 0) {
+            print('请等待【' + actionPlayers + '】号玩家【' + action + '】。');
         } else {
-            print('请等待 [' + actionPlayers + '] 号玩家行动。');
+            actionPlayers.splice(actionPlayers.indexOf(me.id), 1);
+            print('你将和【' + actionPlayers + '】号玩家一起【' + action + '】。');
         }
     });
     socket.on('action', function(action) {
@@ -651,7 +712,7 @@ var initPlayGround = function(rooms, players) {
             var _player = players[i];
             if(players.hasOwnProperty(i)) {
                 Game.players.push(new Player(_player));
-                Game.players[i].playerMarker = drawPlayer(_player);
+                Game.players[i].playerMarker = drawPlayer(Game.players[i]);
             }
         }
     }

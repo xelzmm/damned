@@ -341,7 +341,7 @@ Player.prototype = {
                         break;
                 }
                 _self.debug(msg);
-            }, 500);
+            }, 300);
         }
     }
 };

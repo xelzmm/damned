@@ -377,11 +377,12 @@ var init = function() {
                 var _orderString = '';
                 for (var i in _rooms) { // 获取行动顺序
                     if (_rooms.hasOwnProperty(i)) {
+                        if(progress.stage == 'perform' && i == 0) continue;
                         _order[i] = _rooms[i].players.slice(0);
                         if(_order[i].length > 0)_orderString += _order[i] + ',';
                     }
                 }
-                print('行动顺序：' + _orderString.substr(0, _orderString.length - 1));
+                print(GameConfig.stage[progress.stage] + '顺序：【' + _orderString.substr(0, _orderString.length - 1) + '】');
             } else {
                 Game.order = [];
                 if(progress.stage == 'time') {
@@ -480,6 +481,36 @@ var init = function() {
                 break;
             case 'saw':
                 me.sawClue(playerId, data.clue);
+                break;
+        }
+    });
+    socket.on('skip', function(data) {
+        var player = Game.players[data.player - 1], reason = data.reason;
+        switch(reason) {
+            case 'player-detoxified':
+                player.debug('已解毒，让过治疗房间执行权。');
+                break;
+            case 'empty-clue-pool':
+                player.debug('无法获得线索卡，因为【1】级线索卡已经没有了。');
+                break;
+            case 'no-player-to-watch':
+                player.debug('无法执行监视功能，因为没人拥有线索卡。');
+                break;
+            case 'player-no-clue':
+                player.debug('没有线索卡，无法进行线索合成。');
+                break;
+            case 'no-valid-solution':
+                player.debug('无法进行线索合成，因为没有可合成的方案，让过房间执行权。');
+                break;
+            case 'can-not-disarm':
+                player.debug('无法发起拆弹，因为' + (Game.progress.bomb < 0 ? '控制器已经被破坏！' : '炸弹已解除，无需再次拆弹。'));
+                break;
+            case 'second-disarm-room':
+                player.debug('在第二个拆弹房间，跳过房间功能执行。');
+                break;
+            case 'no-enough-player':
+                player.debug('无法发起拆弹，因为人数不足！');
+                notice('拆弹时必须两个拆弹房间均有至少1名玩家，6-8人局第二次拆弹或者8-9人局第一次拆弹需要两个房间合计至少3名玩家，9人局第二次拆弹需要两个房间合计至少4名玩家。');
                 break;
         }
     });

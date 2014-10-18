@@ -10,7 +10,7 @@ var debug = require('debug'),
 var Config = {
     stageChangeNotifyTime: 3,
     speakTime: 90,
-    moveTime: 45,
+    moveTime: 30,
     performTime: 30,
     thinkingTime: 15,
     notifyTime: 1,
@@ -342,7 +342,8 @@ Game.prototype = {
                                 _self.broadcast('detoxify', {player: playerId});
                             }, Config.notifyTime);
                         } else { // 玩家已解毒，权利让过
-                            this.nextStep();
+//                            this.nextStep();
+                            this.nextWithReason(player.id, 'player-detoxified');
                         }
                         break;
                     case 'clue':
@@ -366,7 +367,8 @@ Game.prototype = {
                                     });
                                 });
                             } else { // 没线索卡了，权利让过
-                                this.nextStep();
+//                                this.nextStep();
+                                this.nextWithReason(player.id, 'empty-clue-pool');
                             }
                         } else { // 玩家有线索卡，询问是否销毁
                             this.challenge(player, client, 'destroy');
@@ -386,7 +388,8 @@ Game.prototype = {
                         this.debug('Players that can be watched: ' + JSON.stringify(alternativePlayers, null, 0));
                         this.functionPerformed = true;
                         if(alternativePlayers.length == 0) {
-                            this.nextStep();
+//                            this.nextStep();
+                            this.nextWithReason(player.id, 'no-player-to-watch')
                         } else if(alternativePlayers.length == 1) {
                             _progress.time = Config.notifyTime;
                             this.updateGameAndAwaitNext(function() {
@@ -408,7 +411,8 @@ Game.prototype = {
                     case 'upgrade':
                     case 'downgrade':
                         if(!player.clue) { // 玩家没有线索卡，跳过该玩家
-                            this.nextStep();
+//                            this.nextStep();
+                            this.nextWithReason(player.id, 'player-no-clue');
                             break;
                         }
                         var playersWithClue = []; // 找到房间里其他有线索卡的玩家
@@ -433,19 +437,22 @@ Game.prototype = {
                                 alternativePlayers.push(slave.id);
                             }
                         }
-                        this.functionPerformed = true;
-                        if(alternativePlayers.length == 0) {// 无可执行的升级方案，跳过房间功能执行
-                            this.nextStep();
+                        if(alternativePlayers.length == 0) {// 无可执行的升级方案，让过房间功能执行权
+//                            this.nextStep();
+                            this.nextWithReason(player.id, 'no-valid-solution');
                         } else if(alternativePlayers.length == 1) {
+                            this.functionPerformed = true;
                             this.askForAction(player.id, [alternativePlayers[0]]);
                         } else {
+                            this.functionPerformed = true;
                             this.challenge(player, client, 'who', alternativePlayers);
                         }
                         break;
                     case 'disarm':
                         this.functionPerformed = true;
                         if(_progress.bomb < 0 || _progress.bomb == 2) { // 拆弹房失效 或已拆两次
-                            this.nextStep();
+//                            this.nextStep();
+                            this.nextWithReason(player.id, 'can-not-disarm');
                             break;
                         }
                         var anotherDisarmRoom;
@@ -456,7 +463,8 @@ Game.prototype = {
                             }
                         }
                         if(anotherDisarmRoom.id < room.id) { // 当前是第二个拆弹房， 跳过
-                            this.nextStep();
+//                            this.nextStep();
+                            this.nextWithReason(player.id, 'second-disarm-room');
                             break;
                         }
                         var minPlayerCount = 2;
@@ -467,7 +475,8 @@ Game.prototype = {
                             minPlayerCount = 4;
                         if(room.players.length < 1 || anotherDisarmRoom.players.length < 1 ||
                             room.players.length + anotherDisarmRoom.players.length < minPlayerCount) { // 人数不足
-                            this.nextStep();
+//                            this.nextStep();
+                            this.nextWithReason(player.id, 'no-enough-player');
                             break;
                         }
                         var participants = room.players.concat(anotherDisarmRoom.players);
@@ -793,6 +802,16 @@ Game.prototype = {
             return false;
         }
         return true;
+    },
+    nextWithReason: function(playerId, reason) {
+        var _self = this;
+        this.broadcast('skip', {
+            player: playerId,
+            reason: reason
+        });
+        this.timeoutId = setTimeout(function () {
+            _self.nextStep();
+        }, Config.notifyTime * 1000);
     },
     nextBeforeTimeout: function(delay) {
         var _self = this;

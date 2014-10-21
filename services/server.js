@@ -12,14 +12,27 @@ var server = function() {
 //        socket.on('connect', function() {
 //            debug('socket[' + socket.id + '] connected, ip: ' + socket.client.conn.remoteAddress);
 //        });
-        socket.on('name', function(name, guid) {
+        socket.on('rejoin', function(room, token) {
+            debug('player reconnect with token: ' + token);
+            if(games.hasOwnProperty(room) && games[room].started) {
+                games[room].resume(socket, token);
+            } else {
+                socket.emit('join failed', {reason: 'cannotreconnect'});
+            }
+        });
+        socket.on('name', function(name) {
             if(!!socket.playerName) {
                 debug('socket[' + socket.id + '] set name: name already set.');
                 return false;
             }
-            debug('socket[' + socket.id + '] set name: ' + name + ', guid: ' + guid);
+            name = name.trim().substr(0, 16);
+            debug('socket[' + socket.id + '] set name: ' + name);
             socket.playerName = name;
-            socket.guid = guid;
+            socket.token = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+            socket.emit('token', socket.token);
         });
         socket.on('join', function(room) {
             if(!socket.playerName) {
@@ -46,7 +59,7 @@ var server = function() {
             }
             debug('socket[' + socket.id + '] ready');
             socket.playerReady = true;
-            io.to(_room).emit('ready', socket.playerName, socket.guid);
+            io.to(_room).emit('ready', socket.playerName, socket.id);
             games[_room].readyToStart();
         });
         socket.on('unready', function() {
@@ -57,7 +70,7 @@ var server = function() {
             }
             debug('socket[' + socket.id + '] unready');
             socket.playerReady = false;
-            io.to(_room).emit('unready', socket.playerName, socket.guid);
+            io.to(_room).emit('unready', socket.playerName, socket.id);
         });
         var leave = function() {
             var _room = socket.socketRoom;

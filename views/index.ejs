@@ -24,10 +24,12 @@
          var username = getCookie("name");
          if(username == '') {
              do {
-                 username = 'player_' + new Date().getTime() % 10000;
-                 username = prompt('请设定您的昵称：', username);
-             } while (username == null || username.trim() == '');
-             setCookie("name", username, 365);
+                 if(username == null || username.trim() == '') {
+                     username = 'player_' + new Date().getTime() % 10000;
+                 }
+                 username = prompt('请设定你的昵称(16个字符以内)：', username.trim());
+             } while (username == null || username.trim() == '' || username.trim().length > 16);
+             setCookie("name", username.trim(), 365);
          }
          function setName() {
              document.getElementById('name').innerHTML = '昵称：' + getCookie("name");
@@ -36,10 +38,12 @@
          function alter() {
              username = getCookie('name');
              do {
-                 if(username == '') username = 'player_' + new Date().getTime() % 10000;
-                 username = prompt('请设定您的昵称：', username);
-             } while (username == null || username.trim() == '');
-             setCookie("name", username, 7);
+                 if(username == null || username.trim() == '') {
+                     username = 'player_' + new Date().getTime() % 10000;
+                 }
+                 username = prompt('请设定你的昵称(16个字符以内)：', username.trim());
+             } while (username == null || username.trim() == '' || username.trim().length > 16);
+             setCookie("name", username.trim(), 365);
              setName();
          }
      </script>

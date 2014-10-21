@@ -63,7 +63,7 @@ html, body {
     max-width: 340px;
     min-height: 20px;
     padding: 8px 0;
-    overflow: scroll;
+    overflow-y: auto;
 }
 
 ul.list {

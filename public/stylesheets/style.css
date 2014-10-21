@@ -58,7 +58,6 @@ a {
     max-width: 340px;
     min-height: 20px;
     padding: 8px 0;
-    overflow: scroll;
     text-align: center;
 }
 
@@ -129,7 +128,7 @@ a {
 }
 
 #chatBoard {
-    overflow: scroll;
+    overflow-y: scroll;
     background: #444;
     line-height: 20px;
     color: white;
@@ -156,10 +155,14 @@ a {
     display: inline;
 }
 
-#inputTitle>button {
+#buttonContainer {
     display: inline;
     position: absolute;
     right: 0;
+}
+
+#resetButton {
+    display: none;
 }
 
 #input {

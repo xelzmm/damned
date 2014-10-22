@@ -72,14 +72,14 @@ var server = function() {
             socket.playerReady = false;
             io.to(_room).emit('unready', socket.playerName, socket.id);
         });
-        var leave = function() {
+        var leave = function(force) {
             var _room = socket.socketRoom;
             if(!_room) {
                 debug('socket[' + socket.id + '] leave: no room to leave!');
                 return false;
             }
             debug('socket[' + socket.id + '] leave ' + _room);
-            games[_room].remove(socket);
+            games[_room].remove(socket, force);
         };
         socket.on('speak', function(msg) {
             var _room = socket.socketRoom;
@@ -95,9 +95,11 @@ var server = function() {
         socket.on('disconnect', function() {
             debug('client disconnected, socket id: ' + socket.id);
             if(!!socket.socketRoom)
-                leave();
+                leave(false);
         });
-        socket.on('leave', leave);
+        socket.on('leave', function() {
+            leave(true);
+        });
     });
 };
 

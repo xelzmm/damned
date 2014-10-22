@@ -149,15 +149,16 @@ Player.prototype = {
     getDisplayName: function() {
         return this.id == me.id ? '【你】' : ('【' + this.id + '】号玩家 (' + this.name + ') ');
     },
-    gainKey: function () {
-        this.debug('获得了【' + this.room + '】号房间的钥匙.');
+    gainKey: function (from) {
+        this.debug('获得了' + from.getDisplayName() + '的钥匙.');
+        from.loseKey();
         this.hasKey = true;
         if (!this.keyMarker) {
             var keyMarker = this.keyMarker = document.createElement('img');
             keyMarker.src = '/images/key.png';
             keyMarker.style.position = 'absolute';
             keyMarker.style.right = '0px';
-            keyMarker.title = keyMarker.alt = '【' + this.room + '】号房间的钥匙';
+            keyMarker.title = keyMarker.alt = '钥匙';
             this.playerMarker.appendChild(keyMarker);
         }
     },
@@ -165,8 +166,20 @@ Player.prototype = {
         this.debug('失去了钥匙.');
         this.hasKey = false;
         if (this.keyMarker) {
-            this.keyMarker.remove();
+            removeNode(this.keyMarker);
             delete this.keyMarker;
+        }
+    },
+    processKeyGive: function(agree, fromPlayer) {
+        this.debug((agree ? '【接受】' : '【拒绝】') + '了' + fromPlayer.getDisplayName() + '赠予的钥匙。');
+        if(agree) {
+            this.gainKey(fromPlayer);
+        }
+    },
+    processKeyRequest: function(agree, fromPlayer) {
+        this.debug((agree ? '【同意】' : '【拒绝】') + '了' + fromPlayer.getDisplayName() + '的索要钥匙请求。');
+        if(agree) {
+            fromPlayer.gainKey(this);
         }
     },
     detoxify: function () {
@@ -354,8 +367,11 @@ var Room = function (room) {
 };
 
 Room.prototype = {
+    getDisplayName: function() {
+        return '【' + this.id + '】号房间';
+    },
     debug: function (msg) {
-        msg = '【' + this.id + '】号房间 ' + msg;
+        msg =  this.getDisplayName() + msg;
         print(msg);
     },
     lock: function () {

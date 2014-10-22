@@ -217,6 +217,7 @@ Game.prototype = {
         var _rooms = this.data.rooms;
         var _clues = this.data.clues;
         var _players = this.players;
+        var _clients = this.clients;
         var _order = this.actionOrder;
         var _progress = this.data.progress;
         switch (_progress.stage) {
@@ -231,7 +232,6 @@ Game.prototype = {
             case 'speak':
             case 'move':
                 if(_progress.room == null) { // 刚进入行动(发言、移动)阶段，初始化
-                    _progress.time = _progress.stage == 'speak' ? Config.speakTime : Config.moveTime;
                     _progress.room = -1;
                     for (i in _rooms) { // 获取行动顺序
                         if(_rooms.hasOwnProperty(i)) {
@@ -239,6 +239,18 @@ Game.prototype = {
                         }
                     }
                     this.debug('Action order ' + JSON.stringify(_order, null, 0));
+                }
+                _progress.time = _progress.stage == 'speak' ? Config.speakTime : Config.moveTime;
+                // 如果有钥匙事件
+                if(_progress.keyAction) {
+                    var to = _progress.keyAction.to;
+                    _progress.time = Config.chooseTime;
+                    this.challenge(to, _clients[to.id - 1], _progress.keyAction.type, {
+                        fromPlayer: _progress.keyAction.from.id,
+                        message: _progress.keyAction.message
+                    });
+                    delete _progress.keyAction;
+                    return;
                 }
                 // 下一个玩家
                 if(_progress.player != null && _progress.player < _order[_progress.room].length - 1) { // 房间里还有其他玩家
@@ -498,14 +510,46 @@ Game.prototype = {
     startSpeak: function(player, socket) {
         var _self = this;
         socket.on('speak', function(msg) {
-            player.debug('says: ' + msg);
-            if(!_self.checkMsgType(msg, 'string')) return;
-            _self.broadcast('speak', {player: player.id, content: msg});
-            if(msg.indexOf('over') >= 0) {
-                socket.removeAllListeners('speak');
-                _self.nextBeforeTimeout();
+            if(typeof(msg) == 'string') {
+                player.debug('says: ' + msg);
+                _self.broadcast('speak', {player: player.id, content: msg});
+                if (msg.indexOf('over') >= 0) {
+                    socket.removeAllListeners('speak');
+                    _self.nextBeforeTimeout();
+                }
+            } else if(typeof(msg) == 'object'){
+                if(msg.type == 'give' || msg.type == 'request') {
+                    var targetPlayer = _self.players[parseInt(msg.targetPlayerId) - 1];
+                    if(!targetPlayer || targetPlayer.room != player.room) return;
+                    if((msg.type == 'give' && (!player.hasKey || targetPlayer.hasKey)) ||
+                        (msg.type == 'request' && (player.hasKey || !targetPlayer.hasKey))) {
+                        player.debug('inlvalid key action ' + JSON.stringify(msg, null, 0));
+                        return;
+                    }
+                    _self.data.progress.keyAction = {
+                        type: msg.type,
+                        from: player,
+                        to: targetPlayer,
+                        message: msg.message
+                    };
+                } else if(msg.type == 'vote') {
+                    var currentRoom = _self.rooms[_self.data.progress.room];
+                    if(currentRoom.players.length < 3) return; //人数少于3
+                    var keyCount = 0;
+                    for(var i in currentRoom.players) {
+                        if(currentRoom.players.hasOwnProperty(i)) {
+                            var _player = currentRoom.players[i];
+                            if(_player.hasKey) {
+                                keyCount ++;
+                            }
+                        }
+                    }
+                    if(keyCount != 1) return; // 只有一把钥匙才能投票
+                    _self.data.keyVote = true;
+                }
             }
         });
+
         _self.updateGameAndAwaitNext(function() {
             socket.removeAllListeners('speak');
             player.debug('speak timeout');
@@ -586,65 +630,128 @@ Game.prototype = {
                         socket.removeAllListeners('challenge');
                         _self.askForAction(player.id, [targetPlayerId]);
                         break;
-                    case 'action': // 打出行动卡
+                    case 'give': // 给予/索取钥匙的答复
+                    case 'request':
                         if(!_self.checkMsgType(decision, 'boolean')) return;
                         socket.removeAllListeners('challenge');
-                        if(_self.data.rooms[_self.data.progress.room].function == 'disarm' && player.role == 'victim') {
-                            decision = true;
+                        var srcPlayer = _self.players[options.fromPlayer - 1];
+                        if(decision) {
+                            if(question == 'give') {
+                                srcPlayer.transformKey(player);
+                            } else {
+                                player.transformKey(srcPlayer);
+                            }
                         }
-                        _self.actions[player.id] = decision;
-                        _self.performAction();
+                        _self.broadcast('key', {
+                            type: question,
+                            agree: decision,
+                            player: player.id,
+                            fromPlayer: options.fromPlayer
+                        });
+                        _self.nextBeforeTimeout();
                         break;
                 }
             });
         });
-        _self.checkConnectionAndDo(function() {
-            switch(question) {
-                case 'who': // 设定选人的超时AI
-                    _self.updateGame();
-                    _self.broadcast('choose', player.id, Config.chooseTime);
-                    _self.chooseTimeoutId = setTimeout(function () {
+        switch(question) {
+            case 'who': // 设定选人的超时AI
+                _self.updateGame();
+//                    _self.broadcast('choose', {type: 'who', playerId: player.id, time: Config.chooseTime});
+                _self.chooseTimeoutId = setTimeout(function () {
+                    _self.checkConnectionAndDo(function() {
                         socket.removeAllListeners('challenge');
                         _self.broadcast('timeout', player.id);
                         player.debug('response challenge [' + question + '] timeout');
                         var targetPlayerId = options[parseInt(Math.random() * options.length)];
                         _self.askForAction(player.id, [targetPlayerId]);
-                    }, Config.chooseTime * 1000);
-                    break;
-                case 'destroy': // 设定销毁线索或查看线索的超时AI
-                case 'watch':
-                    _self.updateGameAndAwaitNext(function () {
-                        socket.removeAllListeners('challenge');
-                        _self.broadcast('timeout', player.id);
-                        player.debug('response challenge [' + question + '] timeout');
-                        switch (question) {
-                            case 'destroy':
-                                _self.broadcast('clue', {
-                                    player: player.id,
-                                    type: 'destroy',
-                                    destroy: false});
+                    });
+                }, Config.chooseTime * 1000);
+                break;
+            case 'destroy': // 设定销毁线索的超时AI
+            case 'watch': // 设定查看线索的超时AI
+            case 'give': // 设定转让key的超时AI
+            case 'request': // 设定索取key的超时AI
+                _self.updateGameAndAwaitNext(function () {
+                    socket.removeAllListeners('challenge');
+                    _self.broadcast('timeout', player.id);
+                    player.debug('response challenge [' + question + '] timeout');
+                    switch (question) {
+                        case 'destroy':
+                            _self.broadcast('clue', {
+                                player: player.id,
+                                type: 'destroy',
+                                destroy: false});
+                            break;
+                        case 'watch':
+                            var targetPlayerId = options[parseInt(Math.random() * options.length)];
+                            _self.broadcast('clue', {
+                                player: player.id,
+                                type: 'watch',
+                                target: targetPlayerId
+                            });
+                            _self.notify(player.id, 'clue', {
+                                player: targetPlayerId,
+                                type: 'saw',
+                                clue: _self.players[targetPlayerId - 1].clue
+                            });
+                            break;
+                        case 'give':
+                        case 'request':
+                            _self.broadcast('key', {
+                                type: question,
+                                agree: question == 'give',
+                                player: player.id,
+                                fromPlayer: options.fromPlayer
+                            });
+                    }
+                });
+                break;
+        }
+        _self.checkConnectionAndDo(function() {
+            _self.debug('Challenge player ' + player.id + ' with [' + question + ']');
+            _self.broadcast('challenge', {
+                player: player.id,
+                question: question,
+                options: options,
+                time: Config.chooseTime
+            }); // 送出问题
+        });
+    },
+    challengeMultiplePlayer: function(participants, question, options) {
+        var _self = this;
+        for(var i in participants) {
+            if(participants.hasOwnProperty(i)) {
+                var playerId = participants[i],
+                    player = _self.players[playerId - 1], socket = _self.clients[playerId - 1];
+                (function(player, socket) {
+                    socket.on('challenge', function (decision) {
+                        switch(question) {
+                            case 'action': // 收到action答复
+                                player.debug('response challenge [' + question + '] with ' + decision);
+                                if (!_self.checkMsgType(decision, 'boolean')) return;
+                                socket.removeAllListeners('challenge');
+                                if (_self.data.rooms[_self.data.progress.room].function == 'disarm' && player.role == 'victim') {
+                                    decision = true;
+                                }
+                                _self.actions[player.id] = decision;
+                                _self.performAction();
                                 break;
-                            case 'watch':
-                                var targetPlayerId = options[parseInt(Math.random() * options.length)];
-                                _self.broadcast('clue', {
-                                    player: player.id,
-                                    type: 'watch',
-                                    target: targetPlayerId
-                                });
-                                _self.notify(player.id, 'clue', {
-                                    player: targetPlayerId,
-                                    type: 'saw',
-                                    clue: _self.players[targetPlayerId - 1].clue
-                                });
+                            case 'vote': // 收到钥匙投票
                                 break;
                         }
                     });
-                    break;
+                })(player, socket);
             }
-            _self.debug('Challenge player ' + player.id + ' with [' + question + ']');
-            _self.notify(player.id, 'challenge', {question: question, options: options}); // 送出问题
+        }
+        _self.checkConnectionAndDo(function() {
+            _self.debug('Challenge multiple player [' + participants + '] with [' + question + ']');
+            _self.broadcast('challenge', {
+                participants: participants,
+                question: question,
+                options: options,
+                time: Config.chooseTime
+            }); // 送出问题
         });
-
     },
     askForAction: function(masterId, slavePlayerIds) {
         this.actions = {};
@@ -656,26 +763,31 @@ Game.prototype = {
         }
         var _self = this;
         this.checkConnectionAndDo(function() {
-            _self.broadcast('wait', {
-                type: _self.data.rooms[_self.data.progress.room].function,
-                actions: _self.actions,
-                time: Config.performTime
-            });
+//            _self.broadcast('wait', {
+//                type: _self.data.rooms[_self.data.progress.room].function,
+//                actions: _self.actions,
+//                time: Config.performTime
+//            });
+            var players = [], clients = [], participants = [];
             for(var i in _self.actions) {
                 if(_self.actions.hasOwnProperty(i)) {
-                    var playerId = i,
-                        player = _self.players[playerId - 1],
-                        client = _self.clients[playerId - 1];
-                    _self.challenge(player, client, 'action', masterId);
+                    var playerId = parseInt(i);
+                    players.push(_self.players[playerId - 1]);
+                    clients.push(_self.clients[playerId - 1]);
+                    participants.push(playerId);
                 }
             }
-            _self.chooseTimeoutId = setTimeout(function() {
+            _self.challengeMultiplePlayer(participants, 'action', {
+                masterPlayer: masterId,
+                actionType: _self.data.progress.stage == 'speak' ? 'vote' : _self.data.rooms[_self.data.progress.room].function
+            });
+            _self.chooseTimeoutId = setTimeout(function() { // 设定challenge多人的超时AI
                 for(var i in _self.actions) {
                     if(_self.actions.hasOwnProperty(i) && _self.actions[i] == 'tbd') {
-                        _self.actions[i] = Math.random() > 0.5;
+                        _self.actions[i] = Math.random() > 0.5; // 随机一个action
                         if(_self.data.rooms[_self.data.progress.room].function == 'disarm'
                             && _self.players[parseInt(i) - 1].role == 'victim') {
-                            _self.actions[i] = true;
+                            _self.actions[i] = true; // 受害者强制拆弹
                         }
                         _self.broadcast('timeout', i);
                         _self.clients[parseInt(i) - 1].removeAllListeners('challenge');
@@ -865,7 +977,7 @@ Game.prototype = {
         this.broadcast('join', {name: socket.playerName, clientId: socket.id});
         return true;
     },
-    remove: function(socket) {
+    remove: function(socket, force) {
         var _room = this.socketRoom;
         this.debug('remove client ' + socket.id + ' from room ' + _room);
         var _clients = this.clients;
@@ -873,18 +985,24 @@ Game.prototype = {
         socket.leave(_room);
         var _self = this;
         if(this.started) {
-            if (this.clients.indexOf(socket) >= 0) {
-                this.debug('Player ' + socket.playerName + ' disconnected, game paused.');
-                this.broadcast('offline', {name: socket.playerName, clientId: socket.id, playerId: _clients.indexOf(socket) + 1});
-                this.paused = true;
-                if(this.overTimeout) clearTimeout(this.overTimeout);
-                this.overTimeout = setTimeout(function() {
-                    if(_self.started = true) {
-                        _self.over();
-                    }
-                }, 120000);
+            if(force) {
+                this.broadcast('leave', {name: socket.playerName, clientId:socket.id});
+                _clients.splice(_clients.indexOf(socket), 1);
+                this.over();
             } else {
-                // 已经重连成功 之后才检测到掉线
+                if (this.clients.indexOf(socket) >= 0) {
+                    this.debug('Player ' + socket.playerName + ' disconnected, game paused.');
+                    this.broadcast('offline', {name: socket.playerName, clientId: socket.id, playerId: _clients.indexOf(socket) + 1});
+                    this.paused = true;
+                    if (this.overTimeout) clearTimeout(this.overTimeout);
+                    this.overTimeout = setTimeout(function () {
+                        if (_self.started = true) {
+                            _self.over();
+                        }
+                    }, 120000);
+                } else {
+                    // 已经重连成功 之后才检测到掉线
+                }
             }
         } else {
             this.broadcast('leave', {name: socket.playerName, clientId:socket.id});
@@ -983,6 +1101,11 @@ Player.prototype = {
     loseKey: function() {
         this.debug('lost the key.');
         this.hasKey = false;
+    },
+    transformKey: function(anotherPlayer) {
+        this.debug('give key to player ' + anotherPlayer.id);
+        this.hasKey = false;
+        anotherPlayer.hasKey = true;
     },
     detoxify: function() {
         this.debug('got detoxified.');

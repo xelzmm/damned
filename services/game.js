@@ -243,8 +243,8 @@ Game.prototype = {
                 _progress.time = _progress.stage == 'speak' ? Config.speakTime : Config.moveTime;
                 // 如果有钥匙事件
                 if(_progress.keyAction) {
-                    var to = _progress.keyAction.to;
                     _progress.time = Config.chooseTime;
+                    var to = _progress.keyAction.to;
                     this.challenge(to, _clients[to.id - 1], _progress.keyAction.type, {
                         fromPlayer: _progress.keyAction.from.id,
                         message: _progress.keyAction.message
@@ -256,6 +256,22 @@ Game.prototype = {
                 if(_progress.player != null && _progress.player < _order[_progress.room].length - 1) { // 房间里还有其他玩家
                     _progress.player += 1;
                 } else { // 上一个房间所有玩家执行完毕
+                    // 如果有钥匙投票事件
+                    if(_progress.keyVote) {
+                        var masterId, slavePlayerIds = _rooms[_progress.room].players.slice(0);
+                        for(i in slavePlayerIds) {
+                            if(slavePlayerIds.hasOwnProperty(i)) {
+                                if(_players[slavePlayerIds[i] - 1].hasKey) {
+                                    masterId = slavePlayerIds[i];
+                                    break;
+                                }
+                            }
+                        }
+                        slavePlayerIds.splice(slavePlayerIds.indexOf(masterId), 1);
+                        this.askForAction(masterId, slavePlayerIds);
+                        delete _progress.keyVote;
+                        return;
+                    }
                     _progress.player = null;
                     for (roomId = _progress.room + 1; roomId <= 12; roomId ++) { // 按照房号查找下一个有玩家的房间
                         if(_order[roomId].length != 0) { // 找到一个有玩家的房间
@@ -518,6 +534,7 @@ Game.prototype = {
                     _self.nextBeforeTimeout();
                 }
             } else if(typeof(msg) == 'object'){
+                player.debug('key action:' + JSON.stringify(msg, null, 0));
                 if(msg.type == 'give' || msg.type == 'request') {
                     var targetPlayer = _self.players[parseInt(msg.targetPlayerId) - 1];
                     if(!targetPlayer || targetPlayer.room != player.room) return;
@@ -532,20 +549,25 @@ Game.prototype = {
                         to: targetPlayer,
                         message: msg.message
                     };
+                    _self.debug('key action:' + JSON.stringify(_self.data.progress.keyAction, null, 4));
                 } else if(msg.type == 'vote') {
-                    var currentRoom = _self.rooms[_self.data.progress.room];
+                    var currentRoom = _self.data.rooms[_self.data.progress.room];
                     if(currentRoom.players.length < 3) return; //人数少于3
                     var keyCount = 0;
                     for(var i in currentRoom.players) {
                         if(currentRoom.players.hasOwnProperty(i)) {
-                            var _player = currentRoom.players[i];
+                            var _player = _self.players[currentRoom.players[i] - 1];
                             if(_player.hasKey) {
                                 keyCount ++;
                             }
                         }
                     }
                     if(keyCount != 1) return; // 只有一把钥匙才能投票
-                    _self.data.keyVote = true;
+                    _self.data.progress.keyVote = true;
+                    _self.broadcast('speak', {
+                        player: player.id,
+                        content: '我发起了抢钥匙，本房间内所有玩家发言完毕后将会进行投票。'
+                    })
                 }
             }
         });
@@ -725,20 +747,25 @@ Game.prototype = {
                     player = _self.players[playerId - 1], socket = _self.clients[playerId - 1];
                 (function(player, socket) {
                     socket.on('challenge', function (decision) {
-                        switch(question) {
-                            case 'action': // 收到action答复
-                                player.debug('response challenge [' + question + '] with ' + decision);
-                                if (!_self.checkMsgType(decision, 'boolean')) return;
+                        player.debug('response challenge [' + question + '] with ' + decision);
+                        switch(options.actionType) {
+                            case 'disarm':
+                            case 'downgrade':
+                            case 'upgrade':
+                                if(!_self.checkMsgType(decision, 'boolean')) return;
                                 socket.removeAllListeners('challenge');
-                                if (_self.data.rooms[_self.data.progress.room].function == 'disarm' && player.role == 'victim') {
+                                if (options.actionType == 'disarm' && player.role == 'victim') {
                                     decision = true;
                                 }
-                                _self.actions[player.id] = decision;
-                                _self.performAction();
                                 break;
-                            case 'vote': // 收到钥匙投票
+                            case 'vote':
+                                if(!_self.checkMsgType(decision, 'number')) return;
+                                if(decision != 0 && !_self.actions.hasOwnProperty(decision)) return;
+                                socket.removeAllListeners('challenge');
                                 break;
                         }
+                        _self.actions[player.id] = decision;
+                        _self.performAction();
                     });
                 })(player, socket);
             }
@@ -785,7 +812,9 @@ Game.prototype = {
                 for(var i in _self.actions) {
                     if(_self.actions.hasOwnProperty(i) && _self.actions[i] == 'tbd') {
                         _self.actions[i] = Math.random() > 0.5; // 随机一个action
-                        if(_self.data.rooms[_self.data.progress.room].function == 'disarm'
+                        if(_self.data.progress.stage == 'speak') {
+                            _self.actions[i] = 0; // 投票弃权
+                        } else if(_self.data.rooms[_self.data.progress.room].function == 'disarm'
                             && _self.players[parseInt(i) - 1].role == 'victim') {
                             _self.actions[i] = true; // 受害者强制拆弹
                         }
@@ -806,7 +835,7 @@ Game.prototype = {
                     allResponsed = false;
                     break;
                 }
-                if(this.actions[i] == false) {
+                if(this.actions[i] === false) {
                     actionResult = false;
                 }
             }
@@ -818,60 +847,107 @@ Game.prototype = {
             var roomFunction = this.data.rooms[this.data.progress.room].function;
             var _self = this;
             this.checkConnectionAndDo(function() {
-                switch (roomFunction) {
-                    case 'upgrade':
-                    case 'downgrade':
-                        if (actionResult) {
-                            var _progress = _self.data.progress,
-                                _players = _self.players,
-                                _order = _self.actionOrder,
-                                _clues = _self.data.clues;
-                            var oldClues = [], participants = [];
-                            for (i in _self.actions) {
-                                if (_self.actions.hasOwnProperty(i)) {
-                                    oldClues.push(_players[parseInt(i) - 1].clue.level);
-                                    participants.push(parseInt(i));
-                                    _players[parseInt(i) - 1].loseClue();
-                                }
+                if(_self.data.progress.stage == 'speak') {
+                    var voteResult = {};
+                    for(i in _self.actions) {
+                        if(_self.actions.hasOwnProperty(i)) {
+                            voteResult[i] = 0;
+                        }
+                    }
+                    for(i in _self.actions) {
+                        if(_self.actions.hasOwnProperty(i)) {
+                            if(_self.actions[i] != 0) {
+                                voteResult[_self.actions[i]] ++;
                             }
-                            var masterPlayer = _players[_order[_progress.room][_progress.player] - 1],
-                                resultLevel = roomFunction == 'upgrade' ? (oldClues[0] + oldClues[1]) :
-                                    Math.abs(oldClues[0] - oldClues[1]);
-                            masterPlayer.gainClue({
-                                level: resultLevel,
-                                room: _clues["level" + resultLevel].splice(0, 1)[0]
-                            });
-                            _self.broadcast('action', {
-                                type: roomFunction,
-                                result: true,
-                                gain: {
-                                    player: masterPlayer.id,
-                                    level: resultLevel
-                                },
-                                participants: participants
-                            });
-                            _self.notify(masterPlayer.id, 'clue', {
-                                type: 'receive',
-                                clue: masterPlayer.clue
-                            });
-                        } else {
-                            _self.broadcast('action', {
-                                type: roomFunction,
-                                result: false
-                            });
                         }
-                        break;
-                    case 'disarm':
-                        if(actionResult) {
-                            _self.data.progress.bomb += 1;
-                        } else {
-                            _self.data.progress.bomb = -1 - _self.data.progress.bomb;
+                    }
+                    var winnerId = 0, maxVotes = 0, parallel = false;
+                    for(i in voteResult) {
+                        if(voteResult.hasOwnProperty(i)) {
+                            if(voteResult[i] > maxVotes) {
+                                winnerId = i;
+                                maxVotes = voteResult[i];
+                                parallel = false;
+                            } else if(voteResult[i] == maxVotes){
+                                parallel = true;
+                            }
                         }
-                        _self.broadcast('action', {
-                            type: 'disarm',
-                            result: actionResult,
-                            bomb: _self.data.progress.bomb
-                        });
+                    }
+                    if(parallel) { // 平票
+                        winnerId = 0;
+                        _self.debug('key stay with original owner.')
+                    }
+                    if(winnerId != 0) {
+                        var keyOwner;
+                        for(i in _self.actions) {
+                            if(_self.actions.hasOwnProperty(i) && _self.players[i - 1].hasKey) {
+                                keyOwner = _self.players[i - 1];
+                                break;
+                            }
+                        }
+                        keyOwner.transformKey(_self.players[winnerId - 1]);
+                    }
+                    _self.broadcast('key', {
+                        type: 'vote',
+                        vote: _self.actions,
+                        winner: winnerId
+                    });
+                } else {
+                    switch (roomFunction) {
+                        case 'upgrade':
+                        case 'downgrade':
+                            if (actionResult) {
+                                var _progress = _self.data.progress,
+                                    _players = _self.players,
+                                    _order = _self.actionOrder,
+                                    _clues = _self.data.clues;
+                                var oldClues = [], participants = [];
+                                for (i in _self.actions) {
+                                    if (_self.actions.hasOwnProperty(i)) {
+                                        oldClues.push(_players[parseInt(i) - 1].clue.level);
+                                        participants.push(parseInt(i));
+                                        _players[parseInt(i) - 1].loseClue();
+                                    }
+                                }
+                                var masterPlayer = _players[_order[_progress.room][_progress.player] - 1],
+                                    resultLevel = roomFunction == 'upgrade' ? (oldClues[0] + oldClues[1]) :
+                                        Math.abs(oldClues[0] - oldClues[1]);
+                                masterPlayer.gainClue({
+                                    level: resultLevel,
+                                    room: _clues["level" + resultLevel].splice(0, 1)[0]
+                                });
+                                _self.broadcast('action', {
+                                    type: roomFunction,
+                                    result: true,
+                                    gain: {
+                                        player: masterPlayer.id,
+                                        level: resultLevel
+                                    },
+                                    participants: participants
+                                });
+                                _self.notify(masterPlayer.id, 'clue', {
+                                    type: 'receive',
+                                    clue: masterPlayer.clue
+                                });
+                            } else {
+                                _self.broadcast('action', {
+                                    type: roomFunction,
+                                    result: false
+                                });
+                            }
+                            break;
+                        case 'disarm':
+                            if (actionResult) {
+                                _self.data.progress.bomb += 1;
+                            } else {
+                                _self.data.progress.bomb = -1 - _self.data.progress.bomb;
+                            }
+                            _self.broadcast('action', {
+                                type: 'disarm',
+                                result: actionResult,
+                                bomb: _self.data.progress.bomb
+                            });
+                    }
                 }
                 delete _self.actions;
                 _self.nextBeforeTimeout();
@@ -996,6 +1072,7 @@ Game.prototype = {
                     this.paused = true;
                     if (this.overTimeout) clearTimeout(this.overTimeout);
                     this.overTimeout = setTimeout(function () {
+                        _clients.splice(_clients.indexOf(socket), 1);
                         if (_self.started = true) {
                             _self.over();
                         }

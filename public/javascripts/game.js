@@ -382,7 +382,7 @@ var init = function() {
             alert('你是【' + me.id + '号】玩家，你的身份是【受害者】!');
         } else {
             print('安全房间是 【' + safeRoom + '】 号房间！', 'self');
-            alert('你是【' + me.id + '号】玩家，你的身份是【奸徒】，安全房间是 【' + safeRoom + '】 号房间！');
+            alert('你是【' + me.id + '号】玩家，你的身份是【奸徒】!\n安全房间是 【' + safeRoom + '】 号房间！');
         }
         initPlayGround(rooms, players);
         notice('提示1：点击线索标记区可以切换线索标记状态。');
@@ -407,6 +407,7 @@ var init = function() {
         var roomMap = document.getElementById('roomMask');
         if(Game.canSpeak) {
             document.getElementById('keyTransform').style.display = 'none';
+            document.getElementById('keyVote').style.display = 'none';
             delete Game.canSpeak;
         }
         if(Game.canMove) {
@@ -461,7 +462,6 @@ var init = function() {
                 switch(progress.stage) {
                     case 'speak':
                         Game.canSpeak = true;
-                        var keyTransformButton = document.getElementById('keyTransform');
                         var _players = currentRoom.players;
                         if(_players.length >= 2) {
                             var targetPlayer = [];
@@ -474,6 +474,7 @@ var init = function() {
                                 }
                             }
                             if(targetPlayer.length > 0) {
+                                var keyTransformButton = document.getElementById('keyTransform');
                                 keyTransformButton.innerHTML = currentPlayer.hasKey ? '赠予钥匙' : '索要钥匙';
                                 keyTransformButton.style.display = 'inline';
                                 keyTransformButton.onclick = function () {
@@ -500,6 +501,29 @@ var init = function() {
                                         targetPlayerId: decision,
                                         message: message
                                     });
+                                }
+                            }
+                        }
+                        if(_players.length >= 3 && !currentPlayer.hasKey) { // 3个以上玩家
+                            var keyCount = 0;
+                            for(i in _players) {
+                                if(_players.hasOwnProperty(i)) {
+                                    if(Game.players[_players[i] - 1].hasKey) {
+                                        keyCount ++;
+                                    }
+                                }
+                            }
+                            if(keyCount == 1) { // 只有一把钥匙
+                                var keyVoteButton = document.getElementById('keyVote');
+                                keyVoteButton.style.display = 'inline';
+                                keyVoteButton.onclick = function() {
+                                    if(confirm('发起抢钥匙，将会在当前房间内所有玩家发言完毕后进行投票。确定继续？')) {
+                                        keyVoteButton.onclick = null;
+                                        keyVoteButton.style.display = 'none';
+                                        socket.emit('speak', {
+                                            type: 'vote'
+                                        });
+                                    }
                                 }
                             }
                         }
@@ -549,6 +573,33 @@ var init = function() {
                 break;
             case 'request':
                 _players[data.player - 1].processKeyRequest(data.agree, _players[data.fromPlayer - 1]);
+                break;
+            case 'vote':
+                print('投票结果：');
+                for(var i in data.vote) {
+                    if(data.vote.hasOwnProperty(i)) {
+                        if(data.vote[i] == 0) {
+                            _players[i - 1].debug('弃权。');
+                        } else {
+                            _players[i - 1].debug('投票给' + _players[data.vote[i] - 1].getDisplayName());
+                        }
+                    }
+                }
+                var playersInRoom = Game.rooms[Game.progress.room].players, keyOwner;
+                for(i in playersInRoom) {
+                    if(playersInRoom.hasOwnProperty(i)) {
+                        var player = Game.players[playersInRoom[i] - 1];
+                        if(player.hasKey) {
+                            keyOwner = player;
+                            break;
+                        }
+                    }
+                }
+                if(data.winner == 0 || data.winner == keyOwner.id) {
+                    notice('钥匙保留在' + keyOwner.getDisplayName() + '身上。');
+                } else {
+                    Game.players[data.winner - 1].gainKey(keyOwner);
+                }
                 break;
         }
     });
@@ -703,9 +754,13 @@ var init = function() {
                 'vote': '投票'
             }[data.options.actionType];
             if(data.participants.indexOf(me.id) >= 0) {
-                print('你将与【' + data.participants.concat().splice(data.participants.indexOf(me.id), 1) + '】一起【' + action + '】。');
-                switch(question) {
-                    case 'action':
+                var others = data.participants.concat();
+                others.splice(data.participants.indexOf(me.id), 1);
+                print('你将与【' + others + '】一起【' + action + '】。');
+                switch(data.options.actionType) {
+                    case 'disarm':
+                    case 'upgrade':
+                    case 'downgrade':
                         switch (Game.rooms[me.room]["function"]) {
                             case 'upgrade':
                             case 'downgrade':
@@ -728,6 +783,18 @@ var init = function() {
                         }
                         break;
                     case 'vote':
+                        msg = '请投票决定谁最终持有钥匙：\n【0】：弃权';
+                        for(i in data.participants) {
+                            if(data.participants.hasOwnProperty(i)) {
+                                var participant = Game.players[data.participants[i] - 1];
+                                msg += '\n' + (participant.id == me.id ? '【'+ me.id + '】你' : participant.getDisplayName()) + (participant.hasKey ? '，钥匙持有者': '');
+                            }
+                        }
+                        do {
+                            decision = prompt(msg, '0');
+                            if(!decision) decision = 0;
+                            decision = parseInt(decision);
+                        } while(decision != 0 && data.participants.indexOf(decision) < 0);
                         break;
                 }
                 document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
@@ -804,7 +871,7 @@ var init = function() {
             }
             resetGame();
         }
-        if(me                  .role == 'victim') {
+        if(me.role == 'victim') {
             notice('安全房间是：【' + result.safeRoom + '】号房间。');
             if (!!result.traitor) {
                 notice(result.traitor + ' 号玩家是【奸徒】。');
@@ -853,8 +920,11 @@ var init = function() {
 };
 var resetGame = function() {
     Game.started = false;
+    document.getElementById('keyTransform').style.display = 'none';
+    document.getElementById('keyVote').style.display = 'none';
     var resetButton = document.getElementById('resetButton');
     resetButton.style.display = 'inline';
+    stopTimer();
     resetButton.onclick = function() {
         gameRoom.display();
         this.onclick = null;

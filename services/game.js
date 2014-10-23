@@ -102,11 +102,17 @@ Game.prototype = {
             _rooms[i] = new Room(i, this.socketRoom, roomFunctions[i], roomColors[i], roomLocks[i], 'unknown', []);
         }
 
-        var _clues = _data.clues = {
-            level1: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].sort(shuffle),
-            level2: ['yellow', 'red', 'blue', 'green'].sort(shuffle)
-        };
+        var _clues = _data.clues = {};
+        _clues.level1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
         var safeRoomId = this.data.safeRoom = parseInt(Math.random() * 12) + 1;
+        if(_clients.length > 5) {
+            _clues.level1.push(13);
+        }
+        if(_clients.length > 6) {
+            _clues.level1.push(0);
+        }
+        _clues.level1.sort(shuffle);
+        _clues.level2 = ['yellow', 'red', 'blue', 'green'].sort(shuffle);
         _clues.level1.splice(_clues.level1.indexOf(safeRoomId), 1);
         _clues.level2.splice(_clues.level2.indexOf(_rooms[safeRoomId].color), 1);
         _clues.level3 = [_rooms[safeRoomId].hasLock ? 'noLock' : 'hasLock'];

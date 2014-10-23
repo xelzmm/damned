@@ -529,7 +529,7 @@ var init = function() {
                         }
                         break;
                     case 'move':
-                        notice('请点击房间进行移动。');
+                        notice('请点击房间进行移动，停留请点击所处房间。');
                         document.title = '* Damned | Player ' + me.id + ' | Room ' + me.room;
                         roomMap.style.zIndex = '100';
                         Game.canMove = true;

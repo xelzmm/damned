@@ -149,6 +149,10 @@ Player.prototype = {
     getDisplayName: function() {
         return this.id == me.id ? '【你】' : ('【' + this.id + '】号玩家 (' + this.name + ') ');
     },
+    speak: function(content) {
+        var msg = this.getDisplayName() + '说：' + content;
+        print(msg, (this.id == me.id ? 'self' : 'player') + ' speak');
+    },
     gainKey: function (from) {
         this.debug('获得了' + from.getDisplayName() + '的钥匙.');
         from.loseKey();
@@ -456,6 +460,7 @@ Room.prototype = {
             }
         }
         var canLock = lockedRoomCount < 3;
+        var wannaLock = false;
         if (roomId == this.id) {
             var _routes = this.routes(), canStay = true;
             for (i in _routes) {
@@ -476,6 +481,7 @@ Room.prototype = {
                 ], '留在 ' + this.id + ' 号房间。'));
             }
             if (this.hasLock && hasKey) {
+                if (!this.locked) wannaLock = true;
                 if (!this.locked && canLock) {
                     optionalMovements.push(build([
                         {
@@ -508,6 +514,7 @@ Room.prototype = {
                                 ], '进入 ' + _room.id + ' 号房间。'));
                             }
                             if (_room.hasLock && hasKey) {
+                                if (!_room.locked) wannaLock = true;
                                 if (!_room.locked && canLock) {
                                     optionalMovements.push(build([
                                         {
@@ -524,6 +531,7 @@ Room.prototype = {
                                     ], '进入 ' + _room.id + ' 号房间，并将其【解锁】。'));
                                 }
                             }
+                            if (this.hasLock && !_room.locked && hasKey) wannaLock = true;
                             if (this.hasLock && !_room.locked && hasKey && canLock) {
                                 optionalMovements.push(build([
                                     {
@@ -548,12 +556,14 @@ Room.prototype = {
                                         }
                                         if (hasKey) {
                                             if (!_room2.locked) {
+                                                if (this.hasLock) wannaLock = true;
                                                 if (this.hasLock && canLock) {
                                                     optionalMovements.push(build([
                                                         {to: _room.id, lockAction: '-lock'},
                                                         {to: _room2.id, lockAction: undefined}
                                                     ], '经过 ' + _room.id + ' 号房间到达 ' + _room2.id + ' 号房间，并回头【锁上】 ' + this.id + ' 号房间。'));
                                                 }
+                                                if (_room.hasLock) wannaLock = true;
                                                 if (_room.hasLock && canLock) {
                                                     optionalMovements.push(build([
                                                         {to: _room.id, lockAction: undefined},
@@ -562,6 +572,7 @@ Room.prototype = {
                                                 }
                                             }
                                             if (_room2.hasLock) {
+                                                if (!_room2.locked) wannaLock = true;
                                                 if (!_room2.locked && canLock) {
                                                     optionalMovements.push(build([
                                                         {to: _room.id, lockAction: undefined},
@@ -582,6 +593,9 @@ Room.prototype = {
                     }
                 }
             }
+        }
+        if(wannaLock && !canLock) {
+            notice('已经有【3】个房间被锁上，本次移动过程中，你无法再锁上任何房间。');
         }
         return optionalMovements;
     },

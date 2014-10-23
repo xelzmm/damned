@@ -545,14 +545,14 @@ var init = function() {
             if(data.content == 'over') return;
             var _players = Game.players;
             var playerId = data.player;
-            _players[playerId - 1].debug('说: ' + data.content);
+            _players[playerId - 1].speak(data.content);
 //            if(me.id == playerId) {
 //                print('你说: ' + data.content, 'self');
 //            } else {
 //                print(playerId + ' 号玩家(' + _players[playerId - 1].name + ') 说: ' + data.content, 'player');
 //            }
         } else {
-            print(data.player + ' 说: ' + data.content, 'player');
+            print(data.player + ' 说: ' + data.content, 'player speak');
         }
     });
     socket.on('move', function(data) {
@@ -575,7 +575,7 @@ var init = function() {
                 _players[data.player - 1].processKeyRequest(data.agree, _players[data.fromPlayer - 1]);
                 break;
             case 'vote':
-                print('投票结果：');
+                print('====== 投票结果 ======');
                 for(var i in data.vote) {
                     if(data.vote.hasOwnProperty(i)) {
                         if(data.vote[i] == 0) {
@@ -585,6 +585,7 @@ var init = function() {
                         }
                     }
                 }
+                print('====== 投票结果 ======');
                 var playersInRoom = Game.rooms[Game.progress.room].players, keyOwner;
                 for(i in playersInRoom) {
                     if(playersInRoom.hasOwnProperty(i)) {

@@ -542,9 +542,12 @@ var init = function() {
     });
     socket.on('speak', function(data) {
         if(Game.started) {
-            if(data.content == 'over') return;
             var _players = Game.players;
             var playerId = data.player;
+            if(data.content.toLowerCase() == 'over') {
+                _players[playerId - 1].debug('提前结束发言。');
+                return;
+            }
             _players[playerId - 1].speak(data.content);
 //            if(me.id == playerId) {
 //                print('你说: ' + data.content, 'self');

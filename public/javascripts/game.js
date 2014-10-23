@@ -446,6 +446,18 @@ var init = function() {
                         Game.elements.timer.style.left = (GameConfig.timerBoard.x + (progress.round - 1) * GameConfig.timerBoard.step) + 'px';
                     }
                 } else if(progress.stage == 'thinking') {
+                    print('当前剩余线索卡：');
+                    print('【1】级线索卡：' + progress.clueCounts[0] + '张');
+                    print('【2】级线索卡：' + progress.clueCounts[1] + '张');
+                    print('【3】级线索卡：' + progress.clueCounts[2] + '张');
+                    if(progress.bomb >= 0 && progress.bomb <= 1) {
+                        print('下次拆弹需要【' +
+                            (progress.bomb == 0 ?
+                                (Game.players.length >= 8 ? 3 : 2) :
+                                (Game.players.length >= 9 ? 4 : (Game.players.length >= 6 ? 3 : 2))
+                                ) +
+                            '】人配合！', 'self');
+                    }
                     print('思考 ' + progress.time + ' 秒，考虑接下来如何行动。');
                 }
             }

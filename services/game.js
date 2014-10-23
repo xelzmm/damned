@@ -1006,7 +1006,17 @@ Game.prototype = {
         });
     },
     updateGame: function() {
+        if(this.data.progress.stage == 'thinking') {
+            this.data.progress.clueCounts = [
+                this.data.clues.level1.length,
+                this.data.clues.level2.length,
+                this.data.clues.level3.length
+            ];
+        }
         this.broadcast('update', this.data.progress);
+        if(this.data.progress.stage == 'thinking') {
+            delete this.data.progress.clueCounts;
+        }
     },
     broadcast: function(event, msg) {
         this.debug('broadcast event [' + event + ']: ' + JSON.stringify(msg, null, 0));

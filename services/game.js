@@ -37,6 +37,7 @@ Game.prototype = {
         gameDebug('Game [' + this.socketRoom + '] ' + msg);
     },
     reset: function() {
+        delete this.paused;
         this.data = {};
         this.players = [];
         this.started = false;
@@ -1068,21 +1069,31 @@ Game.prototype = {
         var _self = this;
         if(this.started) {
             if(force) {
+                delete _self.paused;
                 this.broadcast('leave', {name: socket.playerName, clientId:socket.id});
                 _clients.splice(_clients.indexOf(socket), 1);
                 this.over();
             } else {
                 if (this.clients.indexOf(socket) >= 0) {
-                    this.debug('Player ' + socket.playerName + ' disconnected, game paused.');
-                    this.broadcast('offline', {name: socket.playerName, clientId: socket.id, playerId: _clients.indexOf(socket) + 1});
-                    this.paused = true;
-                    if (this.overTimeout) clearTimeout(this.overTimeout);
-                    this.overTimeout = setTimeout(function () {
+                    if(this.paused) { // 第二人掉线
+                        delete _self.paused;
+                        this.broadcast('leave', {name: socket.playerName, clientId:socket.id});
                         _clients.splice(_clients.indexOf(socket), 1);
-                        if (_self.started = true) {
-                            _self.over();
-                        }
-                    }, 120000);
+                        this.over();
+                    } else {
+                        this.debug('Player ' + socket.playerName + ' disconnected, game paused.');
+                        this.broadcast('offline', {name: socket.playerName, clientId: socket.id, playerId: _clients.indexOf(socket) + 1});
+                        this.paused = true;
+                        if (this.overTimeout) clearTimeout(this.overTimeout);
+                        this.overTimeout = setTimeout(function () {
+                            _self.broadcast('leave', {name: socket.playerName, clientId: socket.id});
+                            delete _self.paused;
+                            _clients.splice(_clients.indexOf(socket), 1);
+                            if (_self.started) {
+                                _self.over();
+                            }
+                        }, 120000);
+                    }
                 } else {
                     // 已经重连成功 之后才检测到掉线
                 }
@@ -1125,7 +1136,6 @@ Game.prototype = {
             }
         }
         if(allConnected) {
-            this.paused = false;
             delete this.paused;
             if(this.pendingHandler) {
                 this.debug('all players online, game resumed.');

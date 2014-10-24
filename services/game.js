@@ -537,7 +537,7 @@ Game.prototype = {
                 player.debug('says: ' + msg);
                 _self.broadcast('speak', {player: player.id, content: msg});
                 if (msg.toLowerCase().indexOf('over') >= 0) {
-                    socket.removeAllListeners('speak');
+                    socket.removeListener('speak', _self.inGameSpeakHandler);
                     _self.nextBeforeTimeout();
                 }
             } else if(typeof(msg) == 'object'){

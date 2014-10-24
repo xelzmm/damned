@@ -752,10 +752,12 @@ var init = function() {
                         break;
                     case 'give':
                         print(Game.players[data.options.fromPlayer - 1].getDisplayName() + '将钥匙赠予' + Game.players[data.player - 1].getDisplayName() + '。');
+                        Game.players[data.options.fromPlayer - 1].debug('附言：' + data.options.message);
                         msg += '确认是否接受。';
                         break;
                     case 'request':
                         print(Game.players[data.options.fromPlayer - 1].getDisplayName() + '向' + Game.players[data.player - 1].getDisplayName() + '索要钥匙。');
+                        Game.players[data.options.fromPlayer - 1].debug('附言：' + data.options.message);
                         msg += '确认是否同意。';
                         break;
                 }
@@ -806,7 +808,7 @@ var init = function() {
                             }
                         }
                         do {
-                            decision = prompt(msg, '0');
+                            decision = prompt(msg, me.id);
                             if(!decision) decision = 0;
                             decision = parseInt(decision);
                         } while(decision != 0 && data.participants.indexOf(decision) < 0);

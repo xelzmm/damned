@@ -45,7 +45,7 @@ Game.prototype = {
         clearTimeout(this.chooseTimeoutId);
         for(var i in this.clients) {
             if (this.clients.hasOwnProperty(i)) {
-//                this.clients[i].removeAllListeners('speak');
+                this.clients[i].removeListener('speak', this.inGameSpeakHandler);
                 this.clients[i].removeAllListeners('move');
                 this.clients[i].removeAllListeners('challenge');
                 this.clients[i].playerReady = false;
@@ -532,7 +532,7 @@ Game.prototype = {
     },
     startSpeak: function(player, socket) {
         var _self = this;
-        socket.on('speak', function(msg) {
+        _self.inGameSpeakHandler = function(msg) {
             if(typeof(msg) == 'string') {
                 player.debug('says: ' + msg);
                 _self.broadcast('speak', {player: player.id, content: msg});
@@ -577,10 +577,11 @@ Game.prototype = {
                     })
                 }
             }
-        });
+        };
+        socket.on('speak', _self.inGameSpeakHandler);
 
         _self.updateGameAndAwaitNext(function() {
-            socket.removeAllListeners('speak');
+            socket.removeListener('speak', _self.inGameSpeakHandler);
             player.debug('speak timeout');
         });
     },

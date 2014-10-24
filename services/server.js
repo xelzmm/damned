@@ -98,6 +98,7 @@ var server = function() {
                 leave(false);
         });
         socket.on('leave', function() {
+            debug('client leave, socket id: ' + socket.id);
             leave(true);
         });
     });

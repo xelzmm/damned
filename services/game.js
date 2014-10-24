@@ -249,14 +249,14 @@ Game.prototype = {
                 }
                 _progress.time = _progress.stage == 'speak' ? Config.speakTime : Config.moveTime;
                 // 如果有钥匙事件
-                if(_progress.keyAction) {
+                if(this.data.keyAction) {
                     _progress.time = Config.chooseTime;
-                    var to = _progress.keyAction.to;
-                    this.challenge(to, _clients[to.id - 1], _progress.keyAction.type, {
-                        fromPlayer: _progress.keyAction.from.id,
-                        message: _progress.keyAction.message
+                    var to = this.data.keyAction.to;
+                    this.challenge(to, _clients[to.id - 1], this.data.keyAction.type, {
+                        fromPlayer: this.data.keyAction.from.id,
+                        message: this.data.keyAction.message
                     });
-                    delete _progress.keyAction;
+                    delete this.data.keyAction;
                     return;
                 }
                 // 下一个玩家
@@ -264,7 +264,7 @@ Game.prototype = {
                     _progress.player += 1;
                 } else { // 上一个房间所有玩家执行完毕
                     // 如果有钥匙投票事件
-                    if(_progress.keyVote) {
+                    if(this.data.keyVote) {
                         var masterId, slavePlayerIds = _rooms[_progress.room].players.slice(0);
                         for(i in slavePlayerIds) {
                             if(slavePlayerIds.hasOwnProperty(i)) {
@@ -276,7 +276,7 @@ Game.prototype = {
                         }
                         slavePlayerIds.splice(slavePlayerIds.indexOf(masterId), 1);
                         this.askForAction(masterId, slavePlayerIds);
-                        delete _progress.keyVote;
+                        delete this.data.keyVote;
                         return;
                     }
                     _progress.player = null;
@@ -550,13 +550,13 @@ Game.prototype = {
                         player.debug('inlvalid key action ' + JSON.stringify(msg, null, 0));
                         return;
                     }
-                    _self.data.progress.keyAction = {
+                    _self.data.keyAction = {
                         type: msg.type,
                         from: player,
                         to: targetPlayer,
                         message: msg.message
                     };
-                    _self.debug('key action:' + JSON.stringify(_self.data.progress.keyAction, null, 4));
+                    _self.debug('key action:' + JSON.stringify(_self.data.keyAction, null, 4));
                 } else if(msg.type == 'vote') {
                     var currentRoom = _self.data.rooms[_self.data.progress.room];
                     if(currentRoom.players.length < 3) return; //人数少于3
@@ -570,7 +570,7 @@ Game.prototype = {
                         }
                     }
                     if(keyCount != 1) return; // 只有一把钥匙才能投票
-                    _self.data.progress.keyVote = true;
+                    _self.data.keyVote = true;
                     _self.broadcast('speak', {
                         player: player.id,
                         content: '我发起了抢钥匙，本房间内所有玩家发言完毕后将会进行投票。'
@@ -1323,8 +1323,8 @@ Player.prototype = {
                                     return false;
                                 break;
                             case '-lock': // 离开有解锁标记的房间，并上锁
-                                if (keyUsed || !this.hasKey || !_room.hasLock
-                                    || _room.locked) // 必须持有钥匙、原房间有锁未锁
+                                if (i == 1 || keyUsed || !this.hasKey || !_room.hasLock
+                                    || _room.locked) // 必须持有钥匙、原房间有锁未锁，不能是第二次移动
                                     return false;
                                 keyUsed = true; // 使用过钥匙，不能再次使用
                                 break;
@@ -1405,9 +1405,9 @@ Player.prototype = {
                             if (_rooms[route].hasLock) { // 目标房间有锁
                                 optionalMovements.push({to: route, lockAction: 'lock'}); // 移动至该房间并上锁
                             }
-                            if (room.hasLock) { // 原房间有锁
-                                optionalMovements.push({to: route, lockAction: '-lock'}); // 移动至该房间并回头锁上原房间
-                            }
+//                            if (room.hasLock) { // 原房间有锁
+//                                optionalMovements.push({to: route, lockAction: '-lock'}); // 移动至该房间并回头锁上原房间
+//                            }
                         }
                     } else { // 目标房间已上锁
                         if(firstMovement.lockAction != '-lock' && this.hasKey) { // 玩家拥有钥匙，且没使用过钥匙

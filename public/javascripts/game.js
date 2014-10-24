@@ -633,8 +633,7 @@ var init = function() {
                     player.gainClue(data.clue);
                 break;
             case 'receive':
-                if(playerId != me.id)
-                    me.gainClue(data.clue);
+                me.gainClue(data.clue);
                 break;
             case 'destroy':
                 if(data.destroy) {

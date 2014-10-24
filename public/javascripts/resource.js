@@ -349,10 +349,10 @@ Player.prototype = {
                         msg += '，并将其解锁.';
                         _toRoom.unlock();
                         break;
-                    case '-lock':
-                        msg += '，并回头将 ' + _room.id + ' 号房间锁上.';
-                        _room.lock();
-                        break;
+//                    case '-lock':
+//                        msg += '，并回头将 ' + _room.id + ' 号房间锁上.';
+//                        _room.lock();
+//                        break;
                     case undefined:
                         msg += '.';
                         break;
@@ -563,13 +563,13 @@ Room.prototype = {
                                                         {to: _room2.id, lockAction: undefined}
                                                     ], '经过 ' + _room.id + ' 号房间到达 ' + _room2.id + ' 号房间，并回头【锁上】 ' + this.id + ' 号房间。'));
                                                 }
-                                                if (_room.hasLock) wannaLock = true;
-                                                if (_room.hasLock && canLock) {
-                                                    optionalMovements.push(build([
-                                                        {to: _room.id, lockAction: undefined},
-                                                        {to: _room2.id, lockAction: '-lock'}
-                                                    ], '经过 ' + _room.id + ' 号房间到达 ' + _room2.id + ' 号房间，并回头【锁上】 ' + _room.id + ' 号房间。'));
-                                                }
+//                                                if (_room.hasLock) wannaLock = true;
+//                                                if (_room.hasLock && canLock) {
+//                                                    optionalMovements.push(build([
+//                                                        {to: _room.id, lockAction: undefined},
+//                                                        {to: _room2.id, lockAction: '-lock'}
+//                                                    ], '经过 ' + _room.id + ' 号房间到达 ' + _room2.id + ' 号房间，并回头【锁上】 ' + _room.id + ' 号房间。'));
+//                                                }
                                             }
                                             if (_room2.hasLock) {
                                                 if (!_room2.locked) wannaLock = true;

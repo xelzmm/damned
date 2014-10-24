@@ -9,7 +9,7 @@ var debug = require('debug'),
     roomDebug = debug('damned:room');
 var Config = {
     stageChangeNotifyTime: 3,
-    speakTime: 90,
+    speakTime: 60,
     moveTime: 30,
     performTime: 30,
     thinkingTime: 15,
@@ -247,7 +247,7 @@ Game.prototype = {
                     }
                     this.debug('Action order ' + JSON.stringify(_order, null, 0));
                 }
-                _progress.time = _progress.stage == 'speak' ? Config.speakTime : Config.moveTime;
+                _progress.time = _progress.stage == 'speak' ? (Config.speakTime + _progress.round * 10) : Config.moveTime;
                 // 如果有钥匙事件
                 if(this.data.keyAction) {
                     _progress.time = Config.chooseTime;

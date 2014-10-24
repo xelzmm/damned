@@ -215,6 +215,7 @@ Player.prototype = {
             }
             msg += '房间是最终危险的!';
             this.debug(msg);
+            alert('你' + msg);
             this.markDangerous(clue);
         }
         if (!targetPlayer.watchedMarker) {
@@ -245,6 +246,7 @@ Player.prototype = {
                     break;
             }
             msg += '房间是最终危险的!';
+            alert('你' + msg);
         }
         this.debug(msg);
         this.clue = clue;

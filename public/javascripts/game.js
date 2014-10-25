@@ -488,6 +488,14 @@ var init = function() {
                 notice('轮到你【' + GameConfig.stage[progress.stage] + '】了.' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
                 var chatBoard = document.getElementById('chatBoard');
                 chatBoard.scrollTop = chatBoard.scrollHeight;
+                if(progress.stage == 'speak' || progress.stage == 'move') {
+                    if(progress.round == 7 && progress.bomb != 2 || progress.round == 8 && progress.bomb == 2) {
+                        print('请注意：当前为逃生前一回合，房间功能不再执行！', 'notice speak');
+                        if(progress.stage == 'move') {
+                            alert('最终的逃离！\n请移动到你认为的安全房间，可以停留在当前房间。\n房间功能不再执行！');
+                        }
+                    }
+                }
                 switch(progress.stage) {
                     case 'speak':
                         Game.canSpeak = true;

@@ -902,23 +902,25 @@ var init = function() {
     });
     socket.on('over', function(result) {
         if(Game.started) {
+            var msg;
             if (me.role == result.winner) {
-                notice('你(' + (me.role == 'victim' ? '受害者' : '奸徒') + ')获得了胜利！');
+                msg = '你(' + (me.role == 'victim' ? '受害者' : '奸徒') + ')获得了胜利！';
             } else {
+                msg = '你失败了！';
                 if(!!result.traitor) {
-                    notice('你失败了！' + (me.role != 'victim' ? '受害者' : '奸徒') + '获得了胜利！');
-                } else {
-                    notice('你失败了！');
+                    msg += (me.role != 'victim' ? '受害者' : '奸徒') + '获得了胜利！';
                 }
             }
+            print(msg, 'notice speak');
+            alert(msg);
             resetGame();
         }
         if(me.role == 'victim') {
-            notice('安全房间是：【' + result.safeRoom + '】号房间。');
+            print('安全房间是：【' + result.safeRoom + '】号房间。', 'notice speak');
             if (!!result.traitor) {
-                notice(result.traitor + ' 号玩家是【奸徒】。');
+                print(result.traitor + ' 号玩家是【奸徒】。', 'notice speak');
             } else {
-                notice('本场游戏没有奸徒。');
+                print('本场游戏没有奸徒。');
             }
         }
 //        print('点击游戏区完成准备。');

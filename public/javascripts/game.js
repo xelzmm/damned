@@ -179,6 +179,15 @@ var resize = function() {
     // scale
     var height = window.innerHeight || document.documentElement.clientHeight,
         width = window.innerWidth || document.documentElement.clientWidth;
+    if(window.originHeight && window.originWidth) {
+        if(window.originHeight == height && (window.originWidth - width) / width > 0.3
+            || window.originWidth == width && (window.originHeight - height) / height > 0.3) {
+            if(window.navigator.userAgent.indexOf('Android') < 0)
+                return; // maybe the keyboard active/dismiss
+        }
+    }
+    window.originHeight = height;
+    window.originWidth = width;
     var edge = height > width ? width : height;
     var mapArea = document.getElementById('mapArea');
     mapArea.style.width = edge + 'px';
@@ -209,6 +218,9 @@ var resize = function() {
     var infoBoard = document.getElementById('infoBoard');
     infoBoard.style.left = (edge - infoBoard.clientWidth) / 2 + 'px';
     infoBoard.style.top = (edge - infoBoard.clientHeight) / 2 + 'px';
+
+    var chatBoard = document.getElementById('chatBoard');
+    chatBoard.scrollTop = chatBoard.scrollHeight;
 };
 var stopTimer = function() {
     if(Game.timer) {
@@ -257,27 +269,32 @@ var init = function() {
 
     window.socket = io('ws://' + window.location.hostname + (window.location.hostname == 'msjh.aliapp.com' ? '' : ':4000'));
 
-    document.getElementById('input').onkeydown = function(e) {
-        if(e.keyCode == 13) {
-            if(Game.canSpeak) {
-                if(e.target.value.trim() == "") {
-                    if(confirm('结束发言？')) {
-                        socket.emit('speak', 'over');
-                    }
-                } else {
-                    socket.emit('speak', e.target.value);
-                    e.target.value = '';
-                }
-            } else if(!Game.started) {
-                if(e.target.value.trim() != "") {
-                    socket.emit('speak', e.target.value);
-                    e.target.value = '';
+    var input = document.getElementById('input');
+    var speak = function() {
+        if(Game.canSpeak) {
+            if(input.value.trim() == "") {
+                if(confirm('结束发言？')) {
+                    socket.emit('speak', 'over');
                 }
             } else {
-                print('你现在不能发言。');
+                socket.emit('speak', input.value);
+                input.value = '';
             }
+        } else if(!Game.started) {
+            if(input.value.trim() != "") {
+                socket.emit('speak', input.value);
+                input.value = '';
+            }
+        } else {
+            print('你现在不能发言。');
         }
     };
+    input.onkeydown = function(e) {
+        if(e.keyCode == 13) {
+            speak();
+        }
+    };
+    document.getElementById('send').onclick = speak;
     document.onkeydown = function(e) {
         if(!(e.metaKey || e.ctrlKey || e.altKey || e.shiftKey))
             document.getElementById('input').focus();

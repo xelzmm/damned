@@ -45,7 +45,8 @@ Game.prototype = {
         clearTimeout(this.chooseTimeoutId);
         for(var i in this.clients) {
             if (this.clients.hasOwnProperty(i)) {
-                this.clients[i].removeListener('speak', this.inGameSpeakHandler);
+                if(!!this.inGameSpeakHandler)
+                    this.clients[i].removeListener('speak', this.inGameSpeakHandler);
                 this.clients[i].removeAllListeners('move');
                 this.clients[i].removeAllListeners('challenge');
                 this.clients[i].playerReady = false;

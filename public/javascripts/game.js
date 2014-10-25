@@ -405,7 +405,6 @@ var init = function() {
         notice('提示1：点击线索标记区可以切换线索标记状态。');
         notice('提示2：发言中包含"over"字样或者提交空发言可以提前结束发言。');
         window.me = Game.players[playerId - 1];
-        document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
         print('进入第【1】回合.');
         window.onbeforeunload = function() {
             if(Game.started) {
@@ -422,13 +421,13 @@ var init = function() {
         Game.progress = progress;
         stopTimer();
         var roomMap = document.getElementById('roomMask');
+        document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
         if(Game.canSpeak) {
             document.getElementById('keyTransform').style.display = 'none';
             document.getElementById('keyVote').style.display = 'none';
             delete Game.canSpeak;
         }
         if(Game.canMove) {
-            document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
             delete Game.canMove;
             roomMap.style.zIndex = '0';
         }
@@ -485,6 +484,7 @@ var init = function() {
                 updateTimer([currentPlayer.id], progress.time);
             }
             if(me.id == currentPlayer.id) {
+                document.title = '* Damned | Player ' + me.id + ' | Room ' + me.room;
                 notice('轮到你【' + GameConfig.stage[progress.stage] + '】了.' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
                 var chatBoard = document.getElementById('chatBoard');
                 chatBoard.scrollTop = chatBoard.scrollHeight;
@@ -567,7 +567,6 @@ var init = function() {
                         break;
                     case 'move':
                         notice('请点击房间进行移动，停留请点击所处房间。');
-                        document.title = '* Damned | Player ' + me.id + ' | Room ' + me.room;
                         roomMap.style.zIndex = '100';
                         Game.canMove = true;
                         break;
@@ -717,7 +716,6 @@ var init = function() {
             updateTimer([data.player], data.time);
             if (data.player == me.id) {
                 var options = data.options;
-                document.title = '* Damned | Player ' + me.id + ' | Room ' + me.room;
                 var choices = '', i, player;
                 switch (question) {
                     case 'destroy':
@@ -761,7 +759,6 @@ var init = function() {
                         decision = confirm('是否同意将钥匙给予' + Game.players[data.options.fromPlayer - 1].getDisplayName() + '？\n附言：\n' + data.options.message);
                         break;
                 }
-                document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
                 socket.emit('challenge', decision);
             } else {
                 var msg = '请等待' + Game.players[data.player - 1].getDisplayName();
@@ -839,7 +836,6 @@ var init = function() {
                         } while(decision != 0 && data.participants.indexOf(decision) < 0);
                         break;
                 }
-                document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
                 socket.emit('challenge', decision);
             } else {
                 print('请等待【' + data.participants + '】号玩家【' + action + '】。');

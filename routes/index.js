@@ -5,7 +5,7 @@ var game = require('../services/game');
 var games = data.games;
 /* GET home page. */
 router.get('/', function(req, res) {
-  res.render('index', { title: 'Damned Hall', games: games});
+  res.render('index', {games: games});
 });
 
 var roomId = 0;
@@ -16,7 +16,7 @@ router.get('/create', function(req, res) {
 });
 
 router.get('/game', function(req, res) {
-   res.render('game', { title: 'Damned'});
+   res.render('game');
 });
 
 module.exports = router;

@@ -1088,23 +1088,32 @@ Game.prototype = {
             } else {
                 if (this.clients.indexOf(socket) >= 0) {
                     if(this.paused) { // 第二人掉线
-                        delete _self.paused;
+//                        delete _self.paused;
                         this.broadcast('leave', {name: socket.playerName, clientId:socket.id});
                         _clients.splice(_clients.indexOf(socket), 1);
-                        this.over();
+//                        this.over();
+                        if (this.overTimeout) {
+                            clearTimeout(this.overTimeout); // 提前结束游戏
+                            delete this.overTimeout;
+                            this.offlineTimeoutHandler();
+                        }
                     } else {
                         this.debug('Player ' + socket.playerName + ' disconnected, game paused.');
                         this.broadcast('offline', {name: socket.playerName, clientId: socket.id, playerId: _clients.indexOf(socket) + 1});
                         this.paused = true;
-                        if (this.overTimeout) clearTimeout(this.overTimeout);
-                        this.overTimeout = setTimeout(function () {
+                        if (this.overTimeout) {
+                            clearTimeout(this.overTimeout);
+                        }
+                        this.offlineTimeoutHandler = function () {
                             _self.broadcast('leave', {name: socket.playerName, clientId: socket.id});
                             delete _self.paused;
                             _clients.splice(_clients.indexOf(socket), 1);
                             if (_self.started) {
                                 _self.over();
                             }
-                        }, 120000);
+                            delete this.offlineTimeoutHandler;
+                        };
+                        this.overTimeout = setTimeout(this.offlineTimeoutHandler, 120000);
                     }
                 } else {
                     // 已经重连成功 之后才检测到掉线

@@ -51,6 +51,19 @@ var server = function() {
                 games[room].add(socket);
             }
         });
+        socket.on('watch', function(room) {
+            if(!!socket.socketRoom) {
+                debug('socket[' + socket.id + '] join: already in a room!');
+                return false;
+            }
+            debug('socket[' + socket.id + '] watch ' + room);
+            if(!(room in games)) {
+                debug('socket[' + socket.id + '] watch: room ' + room + ' not exists');
+                socket.emit('join failed', 'nosuchroom');
+            } else {
+                games[room].addWatcher(socket);
+            }
+        });
         socket.on('ready', function() {
             var _room = socket.socketRoom;
             if(!_room) {

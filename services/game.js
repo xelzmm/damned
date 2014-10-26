@@ -22,6 +22,7 @@ var Game = function(room, io) {
     this.data = {};
     this.players = [];
     this.clients = [];
+    this.watchers = [];
     this.actionOrder = [];
     for(var i = 0; i < 13; i++) {
         this.actionOrder.push(undefined);

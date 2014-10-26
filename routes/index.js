@@ -19,4 +19,8 @@ router.get('/game', function(req, res) {
    res.render('game');
 });
 
+router.get('/watch', function(req, res) {
+    res.render('game');
+});
+
 module.exports = router;

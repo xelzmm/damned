@@ -43,7 +43,8 @@
                      username = 'player_' + new Date().getTime() % 10000;
                  }
                  username = prompt('请设定你的昵称(16个字符以内)：', username.trim());
-             } while (username == null || username.trim() == '' || username.trim().length > 16);
+                 if(username == null || username.trim() == '') return;
+             } while (username.trim().length > 16);
              setCookie("name", username.trim(), 365);
              setName();
          }

@@ -1146,6 +1146,7 @@ Game.prototype = {
                 this.debug(_clients[i].playerName + ' reconnected. old socket id: ' + _clients[i].id + ', new socket id: ' + socket.id);
                 this.broadcast('reonline', {playerId: parseInt(i) + 1, oldClientId: _clients[i].id, newClientId: socket.id});
                 _clients.splice(i, 1, socket);
+                this.players[i].socket = socket.id;
                 clearTimeout(this.overTimeout);
                 delete this.overTimeout;
                 break;

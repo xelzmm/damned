@@ -1001,8 +1001,8 @@ var joinGame = function() {
     setCookie("name", username.trim(), 365);
     notice(username + '，欢迎你进入密室惊魂。');
     socket.emit('name', username);
-    var room = window.location.search.substr(1, window.location.search.length - 1);
-    if(room == '') room = 0;
+    var room = parseInt(window.location.search.substr(1, window.location.search.length - 1));
+    if(isNaN(room)) room = 0;
     socket.emit('join', room);
 //    socket.emit('ready');
 };

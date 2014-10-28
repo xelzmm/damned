@@ -115,7 +115,11 @@ Game.prototype = {
             _clues.level1.push(0);
         }
         _clues.level1.sort(shuffle);
-        _clues.level2 = ['yellow', 'red', 'blue', 'green'].sort(shuffle);
+        _clues.level2 = ['yellow', 'red', 'blue', 'green'];
+        if(_clients.length > 8) {
+            _clues.level2.push('black');
+        }
+        _clues.level2.sort(shuffle);
         _clues.level1.splice(_clues.level1.indexOf(safeRoomId), 1);
         _clues.level2.splice(_clues.level2.indexOf(_rooms[safeRoomId].color), 1);
         _clues.level3 = [_rooms[safeRoomId].hasLock ? 'noLock' : 'hasLock'];

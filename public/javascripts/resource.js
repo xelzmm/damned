@@ -217,7 +217,7 @@ Player.prototype = {
                     msg += clue.room == 0 ? '【大厅】' : ('【' + clue.room + '】号房间');
                     break;
                 case 2:
-                    msg += '【' + GameConfig.color[clue.room] + '】房间';
+                    msg += '【' + GameConfig.color[clue.room] + '】的房间';
                     break;
                 case 3:
                     msg += clue.room == 'hasLock' ? '【有锁】的房间' : '【无锁】的房间';

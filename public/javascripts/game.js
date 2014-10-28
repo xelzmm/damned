@@ -439,7 +439,6 @@ var init = function() {
                 var _orderString = '';
                 for (var i in _rooms) { // 获取行动顺序
                     if (_rooms.hasOwnProperty(i)) {
-                        if(progress.stage == 'perform' && i == 0) continue;
                         _order[i] = _rooms[i].players.slice(0);
                         if(_order[i].length > 0)_orderString += _order[i] + ',';
                     }
@@ -476,6 +475,10 @@ var init = function() {
                             '】人配合！', 'self');
                     }
                     print('思考 ' + progress.time + ' 秒，考虑接下来如何行动。');
+                    if(Game.players.length >= 8 && (progress.round == 6 && progress.bomb != 2 || progress.round == 7 && progress.bomb == 2)) { // 逃生回合
+                        notice('【大厅】的毒雾似乎散去了，可以进去暂时躲一躲。');
+                        Game.elements.posion.style.opacity = '0';
+                    }
                 }
             }
         } else {
@@ -648,6 +651,15 @@ var init = function() {
         var _players = Game.players;
         var playerId = data.player;
         _players[playerId - 1].detoxify();
+    });
+    socket.on('injure', function(data) {
+        var _players = Game.players;
+        for(var i in data.players) {
+            if(data.players.hasOwnProperty(i)) {
+                var player = _players[data.players[i] - 1];
+                if(!player.injured)player.injure();
+            }
+        }
     });
     socket.on('clue', function(data) {
         var _players = Game.players;
@@ -1042,6 +1054,7 @@ var initPlayGround = function(rooms, players) {
     }
     Game.started = true;
     Game.rooms = [];
+    Game.elements = [];
     for(i in rooms) {
         if(rooms.hasOwnProperty(i)) {
             var _room = rooms[i];
@@ -1050,6 +1063,9 @@ var initPlayGround = function(rooms, players) {
             var _roomPosition = GameConfig.roomPosition[i];
             if(_room["function"] == 'hall') {
                 drawResource('hall-' + _room.rule, _roomPosition.x, _roomPosition.y);
+                if(players.length >= 8) { // 8人局开启毒雾大厅
+                    Game.elements.posion = drawElement('posion', 500, 488);
+                }
             } else {
                 _room.dangerousMarker = drawElement(_room.dangerous, GameConfig.dangerousBoard.x + GameConfig.dangerousBoard.step * _room.id, GameConfig.dangerousBoard.y);
                 _room.dangerousMarker.onclick = (function(room) {
@@ -1068,7 +1084,6 @@ var initPlayGround = function(rooms, players) {
             }
         }
     }
-    Game.elements = [];
     // 回合指示
     Game.elements.roundBoard = drawElement('round-board', GameConfig.roundBoard.x, GameConfig.roundBoard.y);
     // 进度指示

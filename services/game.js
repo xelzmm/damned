@@ -341,8 +341,10 @@ Game.prototype = {
                     this.functionPerformed = false;
                     for (roomId = _progress.room + 1; roomId <= 12; roomId ++) { // 按照房号查找下一个有玩家的房间
                         if(_order[roomId].length != 0) { // 找到一个有玩家的房间
-                            if(roomId == 0) { // 跳过大厅
-                                continue;
+                            if(roomId == 0 &&
+                                (_players.length < 8  // 不足8人 大厅没有毒雾
+                                || (_progress.bomb == 2 ? _progress.round == 8 : _progress.round == 7))) { // 逃生前一回合，毒雾已散去
+                                continue; // 跳过大厅执行
                             }
                             _progress.room = roomId;
                             _progress.player = 0; // 房间内第一个玩家执行房间功能
@@ -375,6 +377,17 @@ Game.prototype = {
                     return;
                 }
                 switch(room.function) {
+                    case 'hall':
+                        for(i in _order[_progress.room]) {
+                            if(_order[_progress.room].hasOwnProperty(i)) {
+                                player = _players[_order[_progress.room][i] - 1];
+                                if(!player.injured)player.injure();
+                            }
+                        }
+                        _self.functionPerformed = true;
+                        _self.broadcast('injure', {players: _order[_progress.room]});
+                        _self.nextBeforeTimeout();
+                        break;
                     case 'detoxify':
                         if(player.injured) {
                             _progress.time = Config.notifyTime;

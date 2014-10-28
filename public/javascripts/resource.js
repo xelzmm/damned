@@ -49,7 +49,8 @@ var GameConfig = {
         "detoxify-large": {x: 1132, y: 795, w: 224, h: 168},
         "detoxify-small": {x: 1374, y: 795, w: 224, h: 168},
         "disarm-large": {x: 1617, y: 795, w: 224, h: 168},
-        "disarm-small": {x: 1859, y: 795, w: 224, h: 168}
+        "disarm-small": {x: 1859, y: 795, w: 224, h: 168},
+        "posion": {x: 2267, y:236, w: 90, h: 90}
     },
     roomPosition: [
         {x: 410, y: 399}, // 0
@@ -394,9 +395,9 @@ var Room = function (room) {
 Room.prototype = {
     getDisplayName: function() {
         if(this.id == 0) {
-            return GameConfig.function.hall + '(' + this.rule[0].toUpperCase() + ')';
+            return '【' + GameConfig.function.hall + '】(' + this.rule[0].toUpperCase() + ') ';
         } else {
-            return '【' + this.id + '】号' + GameConfig.function[this.function] + '(' + (this.rule[0].toUpperCase()) + + ')房间';
+            return '【' + this.id + '】号' + GameConfig.function[this.function] + ' (' + (this.rule[0].toUpperCase()) + ') 房间';
         }
     },
     debug: function (msg) {

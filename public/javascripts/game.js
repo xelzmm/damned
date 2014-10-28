@@ -927,9 +927,14 @@ var init = function() {
         socket.token = token;
     });
     socket.on('disconnect', function() {
-        notice('与服务器断开连接，正在尝试重连。。。');
-        Game.started = false;
-        print('请不要刷新页面，重连成功将自动继续游戏！', 'self');
+        if(Game.started) {
+            notice('与服务器断开连接，正在尝试重连。。。');
+            Game.started = false;
+            print('请不要刷新页面，重连成功将自动继续游戏！', 'self speak');
+        } else {
+            alert('与服务器断开连接，请重新进入游戏！');
+            window.location.href = '/';
+        }
     });
     socket.on('reconnecting', function(number) {
         print('正在尝试第 ' + number + ' 次重连...');

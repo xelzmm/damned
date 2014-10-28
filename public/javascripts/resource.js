@@ -240,7 +240,7 @@ Player.prototype = {
     },
     gainClue: function (clue) {
         var msg = '获得了一张【' + clue.level + '】级线索卡';
-        if (clue.room != undefined) {
+        if (clue.room == undefined) {
             msg += '.';
         } else {
             msg += ', 上面写着: ';

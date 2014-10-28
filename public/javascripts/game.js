@@ -395,12 +395,12 @@ var init = function() {
                 print('【' + players[i].id + '】号玩家：' + players[i].name, 'player');
             }
         }
-        print('你是【' + me.id + '】号玩家，你的身份是【' + GameConfig.role[me.role] + '】!', 'self');
+        print('你是【' + me.id + '】号玩家，你的身份是【' + GameConfig.role[me.role] + '】!', 'self speak');
         if(me.role == 'victim') {
-            print('解除身上的剧毒，并找出安全房间逃离！');
+            print('解除身上的剧毒，并找出安全房间逃离！', 'self speak');
             alert('你是【' + me.id + '】号玩家，你的身份是【受害者】!\n找出安全房间逃离吧！');
         } else {
-            print('安全房间是 【' + safeRoom + '】 号房间，想尽一切办法，阻止大家逃离！', 'self');
+            print('安全房间是 【' + safeRoom + '】 号房间，想尽一切办法，阻止大家逃离！', 'self speak');
             alert('你是【' + me.id + '号】玩家，你的身份是【奸徒】!\n安全房间是 【' + safeRoom + '】 号房间！');
         }
         notice('提示1：点击线索标记区可以切换线索标记状态。');
@@ -1016,9 +1016,13 @@ var initPlayGround = function(rooms, players) {
     var i;
     if(!!Game.rooms) {
         for(i in Game.rooms) {
-            if(Game.rooms.hasOwnProperty(i) && !!Game.rooms[i].lockMarker) {
-                removeNode(Game.rooms[i].lockMarker);
-                removeNode(Game.rooms[i].dangerousMarker);
+            if(Game.rooms.hasOwnProperty(i)) {
+                if(!!Game.rooms[i].lockMarker) {
+                    removeNode(Game.rooms[i].lockMarker);
+                }
+                if(!!Game.rooms[i].dangerousMarker) {
+                    removeNode(Game.rooms[i].dangerousMarker);
+                }
             }
         }
         for(i in Game.players) {

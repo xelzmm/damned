@@ -235,10 +235,11 @@ a {
     height: 5px;
     left: 50%;
     margin-left: -30px;
-    bottom: -6px;
+    bottom: -3px;
     border-radius: 8px;
     border: dimgray 2px solid;
     display: none;
+    z-index: 9999;
 }
 
 .count-down {

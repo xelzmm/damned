@@ -99,10 +99,10 @@ var initRoomMap = function() {
                     if(!Game.canMove) return;
                     var optionalMovements = Game.rooms[me.room].routesToRoom(roomId, me.hasKey);
                     if(optionalMovements.length == 0) {
-                        print('您无法' + (roomId == me.room ? '留在【' : '移动到【') + roomId + '】号房间，请重新选择！');
+                        print('您无法' + (roomId == me.room ? '留在' : '移动到') + Room.nameOf(roomId) + '，请重新选择！');
                         return;
                     }
-                    if(!confirm('确定' + (roomId == me.room ? '留在【' : '移动到【') + roomId + '】号房间？')) return;
+                    if(!confirm('确定' + (roomId == me.room ? '留在' : '移动到') + Room.nameOf(roomId) + '？')) return;
                     var emitMove = function(movements) {
                         socket.emit('move', movements);
                     };
@@ -395,11 +395,12 @@ var init = function() {
                 print('【' + players[i].id + '】号玩家：' + players[i].name, 'player');
             }
         }
-        print('你是【' + me.id + '号】玩家，你的身份是【' + GameConfig.role[me.role] + '】!', 'self');
+        print('你是【' + me.id + '】号玩家，你的身份是【' + GameConfig.role[me.role] + '】!', 'self');
         if(me.role == 'victim') {
-            alert('你是【' + me.id + '号】玩家，你的身份是【受害者】!');
+            print('解除身上的剧毒，并找出安全房间逃离！');
+            alert('你是【' + me.id + '】号玩家，你的身份是【受害者】!\n找出安全房间逃离吧！');
         } else {
-            print('安全房间是 【' + safeRoom + '】 号房间！', 'self');
+            print('安全房间是 【' + safeRoom + '】 号房间，想尽一切办法，阻止大家逃离！', 'self');
             alert('你是【' + me.id + '号】玩家，你的身份是【奸徒】!\n安全房间是 【' + safeRoom + '】 号房间！');
         }
         notice('提示1：点击线索标记区可以切换线索标记状态。');

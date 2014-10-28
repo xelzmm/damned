@@ -488,11 +488,6 @@ Game.prototype = {
                         break;
                     case 'disarm':
                         this.functionPerformed = true;
-                        if(_progress.bomb < 0 || _progress.bomb == 2) { // 拆弹房失效 或已拆两次
-//                            this.nextStep();
-                            this.nextWithReason(player.id, 'can-not-disarm');
-                            break;
-                        }
                         var anotherDisarmRoom;
                         for(i in _rooms) { // 找第一个拆弹房间
                             if(_rooms.hasOwnProperty(i) && _rooms[i].function == 'disarm' && i != room.id) {
@@ -503,6 +498,11 @@ Game.prototype = {
                         if(anotherDisarmRoom.id < room.id) { // 当前是第二个拆弹房， 跳过
 //                            this.nextStep();
                             this.nextWithReason(player.id, 'second-disarm-room');
+                            break;
+                        }
+                        if(_progress.bomb < 0 || _progress.bomb == 2) { // 拆弹房失效 或已拆两次
+//                            this.nextStep();
+                            this.nextWithReason(player.id, 'can-not-disarm');
                             break;
                         }
                         var minPlayerCount = 2;

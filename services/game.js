@@ -125,7 +125,8 @@ Game.prototype = {
         _clues.level3 = [_rooms[safeRoomId].hasLock ? 'noLock' : 'hasLock'];
 
         var _roles = ['traitor'];
-        for (i=0; i<=_playerCount; i++ ) _roles.push('victim');
+        _roles.push(Math.random() < 0.1 * _clients.length ? 'victim-ex' : 'victim');
+        for (i=1; i<=_playerCount; i++ ) _roles.push('victim');
         _roles.sort(shuffle);
         _clients.sort(shuffle);
         for(i in _clients) {
@@ -208,18 +209,43 @@ Game.prototype = {
         for(i in safeRoom.players) {
             if(safeRoom.players.hasOwnProperty(i)) {
                 player = _players[safeRoom.players[i] - 1];
-                if(!player.injured && player.role == 'victim') escapedPlayers.push(player);
+                if(!player.injured && player.role.indexOf('victim') == 0) escapedPlayers.push(player);
             }
         }
-        var traitor = undefined;
+        var traitor = undefined, ex = undefined;
         for(i in _players) {
-            if(_players.hasOwnProperty(i) && _players[i].role == 'traitor') {
-                traitor = _players[i].id;
+            if(_players.hasOwnProperty(i)){
+                if(_players[i].role == 'traitor')
+                    traitor = _players[i].id;
+                if(_players[i].role == 'victim-ex')
+                    ex = _players[i].id;
             }
         }
-        var winner = escapedPlayers.length >= _players.length - (traitor == undefined ? 0 : 1) - 2 ? 'victim' : 'traitor';
+        var players = [];
+        for(i in _players) {
+            if(_players.hasOwnProperty(i)) {
+                var _player = _players[i];
+                players.push({
+                    id: _player.id,
+                    inSafeRoom: safeRoom.players.indexOf(_player.id) >= 0,
+                    detoxified: !_player.injured,
+//                    escaped: escapedPlayers.indexOf(_player.id) == 0 && escapedPlayers.length == 1 ? 'alone' : escapedPlayers.indexOf(_player.id) >= 0,
+                    role: _player.role
+                });
+            }
+        }
+        var winner = 'none';
+        if (escapedPlayers.length >= _players.length - (traitor == undefined ? 0 : 1) - 2) {
+            winner = 'victim';
+        } else if (ex != undefined && escapedPlayers.indexOf(ex) == 0 && escapedPlayers.length == 1){
+            if (traitor != undefined) winner = 'ex+traitor';
+            else winner = 'ex';
+        } else if (traitor != undefined){
+            winner = 'traitor';
+        }
+
         this.broadcast('over', {
-            traitor: traitor,
+            players: players,
             winner: winner,
             safeRoom: this.data.safeRoom
         });
@@ -781,7 +807,7 @@ Game.prototype = {
                             case 'upgrade':
                                 if(!_self.checkMsgType(decision, 'boolean')) return;
                                 socket.removeAllListeners('challenge');
-                                if (options.actionType == 'disarm' && player.role == 'victim') {
+                                if (options.actionType == 'disarm' && player.role.indexOf('victim') == 0) {
                                     decision = true;
                                 }
                                 break;
@@ -842,7 +868,7 @@ Game.prototype = {
                         if(_self.data.progress.stage == 'speak') {
                             _self.actions[i] = 0; // 投票弃权
                         } else if(_self.data.rooms[_self.data.progress.room].function == 'disarm'
-                            && _self.players[parseInt(i) - 1].role == 'victim') {
+                            && _self.players[parseInt(i) - 1].role.indexOf('victim') == 0) {
                             _self.actions[i] = true; // 受害者强制拆弹
                         }
                         _self.broadcast('timeout', i);

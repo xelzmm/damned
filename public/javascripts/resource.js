@@ -108,6 +108,7 @@ var GameConfig = {
         hall: '大厅'
     },
     role: {
+        "victim-ex": 'EX受害者',
         victim: '受害者',
         traitor:'奸徒'
     },

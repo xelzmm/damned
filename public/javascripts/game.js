@@ -328,7 +328,7 @@ var init = function() {
         print('玩家：' + data.name + ' 离开了游戏房间。');
         gameRoom.removePlayer(data.clientId);
         if(Game.started) {
-            notice('游戏结束。');
+//            notice('游戏结束。');
             resetGame();
         }
     });
@@ -397,8 +397,12 @@ var init = function() {
         }
         print('你是【' + me.id + '】号玩家，你的身份是【' + GameConfig.role[me.role] + '】!', 'self speak');
         if(me.role == 'victim') {
-            print('解除身上的剧毒，并找出安全房间逃离！', 'self speak');
+            print('解除身上的剧毒，并找出安全房间，和大家一起逃离！', 'self speak');
             alert('你是【' + me.id + '】号玩家，你的身份是【受害者】!\n找出安全房间逃离吧！');
+        } else if(me.role == 'victim-ex') {
+            print('解除身上的剧毒，并找出安全房间，和大家一起逃离！', 'self speak');
+            print('你也可以单独逃离，独自获胜！', 'self speak');
+            alert('你是【' + me.id + '】号玩家，你的身份是【EX受害者】!\n找出安全房间逃离吧！');
         } else {
             print('安全房间是 【' + safeRoom + '】 号房间，想尽一切办法，阻止大家逃离！', 'self speak');
             alert('你是【' + me.id + '号】玩家，你的身份是【奸徒】!\n安全房间是 【' + safeRoom + '】 号房间！');
@@ -740,7 +744,7 @@ var init = function() {
                         for (i in options) {
                             if (options.hasOwnProperty(i)) {
                                 player = Game.players[options[i] - 1];
-                                choices += '\n' + player.getDisplayName() + (!!player.watchedMarker ? ', 已被查看过' : '');
+                                choices += '\n' + player.getDisplayName() + ', Lv' + player.clue.level + (!!player.watchedMarker ? ', 已被查看过' : '');
                             }
                         }
                         do {
@@ -824,7 +828,7 @@ var init = function() {
                                 notice('你选择了【' + (decision ? '配合' : '破坏') + '】' + functionType + '线索卡行动！');
                                 break;
                             case 'disarm':
-                                if (me.role == 'victim') {
+                                if (me.role.indexOf('victim') == 0) {
                                     alert('即将进行拆弹，你是受害者，点击确定予以配合！');
                                     decision = true;
                                 } else {
@@ -910,28 +914,75 @@ var init = function() {
             }
     });
     socket.on('over', function(result) {
+        print('安全房间是：【' + result.safeRoom + '】号房间。', 'notice speak');
+        for(var i in result.players) {
+            if(result.players.hasOwnProperty(i)) {
+                var player = result.players[i];
+                print('【' + player.id + '】号玩家：【' +
+                    GameConfig.role[player.role] + '】' +
+                    (Game.started ?
+                    (player.role == 'traitor' ? '生存' :
+                        (player.inSafeRoom ? ('身处安全房间，' + (player.detoxified ? '逃生' : '中毒死亡')) :
+                        '身处危险房间，死亡')
+                        ) : ''), 'player');
+            }
+        }
         if(Game.started) {
             var msg;
-            if (me.role == result.winner) {
-                msg = '你(' + (me.role == 'victim' ? '受害者' : '奸徒') + ')获得了胜利！';
-            } else {
-                msg = '你失败了！';
-                if(!!result.traitor) {
-                    msg += (me.role != 'victim' ? '受害者' : '奸徒') + '获得了胜利！';
-                }
+            switch(result.winner) {
+                case 'victim':
+                    if(me.role.indexOf('victim') == 0) {
+                        msg = '你 (受害者) 获得了胜利！';
+                    } else {
+                        msg = '你 (奸徒) 失败了！ 受害者获得了胜利。';
+                    }
+                    break;
+                case 'ex':
+                    if(me.role == 'victim-ex') {
+                        msg = '你 (EX受害者) 成功独自逃生！';
+                    } else {
+                        msg = '你 (受害者) 失败了！EX受害者独自逃生。';
+                    }
+                    break;
+                case 'ex+traitor':
+                    if(me.role == 'victim-ex') {
+                        msg = '你 (EX受害者) 成功独自逃生！和 奸徒 一起获得了胜利。';
+                    } else if(me.role == 'traitor') {
+                        msg = '你 (奸徒) 获得了胜利！EX受害者 独自逃生。';
+                    } else {
+                        msg = '你 (受害者) 失败了！EX受害者 和 奸徒 一起获得了胜利。';
+                    }
+                    break;
+                case 'traitor':
+                    if(me.role == 'traitor') {
+                        msg = '你 (奸徒) 获得了胜利！';
+                    } else {
+                        msg = '你 (受害者) 失败了! 奸徒 获得了胜利。';
+                    }
+                    break;
+                case 'none':
+                    msg = '你 (受害者) 失败了！ 本局没有 奸徒。';
             }
+//            if (me.role == result.winner) {
+//                msg = '你(' + (me.role == 'victim' ? '受害者' : '奸徒') + ')获得了胜利！';
+//            } else {
+//                msg = '你失败了！';
+//                if(!!result.traitor) {
+//                    msg += (me.role != 'victim' ? '受害者' : '奸徒') + '获得了胜利！';
+//                }
+//            }
             print(msg, 'notice speak');
             alert(msg);
             resetGame();
         }
-        if(me.role == 'victim') {
-            print('安全房间是：【' + result.safeRoom + '】号房间。', 'notice speak');
-            if (!!result.traitor) {
-                print(result.traitor + ' 号玩家是【奸徒】。', 'notice speak');
-            } else {
-                print('本场游戏没有奸徒。');
-            }
-        }
+//        if(me.role.indexOf('victim') == 0) {
+//            print('安全房间是：【' + result.safeRoom + '】号房间。', 'notice speak');
+//            if (!!result.traitor) {
+//                print(result.traitor + ' 号玩家是【奸徒】。', 'notice speak');
+//            } else {
+//                print('本场游戏没有奸徒。');
+//            }
+//        }
 //        print('点击游戏区完成准备。');
 //        document.getElementById('scaleContainer').onclick = readyHook;
     });

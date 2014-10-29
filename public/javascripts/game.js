@@ -696,6 +696,7 @@ var init = function() {
         }
     });
     socket.on('skip', function(data) {
+        stopTimer();
         var player = Game.players[data.player - 1], reason = data.reason;
         switch(reason) {
             case 'player-detoxified':
@@ -803,6 +804,7 @@ var init = function() {
                 print(msg);
             }
         } else if(data.participants) {
+            updateTimer(data.participants);
             var action = {
                 'disarm': '拆弹',
                 'upgrade': '升级线索卡',

@@ -1402,12 +1402,12 @@ Player.prototype = {
                     var route = routes[i];
                     if(!_rooms[route].locked) { // 目标房间未上锁
                         optionalMovements.push({to: route, lockAction: undefined}); // 移动至该房间
-                        if(_rooms[route].hasLock && this.hasKey && canLock) { // 目标房间有锁，且玩家拥有钥匙
-                            optionalMovements.push({to: route, lockAction: 'lock'}); // 移动至该房间并上锁
-                        }
-                        if(room.hasLock && this.hasKey && canLock) { // 原房间有锁，且玩家拥有钥匙
-                            optionalMovements.push({to: route, lockAction: '-lock'}); // 移动至该房间并回头锁上原房间
-                        }
+//                        if(_rooms[route].hasLock && this.hasKey && canLock) { // 目标房间有锁，且玩家拥有钥匙
+//                            optionalMovements.push({to: route, lockAction: 'lock'}); // 移动至该房间并上锁
+//                        }
+//                        if(room.hasLock && this.hasKey && canLock) { // 原房间有锁，且玩家拥有钥匙
+//                            optionalMovements.push({to: route, lockAction: '-lock'}); // 移动至该房间并回头锁上原房间
+//                        }
                     } else { // 目标房间已上锁
                         if(this.hasKey) { // 玩家拥有钥匙
                             optionalMovements.push({to: route, lockAction: 'unlock'}); // 移动至该房间，并解锁
@@ -1433,14 +1433,15 @@ Player.prototype = {
                     route = routes[i];
                     if(!_rooms[route].locked) { // 目标房间未上锁
                         optionalMovements.push({to: route, lockAction: undefined}); // 移动至该房间
-                        if(firstMovement.lockAction != '-lock' && this.hasKey && canLock) { // 玩家拥有钥匙，且没使用过钥匙
-                            if (_rooms[route].hasLock) { // 目标房间有锁
-                                optionalMovements.push({to: route, lockAction: 'lock'}); // 移动至该房间并上锁
-                            }
+//                        if(firstMovement.lockAction != '-lock' && this.hasKey && canLock) { // 玩家拥有钥匙，且没使用过钥匙
+//                            if (_rooms[route].hasLock) { // 目标房间有锁
+//                                optionalMovements.push({to: route, lockAction: 'lock'}); // 移动至该房间并上锁
+//                            }
+// 不能上锁穿过
 //                            if (room.hasLock) { // 原房间有锁
 //                                optionalMovements.push({to: route, lockAction: '-lock'}); // 移动至该房间并回头锁上原房间
 //                            }
-                        }
+//                        }
                     } else { // 目标房间已上锁
                         if(firstMovement.lockAction != '-lock' && this.hasKey) { // 玩家拥有钥匙，且没使用过钥匙
                             optionalMovements.push({to: route, lockAction: 'unlock'}); // 移动至该房间，并解锁

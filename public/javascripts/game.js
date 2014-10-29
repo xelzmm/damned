@@ -386,6 +386,7 @@ var init = function() {
         document.getElementById('readyButton').removeAttribute('ready');
         document.getElementById('readyButton').innerHTML = '准备';
         initPlayGround(rooms, players);
+        window.me = Game.players[playerId - 1];
         var me = players[playerId - 1];
         notice('游戏开始了！总共有【' + players.length + '】名玩家。');
         notice('本局【拆弹】第一次需要【' + (players.length >= 8 ? 3 : 2) + '】人配合，第二次需要【' +
@@ -409,7 +410,6 @@ var init = function() {
         }
         notice('提示1：点击线索标记区可以切换线索标记状态。');
         notice('提示2：发言中包含"over"字样或者提交空发言可以提前结束发言。');
-        window.me = Game.players[playerId - 1];
         print('进入第【1】回合.');
         window.onbeforeunload = function() {
             if(Game.started) {

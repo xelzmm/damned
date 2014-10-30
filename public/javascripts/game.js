@@ -559,7 +559,7 @@ var init = function() {
                                 }
                             }
                         }
-                        if(_players.length >= 3 && !currentPlayer.hasKey) { // 3个以上玩家
+                        if(_players.length >= 3 && !currentPlayer.hasKey && !Game.keyVote) { // 3个以上玩家
                             var keyCount = 0;
                             for(i in _players) {
                                 if(_players.hasOwnProperty(i)) {
@@ -568,7 +568,7 @@ var init = function() {
                                     }
                                 }
                             }
-                            if(keyCount == 1) { // 只有一把钥匙
+                            if(keyCount > 0) {
                                 var keyVoteButton = document.getElementById('keyVote');
                                 keyVoteButton.style.display = 'inline';
                                 keyVoteButton.onclick = function() {
@@ -631,7 +631,13 @@ var init = function() {
             case 'request':
                 _players[data.player - 1].processKeyRequest(data.agree, _players[data.fromPlayer - 1]);
                 break;
+            case 'grab':
+                notice(_players[data.player - 1].getDisplayName() + '发起了抢钥匙，当前房间内所有玩家发言完毕后将进行投票。');
+                Game.keyVote = true;
+                break;
+            case 'who':
             case 'vote':
+                delete Game.keyVote;
                 print('====== 投票结果 ======');
                 for(var i in data.vote) {
                     if(data.vote.hasOwnProperty(i)) {
@@ -642,23 +648,24 @@ var init = function() {
                         }
                     }
                 }
-                print('====== 投票结果 ======');
-                var playersInRoom = Game.rooms[Game.progress.room].players, keyOwner;
-                for(i in playersInRoom) {
-                    if(playersInRoom.hasOwnProperty(i)) {
-                        var player = Game.players[playersInRoom[i] - 1];
-                        if(player.hasKey) {
-                            keyOwner = player;
-                            break;
-                        }
+                print('====================');
+                if(type == 'who') {
+                    if(data.winner == 0) {
+                        notice('平票，钥匙归原主人所有。');
+                    } else {
+                        Game.keyOwner = Game.players[data.winner - 1];
+                        notice('现在开始抢' + Game.keyOwner.getDisplayName() + '的钥匙。');
                     }
+                    break;
+                } else if(type == 'vote'){
+                    if(data.winner == 0 || data.winner == Game.keyOwner.id) {
+                        notice('平票，钥匙保留在' + Game.keyOwner.getDisplayName() + '身上。');
+                    } else {
+                        Game.players[data.winner - 1].gainKey(Game.keyOwner);
+                    }
+                    delete Game.keyOwner;
+                    break;
                 }
-                if(data.winner == 0 || data.winner == keyOwner.id) {
-                    notice('钥匙保留在' + keyOwner.getDisplayName() + '身上。');
-                } else {
-                    Game.players[data.winner - 1].gainKey(keyOwner);
-                }
-                break;
         }
     });
     socket.on('detoxify', function(data) {
@@ -819,7 +826,8 @@ var init = function() {
                 'disarm': '拆弹',
                 'upgrade': '升级线索卡',
                 'downgrade': '降级线索卡',
-                'vote': '投票'
+                'vote': '投票分配钥匙',
+                'who': '选择抢谁的钥匙'
             }[data.options.actionType];
             if(data.participants.indexOf(me.id) >= 0) {
                 var others = data.participants.concat();
@@ -850,19 +858,46 @@ var init = function() {
                                 break;
                         }
                         break;
-                    case 'vote':
-                        msg = '请投票决定谁最终持有钥匙：\n【0】：弃权';
+                    case 'who':
+                        msg = '请投票决定抢谁的钥匙: \n【0】：弃权';
                         for(i in data.participants) {
                             if(data.participants.hasOwnProperty(i)) {
                                 var participant = Game.players[data.participants[i] - 1];
-                                msg += '\n' + (participant.id == me.id ? '【'+ me.id + '】你' : participant.getDisplayName()) + (participant.hasKey ? '，钥匙持有者': '');
+                                if(participant.hasKey) {
+                                    msg += '\n' + (participant.id == me.id ? '【' + me.id + '】你自己' : participant.getDisplayName());
+                                }
                             }
                         }
                         do {
-                            decision = prompt(msg, me.id);
+                            decision = prompt(msg, '0');
                             if(!decision) decision = 0;
                             decision = parseInt(decision);
-                        } while(decision != 0 && data.participants.indexOf(decision) < 0);
+                        } while(decision != 0 && (data.participants.indexOf(decision) < 0 || !Game.players[decision - 1].hasKey) );
+                        break;
+                    case 'vote':
+                        if(!Game.keyOwner) {
+                            for (i in data.participants) {
+                                if (data.participants.hasOwnProperty(i)) {
+                                    if(Game.players[data.participants[i] - 1].hasKey) {
+                                        Game.keyOwner = Game.players[data.participants[i] - 1];
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        msg = '请投票决定谁最终持有' + Game.keyOwner.getDisplayName() + '的钥匙：\n【0】：弃权';
+                        for(i in data.participants) {
+                            if(data.participants.hasOwnProperty(i)) {
+                                participant = Game.players[data.participants[i] - 1];
+                                if(participant.id == Game.keyOwner.id || !participant.hasKey)
+                                    msg += '\n' + (participant.id == me.id ? '【'+ me.id + '】你自己' : participant.getDisplayName());
+                            }
+                        }
+                        do {
+                            decision = prompt(msg, '0');
+                            if(!decision) decision = 0;
+                            decision = parseInt(decision);
+                        } while(decision != 0 && (data.participants.indexOf(decision) < 0 || !(decision == Game.keyOwner.id || !Game.players[decision - 1].hasKey)));
                         break;
                 }
                 socket.emit('challenge', decision);

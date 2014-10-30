@@ -527,6 +527,7 @@ Room.prototype = {
             }
         } else {
             _routes = this.routes();
+            var through1 = false, through2 = false, through3 = false, through4 = false;
             for (i in _routes) {
                 if (_routes.hasOwnProperty(i)) {
                     _room = Game.rooms[_routes[i]];
@@ -575,7 +576,8 @@ Room.prototype = {
                                 var _room2 = Game.rooms[_routes2[j]];
                                 if (!this.locked) {
                                     if (!_room.locked) {
-                                        if (!_room2.locked) {
+                                        if (!_room2.locked && !through1) {
+                                            through1 = true;
                                             optionalMovements.push(build([
                                                 {to: _room.id, lockAction: undefined},
                                                 {to: _room2.id, lockAction: undefined}
@@ -584,7 +586,8 @@ Room.prototype = {
                                         if (hasKey) {
                                             if (!_room2.locked) {
                                                 if (this.hasLock) wannaLock = true;
-                                                if (this.hasLock && canLock) {
+                                                if (this.hasLock && canLock && !through2) {
+                                                    through2 = true;
                                                     optionalMovements.push(build([
                                                         {to: _room.id, lockAction: '-lock'},
                                                         {to: _room2.id, lockAction: undefined}
@@ -600,12 +603,14 @@ Room.prototype = {
                                             }
                                             if (_room2.hasLock) {
                                                 if (!_room2.locked) wannaLock = true;
-                                                if (!_room2.locked && canLock) {
+                                                if (!_room2.locked && canLock && !through3) {
+                                                    through3 = true;
                                                     optionalMovements.push(build([
                                                         {to: _room.id, lockAction: undefined},
                                                         {to: _room2.id, lockAction: 'lock'}
                                                     ], '经过 ' + _room.id + ' 号房间到达' + Room.nameOf(_room2.id) + '号房间，并将其【锁上】。'));
-                                                } else if (_room2.locked) {
+                                                } else if (_room2.locked && !through4) {
+                                                    through4 = true;
                                                     optionalMovements.push(build([
                                                         {to: _room.id, lockAction: undefined},
                                                         {to: _room2.id, lockAction: 'unlock'}

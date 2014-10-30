@@ -102,7 +102,9 @@ var initRoomMap = function() {
                         print('您无法' + (roomId == me.room ? '留在' : '移动到') + Room.nameOf(roomId) + '，请重新选择！');
                         return;
                     }
-                    if(!confirm('确定' + (roomId == me.room ? '留在' : '移动到') + Room.nameOf(roomId) + '？')) return;
+                    if(!confirm('确定' + (roomId == me.room ? '留在' : '移动到') + Room.nameOf(roomId) + '？' +
+                        (roomId == 0 && !!Game.elements.posion && !me.injured && Game.elements.posion.style.opacity != '0'
+                            ? '\n你将会受到大厅【毒雾】感染！' : ''))) return;
                     var emitMove = function(movements) {
                         socket.emit('move', movements);
                     };
@@ -332,20 +334,19 @@ var init = function() {
             resetGame();
         }
     });
-    socket.on('room', function(room, players) {
+    socket.on('room', function(room, players, testMode) {
         print('你已加入【' + room + '】号游戏房间。');
         window.gameRoom = new GameRoom(room);
-        var roomKeeper = true;
         for(var i in players) {
             if(players.hasOwnProperty(i)) {
 //                print('玩家：' + players[i].name + (players[i].ready ? ' 已准备就绪。' : ' 尚未准备就绪。'));
-                roomKeeper = false;
                 var player = players[i];
                 gameRoom.addPlayer(player.name, player.clientId, player.ready);
             }
         }
-        if(roomKeeper) {
-            print('复制本页地址 ' + window.location.href + ' 给好友一起来玩吧！');
+        print('复制本页地址 ' + window.location.href + ' 给好友一起来玩吧！');
+        if(testMode) {
+            print('当前房间为测试房间！', 'self speak');
         }
         document.getElementById('readyButton').onclick = function() {
             if(!this.getAttribute('ready')) {
@@ -385,6 +386,7 @@ var init = function() {
         gameRoom.hide();
         document.getElementById('readyButton').removeAttribute('ready');
         document.getElementById('readyButton').innerHTML = '准备';
+        Game.testMode = data.testMode;
         initPlayGround(rooms, players);
         window.me = Game.players[playerId - 1];
         var me = players[playerId - 1];
@@ -410,6 +412,14 @@ var init = function() {
         }
         notice('提示1：点击线索标记区可以切换线索标记状态。');
         notice('提示2：发言中包含"over"字样或者提交空发言可以提前结束发言。');
+        if(Game.testMode) {
+            print('=== 请注意，当前为测试模式！===', 'self speak');
+            print('【1】级线索卡固定为: 0,13,x,...', 'self speak');
+            print('【2】级线索卡固定为: 黑色,xx,...', 'self speak');
+            print('【奸徒】固定1名，【EX受害者】固定1名', 'self speak');
+            print('【大厅毒雾】开启，逃生前一回合解除。', 'self speak');
+            print('=== 请注意，当前为测试模式！===', 'self speak');
+        }
         print('进入第【1】回合.');
         window.onbeforeunload = function() {
             if(Game.started) {
@@ -479,7 +489,7 @@ var init = function() {
                             '】人配合！', 'self');
                     }
                     print('思考 ' + progress.time + ' 秒，考虑接下来如何行动。');
-                    if(Game.players.length >= 8 && (progress.round == 6 && progress.bomb != 2 || progress.round == 7 && progress.bomb == 2)) { // 逃生回合
+                    if((!!Game.elements.posion) && (progress.round == 6 && progress.bomb != 2 || progress.round == 7 && progress.bomb == 2)) { // 逃生回合
                         notice('【大厅】的毒雾似乎散去了，可以进去暂时躲一躲。');
                         Game.elements.posion.style.opacity = '0';
                     }
@@ -1116,7 +1126,7 @@ var initPlayGround = function(rooms, players) {
             var _roomPosition = GameConfig.roomPosition[i];
             if(_room["function"] == 'hall') {
                 drawResource('hall-' + _room.rule, _roomPosition.x, _roomPosition.y);
-                if(players.length >= 8) { // 8人局开启毒雾大厅
+                if(players.length >= 8 || Game.testMode) { // 8人局开启毒雾大厅
                     Game.elements.posion = drawElement('posion', 500, 488);
                 }
             } else {

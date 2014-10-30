@@ -7,18 +7,7 @@ var debug = require('debug'),
     gameDebug = debug('damned:game'),
     playerDebug = debug('damned:player'),
     roomDebug = debug('damned:room');
-var Config = {
-    stageChangeNotifyTime: 3,
-    speakTime: 60,
-    moveTime: 30,
-    performTime: 30,
-    thinkingTime: 15,
-    notifyTime: 1,
-    chooseTime: 15,
-    minimumPlayerCount: 5,
-    maximumPlayerCount: 9
-};
-var Game = function(room, io) {
+var Game = function(room, io, testMode) {
     this.data = {};
     this.players = [];
     this.clients = [];
@@ -31,6 +20,35 @@ var Game = function(room, io) {
     this.io = io;
     this.debug('room created: ' + room);
     this.started = false;
+    this.testMode = testMode;
+    if(this.testMode)  {
+        this.config = {
+            stageChangeNotifyTime: 3,
+            speakTime: 30,
+            speakTimeStep: 5,
+            moveTime: 15,
+            performTime: 15,
+            thinkingTime: 1,
+            notifyTime: 1,
+            chooseTime: 15,
+            minimumPlayerCount: 5,
+            maximumPlayerCount: 9
+        };
+        gameDebug('test mode on.');
+    } else {
+        this.config = {
+            stageChangeNotifyTime: 3,
+            speakTime: 60,
+            speakTimeStep: 10,
+            moveTime: 30,
+            performTime: 30,
+            thinkingTime: 15,
+            notifyTime: 1,
+            chooseTime: 15,
+            minimumPlayerCount: 5,
+            maximumPlayerCount: 9
+        };
+    }
 };
 
 Game.prototype = {
@@ -107,26 +125,33 @@ Game.prototype = {
 
         var _clues = _data.clues = {};
         _clues.level1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-        var safeRoomId = this.data.safeRoom = parseInt(Math.random() * 12) + 1;
-        if(_clients.length > 5) {
-            _clues.level1.push(13);
-        }
-        if(_clients.length > 6) {
-            _clues.level1.push(0);
-        }
-        _clues.level1.sort(shuffle);
         _clues.level2 = ['yellow', 'red', 'blue', 'green'];
-        if(_clients.length > 8) {
-            _clues.level2.push('black');
+        var safeRoomId = this.data.safeRoom = parseInt(Math.random() * 12) + 1;
+        if(this.testMode) {
+            _clues.level1.sort(shuffle);
+            _clues.level2.sort(shuffle);
         }
-        _clues.level2.sort(shuffle);
+        if(_clients.length > 5 || this.testMode) {
+            _clues.level1.unshift(13);
+        }
+        if(_clients.length > 6 || this.testMode) {
+            _clues.level1.unshift(0);
+        }
+        if(_clients.length > 8 || this.testMode) {
+            _clues.level2.unshift('black');
+        }
+        if(!this.testMode) {
+            _clues.level1.sort(shuffle);
+            _clues.level2.sort(shuffle);
+        }
         _clues.level1.splice(_clues.level1.indexOf(safeRoomId), 1);
         _clues.level2.splice(_clues.level2.indexOf(_rooms[safeRoomId].color), 1);
         _clues.level3 = [_rooms[safeRoomId].hasLock ? 'noLock' : 'hasLock'];
 
         var _roles = ['traitor'];
-        _roles.push(Math.random() < 0.1 * _clients.length ? 'victim-ex' : 'victim');
-        for (i=1; i<=_playerCount; i++ ) _roles.push('victim');
+        _roles.push(Math.random() < 0.1 * _clients.length || this.testMode ? 'victim-ex' : 'victim');
+        for (i=1; i<=_playerCount - 1; i++ ) _roles.push('victim');
+        if(!this.testMode) _roles.push('victim');
         _roles.sort(shuffle);
         _clients.sort(shuffle);
         for(i in _clients) {
@@ -175,6 +200,7 @@ Game.prototype = {
         for(i in _players) {
             if (_players.hasOwnProperty(i)) {
                 this.notify(_players[i].id, 'start', {
+                    testMode: this.testMode,
                     rooms: _rooms,
                     players: prunePlayers(i),
                     playerId: parseInt(i) + 1,
@@ -265,7 +291,7 @@ Game.prototype = {
                 _progress.stage = 'speak';
                 _progress.room = null;
                 _progress.player = null;
-                _progress.time = Config.stageChangeNotifyTime;
+                _progress.time = this.config.stageChangeNotifyTime;
                 this.updateGameAndAwaitNext();
                 return;
             case 'speak':
@@ -279,10 +305,10 @@ Game.prototype = {
                     }
                     this.debug('Action order ' + JSON.stringify(_order, null, 0));
                 }
-                _progress.time = _progress.stage == 'speak' ? (Config.speakTime + _progress.round * 10) : Config.moveTime;
+                _progress.time = _progress.stage == 'speak' ? (this.config.speakTime + _progress.round * this.config.speakTimeStep) : this.config.moveTime;
                 // 如果有钥匙事件
                 if(this.data.keyAction) {
-                    _progress.time = Config.chooseTime;
+                    _progress.time = this.config.chooseTime;
                     var to = this.data.keyAction.to;
                     this.challenge(to, _clients[to.id - 1], this.data.keyAction.type, {
                         fromPlayer: this.data.keyAction.from.id,
@@ -321,7 +347,7 @@ Game.prototype = {
                     }
                     if(_progress.player == null) { // 没找到，代表所有玩家都行动完毕
                         _progress.room = null;
-                        _progress.time = Config.stageChangeNotifyTime;
+                        _progress.time = this.config.stageChangeNotifyTime;
                         if(_progress.stage == 'speak') {
                             _progress.stage = 'move'; // 进入行动阶段
                         } else {
@@ -347,7 +373,7 @@ Game.prototype = {
                 }
                 return;
             case 'perform':
-                _progress.time = Config.performTime;
+                _progress.time = this.config.performTime;
                 if(_progress.room == null) { // 刚进入执行阶段，初始化
                     _progress.room = -1;
                     for (i in _rooms) { // 获取执行顺序
@@ -368,7 +394,7 @@ Game.prototype = {
                     for (roomId = _progress.room + 1; roomId <= 12; roomId ++) { // 按照房号查找下一个有玩家的房间
                         if(_order[roomId].length != 0) { // 找到一个有玩家的房间
                             if(roomId == 0 &&
-                                (_players.length < 8  // 不足8人 大厅没有毒雾
+                                (_players.length < 8 && !this.testMode  // 不足8人 大厅没有毒雾
                                 || (_progress.bomb == 2 ? _progress.round == 8 : _progress.round == 7))) { // 逃生前一回合，毒雾已散去
                                 continue; // 跳过大厅执行
                             }
@@ -380,7 +406,7 @@ Game.prototype = {
                     if(_progress.player == null) { // 没找到，代表所有房间功能都执行完毕
                         delete this.functionPerformed;
                         _progress.room = null;
-                        _progress.time = Config.thinkingTime;
+                        _progress.time = this.config.thinkingTime;
                         _progress.stage = 'thinking'; // 进入思考阶段
                         this.updateGameAndAwaitNext();
                         return;
@@ -416,12 +442,12 @@ Game.prototype = {
                         break;
                     case 'detoxify':
                         if(player.injured) {
-                            _progress.time = Config.notifyTime;
+                            _progress.time = this.config.notifyTime;
                             this.updateGameAndAwaitNext(function() {
                                 player.detoxify();
                                 _self.functionPerformed = true;
                                 _self.broadcast('detoxify', {player: playerId});
-                            }, Config.notifyTime);
+                            }, this.config.notifyTime);
                         } else { // 玩家已解毒，权利让过
 //                            this.nextStep();
                             this.nextWithReason(player.id, 'player-detoxified');
@@ -430,7 +456,7 @@ Game.prototype = {
                     case 'clue':
                         if(!player.clue) { // 玩家没线索卡
                             if(_clues.level1.length > 0) {
-                                _progress.time = Config.notifyTime;
+                                _progress.time = this.config.notifyTime;
                                 this.updateGameAndAwaitNext(function() {
                                     player.gainClue({'level': 1, room: _clues.level1.splice(0, 1)[0]});
                                     _self.functionPerformed = true;
@@ -472,7 +498,7 @@ Game.prototype = {
 //                            this.nextStep();
                             this.nextWithReason(player.id, 'no-player-to-watch')
                         } else if(alternativePlayers.length == 1) {
-                            _progress.time = Config.notifyTime;
+                            _progress.time = this.config.notifyTime;
                             this.updateGameAndAwaitNext(function() {
                                 _self.broadcast('clue', {
                                     player: player.id,
@@ -567,7 +593,7 @@ Game.prototype = {
                 return;
             case 'thinking':
                 _progress.stage = 'speak';
-                _progress.time = Config.stageChangeNotifyTime;
+                _progress.time = this.config.stageChangeNotifyTime;
                 this.updateGameAndAwaitNext();
                 return;
             default:
@@ -731,7 +757,7 @@ Game.prototype = {
         switch(question) {
             case 'who': // 设定选人的超时AI
                 _self.updateGame();
-//                    _self.broadcast('choose', {type: 'who', playerId: player.id, time: Config.chooseTime});
+//                    _self.broadcast('choose', {type: 'who', playerId: player.id, time: _self.config.chooseTime});
                 _self.chooseTimeoutId = setTimeout(function () {
                     _self.checkConnectionAndDo(function() {
                         socket.removeAllListeners('challenge');
@@ -740,7 +766,7 @@ Game.prototype = {
                         var targetPlayerId = options[parseInt(Math.random() * options.length)];
                         _self.askForAction(player.id, [targetPlayerId]);
                     });
-                }, Config.chooseTime * 1000);
+                }, _self.config.chooseTime * 1000);
                 break;
             case 'destroy': // 设定销毁线索的超时AI
             case 'watch': // 设定查看线索的超时AI
@@ -788,7 +814,7 @@ Game.prototype = {
                 player: player.id,
                 question: question,
                 options: options,
-                time: Config.chooseTime
+                time: _self.config.chooseTime
             }); // 送出问题
         });
     },
@@ -829,7 +855,7 @@ Game.prototype = {
                 participants: participants,
                 question: question,
                 options: options,
-                time: Config.chooseTime
+                time: _self.config.chooseTime
             }); // 送出问题
         });
     },
@@ -846,7 +872,7 @@ Game.prototype = {
 //            _self.broadcast('wait', {
 //                type: _self.data.rooms[_self.data.progress.room].function,
 //                actions: _self.actions,
-//                time: Config.performTime
+//                time: _self.config.performTime
 //            });
             var players = [], clients = [], participants = [];
             for(var i in _self.actions) {
@@ -877,7 +903,7 @@ Game.prototype = {
                     }
                 }
                 _self.performAction();
-            }, Config.performTime * 1000);
+            }, _self.config.performTime * 1000);
         });
     },
     performAction: function() {
@@ -1023,7 +1049,7 @@ Game.prototype = {
             });
             _self.timeoutId = setTimeout(function () {
                 _self.nextStep();
-            }, Config.notifyTime * 1000);
+            }, _self.config.notifyTime * 1000);
         });
     },
     nextBeforeTimeout: function(delay) {
@@ -1031,7 +1057,7 @@ Game.prototype = {
         clearTimeout(_self.timeoutId);
         this.timeoutId = setTimeout(function () {
             _self.nextStep();
-        }, (delay ? delay : Config.notifyTime) * 1000);
+        }, (delay ? delay : this.config.notifyTime) * 1000);
     },
     updateGameAndAwaitNext: function(timeoutHandler, delay) {
         var _self = this;
@@ -1044,7 +1070,7 @@ Game.prototype = {
                     timeoutHandler();
                     _self.timeoutId = setTimeout(function () {
                         _self.nextStep();
-                    }, (delay ? delay : Config.notifyTime) * 1000);
+                    }, (delay ? delay : _self.config.notifyTime) * 1000);
                 } else {
                     _self.nextStep();
                 }
@@ -1088,7 +1114,7 @@ Game.prototype = {
         if(this.started) {
             this.debug('failed because game is started');
             reason = 'started';
-        } else if(_clients.length == Config.maximumPlayerCount) {
+        } else if(_clients.length == this.config.maximumPlayerCount) {
             this.debug('failed because room is full.');
             reason = 'full';
         } else if (_clients.indexOf(socket) >= 0) {
@@ -1110,7 +1136,7 @@ Game.prototype = {
                 });
             }
         }
-        socket.emit('room', _room, _players);
+        socket.emit('room', _room, _players, this.testMode);
         socket.join(_room);
         _clients.push(socket);
         this.broadcast('join', {name: socket.playerName, clientId: socket.id});
@@ -1223,7 +1249,7 @@ Game.prototype = {
         var ready = true, _clients = this.clients;
 //        socket.playerReady = true;
 //        this.broadcast('ready', socket.playerName);
-        if(_clients.length < Config.minimumPlayerCount) {
+        if(_clients.length < this.config.minimumPlayerCount) {
             return;
         }
         for(var i in _clients) {

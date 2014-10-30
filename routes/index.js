@@ -11,7 +11,13 @@ router.get('/', function(req, res) {
 var roomId = 0;
 router.get('/create', function(req, res) {
     var room = ++roomId;
-    games[room] = new game(room, data.io);
+    games[room] = new game(room, data.io, false);
+    res.redirect(302, '/game?' + room);
+});
+
+router.get('/test', function(req, res) {
+    var room = ++roomId;
+    games[room] = new game(room, data.io, true);
     res.redirect(302, '/game?' + room);
 });
 

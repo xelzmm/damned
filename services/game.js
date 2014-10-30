@@ -1326,7 +1326,14 @@ Player.prototype = {
             _room = _originRoom,
             keyUsed = false,
             _movements = [];
-        for(var i in movements) {
+        var lockedRoomCount = 0;
+        for(var i in _rooms) {
+            if(_rooms.hasOwnProperty(i) && _rooms[i].locked){
+                lockedRoomCount += 1;
+            }
+        }
+        var canLock = lockedRoomCount < 3;
+        for(i in movements) {
             if (movements.hasOwnProperty(i)) {
                 var movement = movements[i],
                     _toRoom = _rooms[movement.to],
@@ -1347,20 +1354,20 @@ Player.prototype = {
                             return false; // 其他情况，不能停留
                         }
                     } else { // 所在房间没被锁
-                        if (_room.hasLock) { // 所在房间有锁
-                            if(lockAction == 'lock' && this.hasKey) { // 用钥匙锁上，停留
-//                                return true;
-                            } else {
+                        if(lockAction == 'lock') { // 用钥匙锁上
+                            if (!this.hasKey || !canLock || !_room.hasLock) { // 没有key、没有锁或者不能锁
                                 return false;
                             }
-                        } else { // 所在房间没锁，判断是否旁边的房间都被锁了，无路可走
+                        } else if (lockAction == undefined){ // 没有任何锁动作
+                            // 判断是否旁边的房间都被锁了，无路可走
                             var _routes = _room.routes();
-                            for(var j in _routes) {
-                                if(_routes.hasOwnProperty(j) && !_rooms[_routes[j]].locked) { // 有一个没锁的，不能停留
+                            for (var j in _routes) {
+                                if (_routes.hasOwnProperty(j) && !_rooms[_routes[j]].locked) { // 有一个没锁的，不能停留
                                     return false;
                                 }
                             }
-//                            return true; // 旁边的房间都锁了，可以停留
+                        } else { // 停留不能有其他锁操作
+                            return false;
                         }
                     }
                 } else { // 走出了
@@ -1377,12 +1384,12 @@ Player.prototype = {
                                 break;
                             case 'lock': // 进入有解锁标记的房间，并上锁
                                 if (keyUsed || !this.hasKey || _room.locked || !_toRoom.hasLock || _toRoom.locked
-                                    || anotherMove) // 必须持有钥匙、所在房间未锁、目标房间有锁未锁，上锁后停留
+                                    || anotherMove || !canLock) // 必须持有钥匙、所在房间未锁、目标房间有锁未锁，上锁后停留
                                     return false;
                                 break;
                             case '-lock': // 离开有解锁标记的房间，并上锁
                                 if (i == 1 || keyUsed || !this.hasKey || !_room.hasLock
-                                    || _room.locked) // 必须持有钥匙、原房间有锁未锁，不能是第二次移动
+                                    || _room.locked || !canLock) // 必须持有钥匙、原房间有锁未锁，不能是第二次移动
                                     return false;
                                 keyUsed = true; // 使用过钥匙，不能再次使用
                                 break;
@@ -1407,13 +1414,13 @@ Player.prototype = {
             routes = room.routes(),
             optionalMovements = [],
             autoMovements = [];
-        var lockedRoomCount = 0;
-        for(var i in _rooms) {
-            if(_rooms.hasOwnProperty(i) && _rooms[i].locked){
-                lockedRoomCount += 1;
-            }
-        }
-        var canLock = lockedRoomCount < 3;
+//        var lockedRoomCount = 0;
+//        for(var i in _rooms) {
+//            if(_rooms.hasOwnProperty(i) && _rooms[i].locked){
+//                lockedRoomCount += 1;
+//            }
+//        }
+//        var canLock = lockedRoomCount < 3;
         if(room.locked) { // 所在房间已上锁
             optionalMovements.push({to: undefined, lockAction: undefined}); // 停留
             if(this.hasKey) { // 有钥匙，开锁，停留

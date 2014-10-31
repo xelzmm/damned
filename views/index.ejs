@@ -70,10 +70,11 @@
                      if(games.hasOwnProperty(roomId)) {
                          count ++;%>
               <li>
-                  <a href="<% if (!games[roomId].started){ %>/game?<%= roomId %><%} else {%>#<%}%>" target="_self">
+                  <a href="<% if (!games[roomId].started){ %>/game/<%= roomId %><%} else {%>#<%}%>" target="_self">
                       <%= roomId %> 号房间 [<%= games[roomId].clients.length %>人]
                       <% if (games[roomId].started){ %> [游戏中]<%}%>
                   </a>
+                  <a href="/watch/<%=roomId%>" target="_self">观战</a>
               </li>
               <% }}%>
               <li class="list-header">共 <%= count %> 个房间</li>

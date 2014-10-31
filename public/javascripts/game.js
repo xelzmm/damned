@@ -2,7 +2,7 @@ var roomBoard = document.getElementById('roomBoard');
 //var canvas = document.getElementById('roomBoard');
 //var context = canvas.getContext && canvas.getContext('2d');
 //window.context = context;
-window.Game = {rooms: [], players: [], elements: [], started: false};
+//window.Game = {rooms: [], players: [], elements: [], started: false};
 var gameResource = new Image();
 var drawResource = function (resourceName, x, y) {
 //    context = context || window.context;
@@ -303,15 +303,18 @@ var init = function() {
     };
     socket.on('join failed', function(reason) {
         Game.started = false;
+        var location = '/';
         switch(reason) {
             case 'nosuchroom':
                 alert('该房间不存在！');
                 break;
             case 'full':
-                alert('房间已满员！');
+                alert('房间已满员，将转为观战模式');
+                location = '/watch/' + Game.roomId;
                 break;
             case 'started':
-                alert('游戏已经开始，暂不支持观战。');
+                alert('游戏已经开始，将转为观战。');
+                location = '/watch/' + Game.roomId;
                 break;
             case 'duplicated':
                 alert('您已经在此房间内，请不要重复加入。');
@@ -320,35 +323,99 @@ var init = function() {
                 alert('游戏结束，无法重连！');
                 break;
         }
-        window.location.href = '/';
+        window.location.href = location;
+    });
+    socket.on('data', function(data){
+        print('游戏正在进行中。');
+        gameRoom.hide();
+        initPlayGround(data.rooms, data.players);
+        for(var i in Game.players) {
+            if(Game.players.hasOwnProperty(i)) {
+                var player = Game.players[i];
+                print('【' + player.id + '】号玩家：' + player.name, 'player');
+                if(player.hasKey) {
+                    var keyMarker = player.keyMarker = document.createElement('img');
+                    keyMarker.src = '/images/key.png';
+                    keyMarker.style.position = 'absolute';
+                    keyMarker.style.right = '0px';
+                    keyMarker.title = keyMarker.alt = '钥匙';
+                    player.playerMarker.appendChild(keyMarker);
+                }
+                if(player.clue) {
+                    var clueMarker = player.clueMarker = document.createElement('img');
+                    clueMarker.src = '/images/level' + player.clue.level + '.png';
+                    clueMarker.style.position = 'absolute';
+                    clueMarker.style.bottom = '0px';
+                    clueMarker.title = clueMarker.alt = '【' + player.clue.level + '】级线索卡';
+                    player.playerMarker.appendChild(clueMarker);
+                }
+            }
+        }
+        window.me = {id: 0, room: Game.roomId, role:'watcher'};
+        var progress = data.progress;
+        if(progress.round == 8 && progress.bomb != 2) {
+            Game.elements.timer.style.left = (GameConfig.timerBoard.x + 7.5 * GameConfig.timerBoard.step) + 'px';
+        } else {
+            Game.elements.timer.style.left = (GameConfig.timerBoard.x + (progress.round - 1) * GameConfig.timerBoard.step) + 'px';
+        }
+        var bomb = progress.bomb;
+        if(progress.bomb < 0) {
+            Game.elements.bomb.className = 'bomb-invalid';
+            bomb = -1 - progress.bomb;
+        }
+        Game.elements.bomb.style.left = (GameConfig.bombBoard.x + bomb * GameConfig.bombBoard.step) + 'px';
+        if(progress.bomb == 2) {
+            Game.elements.roundBoard.style.opacity = '0';
+        }
+        if(['speak', 'move', 'perform'].indexOf(progress.stage) >= 0) {
+            var _rooms = Game.rooms, _order = Game.order = [];
+            for (i in _rooms) { // 获取行动顺序
+                if (_rooms.hasOwnProperty(i)) {
+                    _order[i] = _rooms[i].players.slice(0);
+                }
+            }
+            if(progress.room != null && progress.player != null) {
+                var currentPlayer = Game.players[Game.order[progress.room][progress.player] - 1];
+                print('现在是' + currentPlayer.getDisplayName() + '的【' + GameConfig.stage[progress.stage] + '】时间. ');
+            }
+        }
     });
     socket.on('join', function(data) {
-        print('玩家：' + data.name + ' 进入了游戏房间。');
-        gameRoom.addPlayer(data.name, data.clientId, false);
+        if(data.mode == 'play') {
+            print('玩家：' + data.name + ' 进入了游戏房间。');
+            gameRoom.addPlayer(data.name, data.clientId, false);
+        } else if(data.mode == 'watch'){
+            print('玩家：' + data.name + ' 进入房间观战。');
+        }
     });
     socket.on('leave', function(data) {
-        print('玩家：' + data.name + ' 离开了游戏房间。');
-        gameRoom.removePlayer(data.clientId);
-        if(Game.started) {
-//            notice('游戏结束。');
-            resetGame();
-        }
+        gameRoom.removePlayer(data);
     });
     socket.on('room', function(room, players, testMode) {
         print('你已加入【' + room + '】号游戏房间。');
         window.gameRoom = new GameRoom(room);
         for(var i in players) {
             if(players.hasOwnProperty(i)) {
-//                print('玩家：' + players[i].name + (players[i].ready ? ' 已准备就绪。' : ' 尚未准备就绪。'));
                 var player = players[i];
                 gameRoom.addPlayer(player.name, player.clientId, player.ready);
             }
         }
-        print('复制本页地址 ' + window.location.href + ' 给好友一起来玩吧！');
+        if(Game.mode == 'play') {
+            print('复制本页地址 ' + window.location.href + ' 给好友一起来玩吧！');
+        } else if(Game.mode == 'watch'){
+            print('当前为观战模式。', 'self speak');
+            document.getElementById('readyButton').innerHTML = '加入';
+        }
         if(testMode) {
             print('当前房间为测试房间！', 'self speak');
         }
         document.getElementById('readyButton').onclick = function() {
+            if(Game.mode == 'watch') {
+                if(confirm('确认加入游戏？')) {
+                    window.location.href = '/game/' + Game.roomId;
+                }
+                return;
+            }
             if(!this.getAttribute('ready')) {
                 socket.emit('ready');
                 this.setAttribute('ready', 'ready');
@@ -384,12 +451,8 @@ var init = function() {
     socket.on('start', function(data) {
         var rooms = data.rooms, players = data.players, playerId = data.playerId, safeRoom = data.safeRoom;
         gameRoom.hide();
-        document.getElementById('readyButton').removeAttribute('ready');
-        document.getElementById('readyButton').innerHTML = '准备';
         Game.testMode = data.testMode;
         initPlayGround(rooms, players);
-        window.me = Game.players[playerId - 1];
-        var me = players[playerId - 1];
         notice('游戏开始了！总共有【' + players.length + '】名玩家。');
         notice('本局【拆弹】第一次需要【' + (players.length >= 8 ? 3 : 2) + '】人配合，第二次需要【' +
             (players.length >= 9 ? 4 : (players.length >= 6 ? 3 : 2)) + '】人配合!');
@@ -398,31 +461,42 @@ var init = function() {
                 print('【' + players[i].id + '】号玩家：' + players[i].name, 'player');
             }
         }
-        print('你是【' + me.id + '】号玩家，你的身份是【' + GameConfig.role[me.role] + '】!', 'self speak');
-        if(me.role == 'victim') {
-            print('解除身上的剧毒，并找出安全房间，和大家一起逃离！', 'self speak');
-            alert('你是【' + me.id + '】号玩家，你的身份是【受害者】!\n找出安全房间逃离吧！');
-        } else if(me.role == 'victim-ex') {
-            print('解除身上的剧毒，并找出安全房间，和大家一起逃离！', 'self speak');
-            print('你也可以单独逃离，独自获胜！', 'self speak');
-            alert('你是【' + me.id + '】号玩家，你的身份是【EX受害者】!\n找出安全房间逃离吧！');
+        if(Game.mode == 'play') {
+            document.getElementById('readyButton').removeAttribute('ready');
+            document.getElementById('readyButton').innerHTML = '准备';
+            window.me = Game.players[playerId - 1];
+            var me = players[playerId - 1];
+            print('你是【' + me.id + '】号玩家，你的身份是【' + GameConfig.role[me.role] + '】!', 'self speak');
+            if (me.role == 'victim') {
+                print('解除身上的剧毒，并找出安全房间，和大家一起逃离！', 'self speak');
+                alert('你是【' + me.id + '】号玩家，你的身份是【受害者】!\n找出安全房间逃离吧！');
+            } else if (me.role == 'victim-ex') {
+                print('解除身上的剧毒，并找出安全房间，和大家一起逃离！', 'self speak');
+                print('你也可以单独逃离，独自获胜！', 'self speak');
+                alert('你是【' + me.id + '】号玩家，你的身份是【EX受害者】!\n找出安全房间逃离吧！');
+            } else {
+                print('安全房间是 【' + safeRoom + '】 号房间，想尽一切办法，阻止大家逃离！', 'self speak');
+                alert('你是【' + me.id + '号】玩家，你的身份是【奸徒】!\n安全房间是 【' + safeRoom + '】 号房间！');
+            }
+            notice('提示1：点击线索标记区可以切换线索标记状态。');
+            notice('提示2：发言中包含"over"字样或者提交空发言可以提前结束发言。');
         } else {
-            print('安全房间是 【' + safeRoom + '】 号房间，想尽一切办法，阻止大家逃离！', 'self speak');
-            alert('你是【' + me.id + '号】玩家，你的身份是【奸徒】!\n安全房间是 【' + safeRoom + '】 号房间！');
+            var resetButton = document.getElementById('resetButton');
+            resetButton.onclick = null;
+            resetButton.style.display = 'none';
+            window.me = {id: 0, room: Game.roomId, role: 'wather'};
         }
-        notice('提示1：点击线索标记区可以切换线索标记状态。');
-        notice('提示2：发言中包含"over"字样或者提交空发言可以提前结束发言。');
         if(Game.testMode) {
-            print('=== 请注意，当前为测试模式！===', 'self speak');
-            print('【1】级线索卡固定为: 0,13,x,...', 'self speak');
-            print('【2】级线索卡固定为: 黑色,xx,...', 'self speak');
-            print('【奸徒】固定1名，【EX受害者】固定1名', 'self speak');
-            print('【大厅毒雾】开启，逃生前一回合解除。', 'self speak');
-            print('=== 请注意，当前为测试模式！===', 'self speak');
+            print('=== 请注意，当前为测试模式！===', 'player speak');
+            print('【1】级线索卡固定为: 0,13,x,...', 'player speak');
+            print('【2】级线索卡固定为: 黑色,xx,...', 'player speak');
+            print('【奸徒】固定1名，【EX受害者】固定1名', 'player speak');
+            print('【大厅毒雾】开启，逃生前一回合解除。', 'player speak');
+            print('=== 请注意，当前为测试模式！===', 'player speak');
         }
         print('进入第【1】回合.');
         window.onbeforeunload = function() {
-            if(Game.started) {
+            if(Game.started && Game.mode == 'play') {
                 return '游戏正在进行，此操作将会断开游戏并令该局游戏终止。';
             } else {
                 return undefined;
@@ -821,7 +895,7 @@ var init = function() {
                 print(msg);
             }
         } else if(data.participants) {
-            updateTimer(data.participants);
+            updateTimer(data.participants, data.time);
             var action = {
                 'disarm': '拆弹',
                 'upgrade': '升级线索卡',
@@ -980,15 +1054,19 @@ var init = function() {
                 case 'victim':
                     if(me.role.indexOf('victim') == 0) {
                         msg = '你 (受害者) 获得了胜利！';
-                    } else {
+                    } else if(me.role == 'traitor'){
                         msg = '你 (奸徒) 失败了！ 受害者获得了胜利。';
+                    } else if(me.role == 'watcher'){
+                        msg = '受害者获得了胜利！';
                     }
                     break;
                 case 'ex':
                     if(me.role == 'victim-ex') {
-                        msg = '你 (EX受害者) 成功独自逃生！';
-                    } else {
+                        msg = '你 (EX受害者) 胜利，成功独自逃生！';
+                    } else if(me.role == 'victim'){
                         msg = '你 (受害者) 失败了！EX受害者独自逃生。';
+                    } else if(me.role == 'watcher') {
+                        msg = 'EX受害者 胜利，成功独自逃生！';
                     }
                     break;
                 case 'ex+traitor':
@@ -996,48 +1074,38 @@ var init = function() {
                         msg = '你 (EX受害者) 成功独自逃生！和 奸徒 一起获得了胜利。';
                     } else if(me.role == 'traitor') {
                         msg = '你 (奸徒) 获得了胜利！EX受害者 独自逃生。';
-                    } else {
+                    } else if(me.role == 'victim'){
                         msg = '你 (受害者) 失败了！EX受害者 和 奸徒 一起获得了胜利。';
+                    } else if(me.role == 'watcher') {
+                        msg = 'EX受害者 独自逃生，和 奸徒 一起获得了胜利。';
                     }
                     break;
                 case 'traitor':
                     if(me.role == 'traitor') {
                         msg = '你 (奸徒) 获得了胜利！';
-                    } else {
+                    } else if(me.role.indexOf('victim') == 0){
                         msg = '你 (受害者) 失败了! 奸徒 获得了胜利。';
+                    } else if(me.role == 'watcher') {
+                        msg = '奸徒获得了胜利！'
                     }
                     break;
                 case 'none':
-                    msg = '你 (受害者) 失败了！ 本局没有 奸徒。';
+                    if(me.role.indexOf('victim') == 0) {
+                        msg = '你 (受害者) 失败了！ 本局没有 奸徒。';
+                    } else if(me.role == 'watcher') {
+                        msg = '受害者失败了，本局没有奸徒。';
+                    }
             }
-//            if (me.role == result.winner) {
-//                msg = '你(' + (me.role == 'victim' ? '受害者' : '奸徒') + ')获得了胜利！';
-//            } else {
-//                msg = '你失败了！';
-//                if(!!result.traitor) {
-//                    msg += (me.role != 'victim' ? '受害者' : '奸徒') + '获得了胜利！';
-//                }
-//            }
             print(msg, 'notice speak');
             alert(msg);
             resetGame();
         }
-//        if(me.role.indexOf('victim') == 0) {
-//            print('安全房间是：【' + result.safeRoom + '】号房间。', 'notice speak');
-//            if (!!result.traitor) {
-//                print(result.traitor + ' 号玩家是【奸徒】。', 'notice speak');
-//            } else {
-//                print('本场游戏没有奸徒。');
-//            }
-//        }
-//        print('点击游戏区完成准备。');
-//        document.getElementById('scaleContainer').onclick = readyHook;
     });
     socket.on('token', function(token) {
         socket.token = token;
     });
     socket.on('disconnect', function() {
-        if(Game.started) {
+        if(Game.started && Game.mode == 'play') {
             notice('与服务器断开连接，正在尝试重连。。。');
             Game.started = false;
             print('请不要刷新页面，重连成功将自动继续游戏！', 'self speak');
@@ -1117,9 +1185,9 @@ var joinGame = function() {
     setCookie("name", username.trim(), 365);
     notice(username + '，欢迎你进入密室惊魂。');
     socket.emit('name', username);
-    var room = parseInt(window.location.search.substr(1, window.location.search.length - 1));
-    if(isNaN(room)) room = 0;
-    socket.emit('join', room);
+//    var room = parseInt(window.location.search.substr(1, window.location.search.length - 1));
+//    if(isNaN(room)) room = 0;
+    socket.emit('join', {room: Game.roomId, mode: Game.mode});
 //    socket.emit('ready');
 };
 var initPlayGround = function(rooms, players) {
@@ -1216,10 +1284,17 @@ GameRoom.prototype = {
         this.players[clientId].marker = roomPlayer;
         document.getElementById('roomPlayers').appendChild(roomPlayer);
     },
-    removePlayer: function(clientId) {
+    removePlayer: function(data) {
+        var clientId = data.clientId;
         if(clientId in this.players) {
+            print('玩家：' + data.name + ' 离开了游戏房间。');
             removeNode(this.players[clientId].marker);
             delete this.players[clientId];
+            if(Game.started) {
+                resetGame();
+            }
+        } else { // 观战离开
+            print('观众：' + data.name + ' 离开了游戏房间。');
         }
     },
     updatePlayer: function(playerId, oldClientId, newClientId) {

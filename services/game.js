@@ -180,31 +180,26 @@ Game.prototype = {
 
         this.started = true;
 
-        var prunePlayers = function(playerId) {
-            var _prunedPlayers = [];
-            for(var i in _players) {
-                if(_players.hasOwnProperty(i)) {
-                    _prunedPlayers.push({
-                        id: _players[i].id,
-                        name: _players[i].name,
-                        hasKey: _players[i].hasKey,
-                        injured: _players[i].injured,
-                        role: i == playerId ? _players[i].role : 'unknown',
-                        room: _players[i].room
-                    });
-                }
-            }
-            return _prunedPlayers;
-        };
-
         for(i in _players) {
             if (_players.hasOwnProperty(i)) {
                 this.notify(_players[i].id, 'start', {
                     testMode: this.testMode,
                     rooms: _rooms,
-                    players: prunePlayers(i),
+                    players: this.prunePlayers(i),
                     playerId: parseInt(i) + 1,
                     safeRoom: _players[i].role == 'traitor' ? safeRoomId : undefined
+                });
+            }
+        }
+
+        for(i in this.watchers) {
+            if(this.watchers.hasOwnProperty(i)) {
+                this.watchers[i].emit('start', {
+                    testMode: this.testMode,
+                    rooms: _rooms,
+                    players: this.prunePlayers(0),
+                    playerId: 0,
+                    safeRoom: undefined
                 });
             }
         }
@@ -226,6 +221,24 @@ Game.prototype = {
 //            }
 //        }
         this.nextStep();
+    },
+    prunePlayers: function(playerId) {
+        var _prunedPlayers = [];
+        var _players = this.players;
+        for(var i in _players) {
+            if(_players.hasOwnProperty(i)) {
+                _prunedPlayers.push({
+                    id: _players[i].id,
+                    name: _players[i].name,
+                    hasKey: _players[i].hasKey,
+                    injured: _players[i].injured,
+                    role: i == playerId ? _players[i].role : 'unknown',
+                    clue: _players[i].clue,
+                    room: _players[i].room
+                });
+            }
+        }
+        return _prunedPlayers;
     },
     over: function () {
         var _rooms = this.data.rooms;
@@ -1144,6 +1157,34 @@ Game.prototype = {
             this.pendingHandler = handler;
         }
     },
+    addWather: function(socket) {
+        var _room = this.socketRoom;
+        this.debug('add client ' + socket.id + ' to room ' + _room + 'in [watch] mode');
+        var _watchers = this.watchers;
+        var _clients = this.clients;
+        socket.socketRoom = _room;
+        var _players = [];
+        for(var i in _clients) {
+            if(_clients.hasOwnProperty(i)) {
+                _players.push({
+                    clientId: _clients[i].id,
+                    name: _clients[i].playerName,
+                    ready: _clients[i].playerReady
+                });
+            }
+        }
+        socket.emit('room', _room, _players, this.testMode);
+        socket.join(_room);
+        _watchers.push(socket);
+        this.broadcast('join', {name: socket.playerName, clientId: socket.id, mode: 'watch'});
+        if(this.started) {
+            socket.emit('data', {
+                rooms: this.data.rooms,
+                players: this.prunePlayers(0),
+                progress: this.data.progress
+            });
+        }
+    },
     add: function(socket) {
         var _room = this.socketRoom;
         this.debug('add client ' + socket.id + ' to room ' + _room);
@@ -1177,15 +1218,21 @@ Game.prototype = {
         socket.emit('room', _room, _players, this.testMode);
         socket.join(_room);
         _clients.push(socket);
-        this.broadcast('join', {name: socket.playerName, clientId: socket.id});
+        this.broadcast('join', {name: socket.playerName, clientId: socket.id, mode: 'play'});
         return true;
     },
     remove: function(socket, force) {
         var _room = this.socketRoom;
         this.debug('remove client ' + socket.id + ' from room ' + _room);
-        var _clients = this.clients;
+        var _clients = this.clients, _wathers = this.watchers;
         delete socket.socketRoom; // 标示这个socket已经掉线
         socket.leave(_room);
+        if(_wathers.indexOf(socket) >= 0) {
+            this.debug('client ' + socket.id + 'is wather');
+            this.broadcast('leave', {name: socket.playerName, clientId:socket.id});
+            _wathers.splice(_wathers.indexOf(socket), 1);
+            return;
+        }
         var _self = this;
         if(this.started) {
             if(force) {

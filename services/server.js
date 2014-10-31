@@ -34,7 +34,8 @@ var server = function() {
             });
             socket.emit('token', socket.token);
         });
-        socket.on('join', function(room) {
+        socket.on('join', function(data) {
+            var room = data.room, mode = data.mode;
             if(!socket.playerName) {
                 debug('socket[' + socket.id + '] join: set name needed!');
                 return false;
@@ -43,25 +44,16 @@ var server = function() {
                 debug('socket[' + socket.id + '] join: already in a room!');
                 return false;
             }
-            debug('socket[' + socket.id + '] join ' + room);
+            debug('socket[' + socket.id + '] join room [' + room + '] with [' + mode + '] mode.');
             if(!(room in games)) {
                 debug('socket[' + socket.id + '] join: room ' + room + ' not exists');
                 socket.emit('join failed', 'nosuchroom');
             } else {
-                games[room].add(socket);
-            }
-        });
-        socket.on('watch', function(room) {
-            if(!!socket.socketRoom) {
-                debug('socket[' + socket.id + '] join: already in a room!');
-                return false;
-            }
-            debug('socket[' + socket.id + '] watch ' + room);
-            if(!(room in games)) {
-                debug('socket[' + socket.id + '] watch: room ' + room + ' not exists');
-                socket.emit('join failed', 'nosuchroom');
-            } else {
-                games[room].addWatcher(socket);
+                if(mode == 'play') {
+                    games[room].add(socket);
+                } else if(mode == 'watch') {
+                    games[room].addWather(socket);
+                }
             }
         });
         socket.on('ready', function() {

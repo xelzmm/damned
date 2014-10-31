@@ -55,6 +55,16 @@
       </div>
   </div>
   </body>
+  <script type="text/javascript">
+      var Game = {
+          roomId: "<%= roomId%>",
+          mode: "<%= mode%>",
+          rooms: [],
+          players: [],
+          elements: [],
+          started: false
+      }
+  </script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/javascripts/resource.js"></script>
   <script src="/javascripts/game.js"></script>

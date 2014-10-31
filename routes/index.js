@@ -12,21 +12,31 @@ var roomId = 0;
 router.get('/create', function(req, res) {
     var room = ++roomId;
     games[room] = new game(room, data.io, false);
-    res.redirect(302, '/game?' + room);
+    res.redirect(302, '/game/' + room);
 });
 
 router.get('/test', function(req, res) {
     var room = ++roomId;
     games[room] = new game(room, data.io, true);
-    res.redirect(302, '/game?' + room);
+    res.redirect(302, '/game/' + room);
 });
 
-router.get('/game', function(req, res) {
-   res.render('game');
+router.get('/game/:roomId', function(req, res) {
+    var roomId = req.params.roomId;
+    if(!games.hasOwnProperty(roomId)) {
+        res.redirect(302, '/index');
+    } else {
+        res.render('game', {roomId: req.params.roomId, mode: 'play'});
+    }
 });
 
-router.get('/watch', function(req, res) {
-    res.render('game');
+router.get('/watch/:roomId', function(req, res) {
+    var roomId = req.params.roomId;
+    if(!games.hasOwnProperty(roomId)) {
+        res.redirect(302, '/index');
+    } else {
+        res.render('game', {roomId: req.params.roomId, mode: 'watch'});
+    }
 });
 
 module.exports = router;

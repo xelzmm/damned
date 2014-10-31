@@ -24,7 +24,7 @@ router.get('/test', function(req, res) {
 router.get('/game/:roomId', function(req, res) {
     var roomId = req.params.roomId;
     if(!games.hasOwnProperty(roomId)) {
-        res.redirect(302, '/index');
+        res.redirect(302, '/');
     } else {
         res.render('game', {roomId: req.params.roomId, mode: 'play'});
     }
@@ -33,7 +33,7 @@ router.get('/game/:roomId', function(req, res) {
 router.get('/watch/:roomId', function(req, res) {
     var roomId = req.params.roomId;
     if(!games.hasOwnProperty(roomId)) {
-        res.redirect(302, '/index');
+        res.redirect(302, '/');
     } else {
         res.render('game', {roomId: req.params.roomId, mode: 'watch'});
     }

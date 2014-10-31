@@ -49,6 +49,10 @@ var Game = function(room, io, testMode) {
             maximumPlayerCount: 9
         };
     }
+    var _self = this;
+    this.closeTimeout = setTimeout(function() {
+        _self.pendingClose();
+    }, 30000);
 };
 
 Game.prototype = {
@@ -1227,59 +1231,59 @@ Game.prototype = {
         var _clients = this.clients, _wathers = this.watchers;
         delete socket.socketRoom; // 标示这个socket已经掉线
         socket.leave(_room);
+        var _self = this;
         if(_wathers.indexOf(socket) >= 0) {
             this.debug('client ' + socket.id + 'is wather');
             this.broadcast('leave', {name: socket.playerName, clientId:socket.id});
             _wathers.splice(_wathers.indexOf(socket), 1);
-            return;
-        }
-        var _self = this;
-        if(this.started) {
-            if(force) {
-                delete _self.paused;
-                this.broadcast('leave', {name: socket.playerName, clientId:socket.id});
-                _clients.splice(_clients.indexOf(socket), 1);
-                this.over();
-            } else {
-                if (this.clients.indexOf(socket) >= 0) {
-                    if(this.paused) { // 第二人掉线
+        } else if(_clients.indexOf(socket) >= 0) {
+            if (this.started) {
+                if (force) {
+                    delete _self.paused;
+                    this.broadcast('leave', {name: socket.playerName, clientId: socket.id});
+                    _clients.splice(_clients.indexOf(socket), 1);
+                    this.over();
+                } else {
+                    if (this.clients.indexOf(socket) >= 0) {
+                        if (this.paused) { // 第二人掉线
 //                        delete _self.paused;
-                        this.broadcast('leave', {name: socket.playerName, clientId:socket.id});
-                        _clients.splice(_clients.indexOf(socket), 1);
+                            this.broadcast('leave', {name: socket.playerName, clientId: socket.id});
+                            _clients.splice(_clients.indexOf(socket), 1);
 //                        this.over();
-                        if (this.overTimeout) {
-                            clearTimeout(this.overTimeout); // 提前结束游戏
-                            delete this.overTimeout;
-                            this.offlineTimeoutHandler();
+                            if (this.overTimeout) {
+                                clearTimeout(this.overTimeout); // 提前结束游戏
+                                delete this.overTimeout;
+                                this.offlineTimeoutHandler();
+                            }
+                        } else {
+                            this.debug('Player ' + socket.playerName + ' disconnected, game paused.');
+                            this.broadcast('offline', {name: socket.playerName, clientId: socket.id, playerId: _clients.indexOf(socket) + 1});
+                            this.paused = true;
+                            if (this.overTimeout) {
+                                clearTimeout(this.overTimeout);
+                            }
+                            this.offlineTimeoutHandler = function () {
+                                _self.broadcast('leave', {name: socket.playerName, clientId: socket.id});
+                                delete _self.paused;
+                                _clients.splice(_clients.indexOf(socket), 1);
+                                if (_self.started) {
+                                    _self.over();
+                                }
+                                delete this.offlineTimeoutHandler;
+                            };
+                            this.overTimeout = setTimeout(this.offlineTimeoutHandler, 120000);
                         }
                     } else {
-                        this.debug('Player ' + socket.playerName + ' disconnected, game paused.');
-                        this.broadcast('offline', {name: socket.playerName, clientId: socket.id, playerId: _clients.indexOf(socket) + 1});
-                        this.paused = true;
-                        if (this.overTimeout) {
-                            clearTimeout(this.overTimeout);
-                        }
-                        this.offlineTimeoutHandler = function () {
-                            _self.broadcast('leave', {name: socket.playerName, clientId: socket.id});
-                            delete _self.paused;
-                            _clients.splice(_clients.indexOf(socket), 1);
-                            if (_self.started) {
-                                _self.over();
-                            }
-                            delete this.offlineTimeoutHandler;
-                        };
-                        this.overTimeout = setTimeout(this.offlineTimeoutHandler, 120000);
+                        // 已经重连成功 之后才检测到掉线
                     }
-                } else {
-                    // 已经重连成功 之后才检测到掉线
                 }
+            } else {
+                this.broadcast('leave', {name: socket.playerName, clientId: socket.id});
+                _clients.splice(_clients.indexOf(socket), 1);
+                this.readyToStart();
             }
-        } else {
-            this.broadcast('leave', {name: socket.playerName, clientId:socket.id});
-            _clients.splice(_clients.indexOf(socket), 1);
-            this.readyToStart();
         }
-        if(this.clients.length == 0) {
+        if(this.clients.length == 0 && this.watchers.length == 0) {
             if(this.closeTimeout) {
                 clearTimeout(this.closeTimeout);
             }
@@ -1324,9 +1328,9 @@ Game.prototype = {
         }
     },
     pendingClose: function() {
-        if(this.clients.length == 0) {
+        delete this.closeTimeout;
+        if(this.clients.length == 0 && this.watchers.length == 0) {
             this.debug('No players in this room, gonna closed.');
-            delete this.closeTimeout;
             delete games[this.socketRoom];
         }
     },

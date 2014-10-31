@@ -9,7 +9,7 @@
              var d = new Date();
              d.setTime(d.getTime() + (exdays*24*60*60*1000));
              var expires = "expires="+d.toUTCString();
-             document.cookie = cname + "=" + encodeURIComponent(cvalue) + "; " + expires;
+             document.cookie = cname + "=" + encodeURIComponent(cvalue) + "; " + expires + '; path=/';
          }
 
          function getCookie(cname) {
@@ -67,7 +67,7 @@
               <li class="list-header">游戏房间</li>
               <% var count = 0;%>
               <% for (var roomId in games) {
-                     if(games.hasOwnProperty(roomId)) {
+                     if(games.hasOwnProperty(roomId) && games[roomId].clients.length > 0) {
                          count ++;%>
               <li>
                   <a href="<% if (!games[roomId].started){ %>/game/<%= roomId %><%} else {%>#<%}%>" target="_self">

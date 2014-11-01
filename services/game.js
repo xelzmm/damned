@@ -237,7 +237,7 @@ Game.prototype = {
                     hasKey: _players[i].hasKey,
                     injured: _players[i].injured,
                     role: i == playerId ? _players[i].role : 'unknown',
-                    clue: _players[i].clue,
+                    clue: _players[i].clue ? (i == playerId ? _players[i].clue : {level: _players[i].clue.level}) : undefined,
                     room: _players[i].room
                 });
             }
@@ -249,6 +249,7 @@ Game.prototype = {
         var _players = this.players;
         var safeRoom = _rooms[this.data.safeRoom];
         var escapedPlayers = [], i, player;
+        delete this.pendingHandler;
         for(i in safeRoom.players) {
             if(safeRoom.players.hasOwnProperty(i)) {
                 player = _players[safeRoom.players[i] - 1];

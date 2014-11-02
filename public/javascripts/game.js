@@ -1122,9 +1122,9 @@ var init = function() {
         Game.started = true;
         setTimeout(function() {
             socket.emit('rejoin', gameRoom.room, socket.token);
-            if(Game.order.length > 0 && Game.order[Game.progress.room][Game.progress.player] == me.id) {
+//            if(Game.order.length > 0 && Game.order[Game.progress.room][Game.progress.player] == me.id) {
                 notice('断线期间你的行动时间将超时跳过。');
-            }
+//            }
         }, 1000);
     });
     socket.on('offline', function(data) {

@@ -367,6 +367,9 @@ var init = function() {
         if(progress.bomb == 2) {
             Game.elements.roundBoard.style.opacity = '0';
         }
+        if((!!Game.elements.posion) && progress.round == 6) { // 逃生回合
+            Game.elements.posion.style.opacity = '0';
+        }
         if(['speak', 'move', 'perform'].indexOf(progress.stage) >= 0) {
             var _rooms = Game.rooms, _order = Game.order = [];
             for (i in _rooms) { // 获取行动顺序
@@ -563,7 +566,7 @@ var init = function() {
                             '】人配合！', 'self');
                     }
                     print('思考 ' + progress.time + ' 秒，考虑接下来如何行动。');
-                    if((!!Game.elements.posion) && (progress.round == 6 && progress.bomb != 2 || progress.round == 7 && progress.bomb == 2)) { // 逃生回合
+                    if((!!Game.elements.posion) && progress.round == 6) { // 逃生回合
                         notice('【大厅】的毒雾似乎散去了，可以进去暂时躲一躲。');
                         Game.elements.posion.style.opacity = '0';
                     }

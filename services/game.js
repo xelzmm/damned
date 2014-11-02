@@ -421,7 +421,7 @@ Game.prototype = {
                         if(_order[roomId].length != 0) { // 找到一个有玩家的房间
                             if(roomId == 0 &&
                                 (_players.length < 8 && !this.testMode  // 不足8人 大厅没有毒雾
-                                || (_progress.bomb == 2 ? _progress.round == 8 : _progress.round == 7))) { // 逃生前一回合，毒雾已散去
+                                || _progress.round >= 7)) { // 逃生前一回合，毒雾已散去
                                 continue; // 跳过大厅执行
                             }
                             _progress.room = roomId;

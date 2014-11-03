@@ -6,7 +6,20 @@ html, body {
     background-color: black;
 }
 
-#rooms a, #header a {
+#logo {
+    background: url('/images/logo.png') no-repeat;
+    width: 300px;
+    height: 200px;
+    position: relative;
+}
+
+#logo a {
+    position: absolute;
+    bottom: 8px;
+    right: 0;
+}
+
+#logo a, #rooms a, #header a {
     background-color: rgb(44, 44, 44);
     border-radius: 5px;
     color: rgb(255, 255, 255);

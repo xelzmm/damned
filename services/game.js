@@ -1281,7 +1281,7 @@ Game.prototype = {
             } else {
                 this.broadcast('leave', {name: socket.playerName, clientId: socket.id});
                 _clients.splice(_clients.indexOf(socket), 1);
-                this.readyToStart();
+//                this.readyToStart();
             }
         }
         if(this.clients.length == 0 && this.watchers.length == 0) {

@@ -385,10 +385,10 @@ var init = function() {
     });
     socket.on('join', function(data) {
         if(data.mode == 'play') {
-            print('玩家：' + data.name + ' 进入了游戏房间。');
+            print('玩家：' + data.name + ' 进入游戏。');
             gameRoom.addPlayer(data.name, data.clientId, false);
         } else if(data.mode == 'watch'){
-            print('玩家：' + data.name + ' 进入房间观战。');
+            print('观众：' + data.name + ' 进入游戏。');
         }
     });
     socket.on('leave', function(data) {
@@ -1234,6 +1234,7 @@ var initPlayGround = function(rooms, players) {
                 drawResource('hall-' + _room.rule, _roomPosition.x, _roomPosition.y);
                 if(players.length >= 8 || Game.testMode) { // 8人局开启毒雾大厅
                     Game.elements.posion = drawElement('posion', 500, 488);
+                    notice('请注意：【大厅毒雾】开启，停留大厅将会被感染！');
                 }
             } else {
                 _room.dangerousMarker = drawElement(_room.dangerous, GameConfig.dangerousBoard.x + GameConfig.dangerousBoard.step * _room.id, GameConfig.dangerousBoard.y);
@@ -1290,14 +1291,26 @@ GameRoom.prototype = {
     removePlayer: function(data) {
         var clientId = data.clientId;
         if(clientId in this.players) {
-            print('玩家：' + data.name + ' 离开了游戏房间。');
+            print('玩家：' + data.name + ' 离开游戏。');
             removeNode(this.players[clientId].marker);
             delete this.players[clientId];
             if(Game.started) {
                 resetGame();
             }
+            var allReady = true, count = 0;
+            for(var i in this.players) {
+                if(this.players.hasOwnProperty(i)) {
+                    count++;
+                    if(this.players[i].marker.innerHTML.indexOf('已准备') < 0) {
+                        allReady = false;
+                    }
+                }
+            }
+            if(allReady) {
+                notice('当前为【' + count + '】人局，任意玩家重新准备即可开始。');
+            }
         } else { // 观战离开
-            print('观众：' + data.name + ' 离开了游戏房间。');
+            print('观众：' + data.name + ' 离开游戏。');
         }
     },
     updatePlayer: function(playerId, oldClientId, newClientId) {

@@ -163,8 +163,9 @@ Date.prototype.format = function (format) {
                 ("00" + o[k]).substr(("" + o[k]).length));
     return format;
 };
-var print = function(msg, style) {
-    msg = msg.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+var print = function(msg, style, literal) {
+    if(!literal)
+        msg = msg.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     var chatBoard = document.getElementById('chatBoard');
     var autoScroll = chatBoard.scrollTop + chatBoard.clientHeight >= chatBoard.scrollHeight - 5;
     var msgBox = document.createElement('div');
@@ -412,6 +413,8 @@ var init = function() {
         if(testMode) {
             print('当前房间为测试房间！', 'self speak');
         }
+        print('首次游戏，请仔细阅读 <a target="_blank" href="/readme.html">操作说明</a>。', 'notice speak', true);
+        print('如有任何问题或者建议，请加官方QQ群 <a target="_blank" href="http://shang.qq.com/wpa/qunwpa?idkey=5c2b3d7e0616c2711001a6e8ab9661d9b0d6ae321169afb09e4fa0b38911e7ce"><img border="0" style="vertical-align: top; height: 19px;" src="http://pub.idqqimg.com/wpa/images/group.png" alt="密室惊魂" title="密室惊魂"></a> 进行反馈。', 'speak', true);
         document.getElementById('readyButton').onclick = function() {
             if(Game.mode == 'watch') {
                 if(confirm('确认加入游戏？')) {

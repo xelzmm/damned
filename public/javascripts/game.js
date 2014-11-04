@@ -477,8 +477,6 @@ var init = function() {
         Game.testMode = data.testMode;
         initPlayGround(rooms, players);
         notice('游戏开始了！总共有【' + players.length + '】名玩家。');
-        notice('本局【拆弹】第一次需要【' + (players.length >= 8 ? 3 : 2) + '】人配合，第二次需要【' +
-            (players.length >= 9 ? 4 : (players.length >= 6 ? 3 : 2)) + '】人配合!');
         for(var i in players) {
             if(players.hasOwnProperty(i)) {
                 print('【' + players[i].id + '】号玩家：' + players[i].name, 'player');
@@ -516,7 +514,14 @@ var init = function() {
             print('【奸徒】固定1名，【EX受害者】固定1名', 'player speak');
             print('【大厅毒雾】开启，逃生前一回合解除。', 'player speak');
             print('=== 请注意，当前为测试模式！===', 'player speak');
+        } else {
+            if(players.length >= 6) print('本局增加【1】级线索卡：【13】号房间危险', 'player');
+            if(players.length >= 7) print('本局增加【1】级线索卡：【大厅】危险', 'player');
+            if(players.length >= 8) print('本局增加【大厅毒雾】功能，停留大厅将会中毒', 'player');
+            if(players.length >= 9) print('本局增加【2】级线索卡：【黑色】房间危险', 'player');
         }
+        notice('本局【拆弹】第一次需要【' + (players.length >= 8 ? 3 : 2) + '】人配合，第二次需要【' +
+            (players.length >= 9 ? 4 : (players.length >= 6 ? 3 : 2)) + '】人配合!');
         print('进入第【1】回合.');
         window.onbeforeunload = function() {
             if(Game.started && Game.mode == 'play') {
@@ -1261,7 +1266,6 @@ var initPlayGround = function(rooms, players) {
                 drawResource('hall-' + _room.rule, _roomPosition.x, _roomPosition.y);
                 if(players.length >= 8 || Game.testMode) { // 8人局开启毒雾大厅
                     Game.elements.posion = drawElement('posion', 500, 488);
-                    notice('请注意：【大厅毒雾】开启，停留大厅将会被感染！');
                 }
             } else {
                 _room.dangerousMarker = drawElement(_room.dangerous, GameConfig.dangerousBoard.x + GameConfig.dangerousBoard.step * _room.id, GameConfig.dangerousBoard.y);

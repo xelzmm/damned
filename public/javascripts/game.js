@@ -538,7 +538,7 @@ var init = function() {
                     }
                 }
                 print(GameConfig.stage[progress.stage] + '顺序：【' + _orderString.substr(0, _orderString.length - 1) + '】');
-                if(progress.stage == 'move' && progress.bomb >= 0 && progress.bomb <= 1) {
+                if(progress.stage == 'move' && progress.bomb >= 0 && progress.bomb <= 1 && progress.round < 7) {
                     print('提示：本回合拆弹需要【' +
                         (progress.bomb == 0 ?
                             (Game.players.length >= 8 ? 3 : 2) :

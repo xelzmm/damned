@@ -273,6 +273,23 @@ var init = function() {
     window.socket = io('ws://' + window.location.hostname + (window.location.hostname == 'msjh.aliapp.com' ? '' : ':4000'));
 
     var input = document.getElementById('input');
+    var speakInterval, speakIdle = 0, maxSpeakIdle = 15;
+    var lastInput = '';
+    var speakCheck = function() {
+        speakInterval = setInterval(function() {
+            if(lastInput != input.value) {
+                speakIdle = 0;
+                lastInput = input.value;
+            } else {
+                speakIdle++;
+            }
+            if(maxSpeakIdle - speakIdle == 5) {
+                print((maxSpeakIdle - speakIdle) + ' 秒内无输入，将会自动结束发言。');
+            } else if(maxSpeakIdle - speakIdle == 0){
+                socket.emit('speak', '\1timeout');
+            }
+        }, 1000);
+    };
     var speak = function() {
         if(Game.canSpeak) {
             if(input.value.trim() == "") {
@@ -521,6 +538,8 @@ var init = function() {
             document.getElementById('keyTransform').style.display = 'none';
             document.getElementById('keyVote').style.display = 'none';
             delete Game.canSpeak;
+            clearInterval(speakInterval);
+            speakIdle = 0;
         }
         if(Game.canMove) {
             delete Game.canMove;
@@ -560,7 +579,7 @@ var init = function() {
                     print('【1】级线索卡：' + progress.clueCounts[0] + '张');
                     print('【2】级线索卡：' + progress.clueCounts[1] + '张');
                     print('【3】级线索卡：' + progress.clueCounts[2] + '张');
-                    if(progress.bomb >= 0 && progress.bomb <= 1) {
+                    if(progress.bomb >= 0 && progress.bomb <= 1 && progress.round < 7) {
                         print('下次拆弹需要【' +
                             (progress.bomb == 0 ?
                                 (Game.players.length >= 8 ? 3 : 2) :
@@ -597,6 +616,7 @@ var init = function() {
                 switch(progress.stage) {
                     case 'speak':
                         Game.canSpeak = true;
+                        speakCheck();
                         var _players = currentRoom.players;
                         if(_players.length >= 2) {
                             var targetPlayer = [];
@@ -680,6 +700,10 @@ var init = function() {
             var playerId = data.player;
             if(data.content.toLowerCase() == 'over') {
                 _players[playerId - 1].debug('提前结束发言。');
+                return;
+            }
+            if(data.content == '\1timeout') {
+                _players[playerId - 1].debug('长时间不发言，自动结束。');
                 return;
             }
             _players[playerId - 1].speak(data.content);

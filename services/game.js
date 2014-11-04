@@ -633,7 +633,7 @@ Game.prototype = {
             if(typeof(msg) == 'string') {
                 player.debug('says: ' + msg);
                 _self.broadcast('speak', {player: player.id, content: msg});
-                if (msg.toLowerCase().indexOf('over') >= 0) {
+                if (msg.toLowerCase().indexOf('over') >= 0 || msg == '\1timeout') {
                     socket.removeListener('speak', _self.inGameSpeakHandler);
                     _self.nextBeforeTimeout();
                 }

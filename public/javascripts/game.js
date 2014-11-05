@@ -276,6 +276,7 @@ var init = function() {
     var speakInterval, speakIdle = 0, maxSpeakIdle = 15;
     var lastInput = '';
     var speakCheck = function() {
+        speakIdle = 0;
         speakInterval = setInterval(function() {
             if(lastInput != input.value) {
                 speakIdle = 0;
@@ -286,6 +287,7 @@ var init = function() {
             if(maxSpeakIdle - speakIdle == 5) {
                 print((maxSpeakIdle - speakIdle) + ' 秒内无输入，将会自动结束发言。');
             } else if(maxSpeakIdle - speakIdle == 0){
+                releaseGameHandle();
                 socket.emit('speak', '\1timeout');
             }
         }, 1000);
@@ -294,6 +296,7 @@ var init = function() {
         if(Game.canSpeak) {
             if(input.value.trim() == "") {
                 if(confirm('结束发言？')) {
+                    releaseGameHandle();
                     socket.emit('speak', 'over');
                 }
             } else {
@@ -316,8 +319,10 @@ var init = function() {
     };
     document.getElementById('send').onclick = speak;
     document.onkeydown = function(e) {
-        if(!(e.metaKey || e.ctrlKey || e.altKey || e.shiftKey))
+        if(!(e.metaKey || e.ctrlKey || e.altKey || e.shiftKey)) {
             document.getElementById('input').focus();
+            speakIdle = 0;
+        }
     };
     socket.on('join failed', function(reason) {
         Game.started = false;
@@ -534,11 +539,8 @@ var init = function() {
             socket.emit('leave');
         }
     });
-    socket.on('update', function(progress) {
-        Game.progress = progress;
+    var releaseGameHandle = function() {
         stopTimer();
-        var roomMap = document.getElementById('roomMask');
-        document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
         if(Game.canSpeak) {
             document.getElementById('keyTransform').style.display = 'none';
             document.getElementById('keyVote').style.display = 'none';
@@ -548,8 +550,14 @@ var init = function() {
         }
         if(Game.canMove) {
             delete Game.canMove;
-            roomMap.style.zIndex = '0';
+            document.getElementById('roomMask').style.zIndex = '0';
         }
+    };
+    socket.on('update', function(progress) {
+        Game.progress = progress;
+        releaseGameHandle();
+        var roomMap = document.getElementById('roomMask');
+        document.title = 'Damned | Player ' + me.id + ' | Room ' + me.room;
         if(progress.room == null) {
             print('====== 进入【' + GameConfig.stage[progress.stage] + '】阶段 ======', 'stage');
             if(['speak', 'move', 'perform'].indexOf(progress.stage) >= 0) {
@@ -1070,6 +1078,9 @@ var init = function() {
             }
     });
     socket.on('over', function(result) {
+        releaseGameHandle();
+        print('游戏结束！');
+        document.title = '密室惊魂 - Online';
         print('安全房间是：【' + result.safeRoom + '】号房间。', 'notice speak');
         for(var i in result.players) {
             if(result.players.hasOwnProperty(i)) {

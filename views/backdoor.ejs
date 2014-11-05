@@ -1,0 +1,64 @@
+<html>
+<head>
+    <title>密室惊魂 - 上帝视角</title>
+</head>
+<h1>【<%=game.socketRoom%>】号房间 - 上帝视角</h1>
+<% var i; %>
+<h3>玩家: <%= game.clients.length %></h3>
+<% if(!game.started) { %>
+    <ul>
+    <%
+    for(i in game.clients) {
+        if(game.clients.hasOwnProperty(i)) {
+            var client = game.clients[i],
+                sHeaders = client.handshake.headers,
+                clientIp = sHeaders['x-forwarded-for'] ? sHeaders['x-forwarded-for'] : client.client.conn.remoteAddress;
+    %>
+            <li><%= client.playerName %> <%= clientIp %> <%= client.playerReady ? '已准备' : '' %></li>
+
+    <%
+        }
+    }
+    %>
+    </ul>
+<% } else { %>
+    <ul>
+    <%
+    for(i in game.clients) {
+        if(game.clients.hasOwnProperty(i)) {
+            client = game.clients[i];
+            var player = game.players[i];
+            sHeaders = client.handshake.headers;
+            clientIp = sHeaders['x-forwarded-for'] ? sHeaders['x-forwarded-for'] : client.client.conn.remoteAddress;
+    %>
+            <li>【<%= player.id %>】<%= player.name %> <%= player.role %> <%= clientIp %></li>
+    <%
+        }
+    }
+    %>
+    </ul>
+    <h3>开始时间 - <%= game.startTime %></h3>
+    <h3>安全房间 - <%= game.data.safeRoom %></h3>
+    <ul>
+        <li>【1】级线索卡：<%= game.data.clues.level1 %></li>
+        <li>【2】级线索卡：<%= game.data.clues.level2 %></li>
+        <li>【3】级线索卡：<%= game.data.clues.level3 %></li>
+    </ul>
+<% } %>
+<h3>观众: <%= game.watchers.length %></h3>
+<ul>
+<%
+for(i in game.watchers) {
+    if(game.watchers.hasOwnProperty(i)) {
+        client = game.watchers[i],
+        sHeaders = client.handshake.headers,
+        clientIp = sHeaders['x-forwarded-for'] ? sHeaders['x-forwarded-for'] : client.client.conn.remoteAddress;
+%>
+        <li><%= client.playerName %> <%= clientIp %></li>
+
+<%
+    }
+}
+%>
+</ul>
+</html>

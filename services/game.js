@@ -78,6 +78,7 @@ Game.prototype = {
     },
     start: function() {
         this.debug('starting game...');
+        this.startTime = new Date();
         var _clients = this.clients;
         var _players = this.players;
         var _playerCount = _clients.length;

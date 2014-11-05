@@ -1348,7 +1348,7 @@ GameRoom.prototype = {
                     }
                 }
             }
-            if(allReady) {
+            if(allReady && count >= 5) {
                 notice('当前为【' + count + '】人局，任意玩家重新准备即可开始。');
             }
         } else { // 观战离开

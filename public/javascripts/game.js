@@ -300,7 +300,33 @@ var init = function() {
                     socket.emit('speak', 'over');
                 }
             } else {
-                socket.emit('speak', input.value);
+                if(input.value == '/xs') {
+                    var msg = '我的线索标记状态：';
+                    var dangerousStatusName = {
+                        confirmed: '确认危险',
+                        possible: '可能危险',
+                        unknown: '未知'
+                    };
+                    var dangerous = {
+                            confirmed: [],
+                            possible: [],
+                            unknown: []
+                    };
+                    for(var i in Game.rooms) {
+                        if(Game.rooms.hasOwnProperty(i) && i != 0) {
+                            var room = Game.rooms[i];
+                            dangerous[room.dangerous].push(room.id);
+                        }
+                    }
+                    for(i in dangerous) {
+                        if(dangerous.hasOwnProperty(i)) {
+                            msg += '【' + dangerousStatusName[i] + '】：' + dangerous[i];
+                        }
+                    }
+                    socket.emit('speak', msg);
+                } else {
+                    socket.emit('speak', input.value);
+                }
                 input.value = '';
             }
         } else if(!Game.started) {

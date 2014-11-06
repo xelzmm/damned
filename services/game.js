@@ -153,6 +153,7 @@ Game.prototype = {
         _clues.level2.splice(_clues.level2.indexOf(_rooms[safeRoomId].color), 1);
         _clues.level3 = [_rooms[safeRoomId].hasLock ? 'noLock' : 'hasLock'];
 
+        this.data.usedClues = {level1: [], level2: [], level3: []};
         var _roles = ['traitor'];
         _roles.push(Math.random() < 0.1 * _clients.length || this.testMode ? 'victim-ex' : 'victim');
         for (i=1; i<=_playerCount - 1; i++ ) _roles.push('victim');
@@ -485,7 +486,9 @@ Game.prototype = {
                             if(_clues.level1.length > 0) {
                                 _progress.time = this.config.notifyTime;
                                 this.updateGameAndAwaitNext(function() {
-                                    player.gainClue({'level': 1, room: _clues.level1.splice(0, 1)[0]});
+                                    var clueRoom = _clues.level1.splice(0, 1)[0];
+                                    player.gainClue({'level': 1, room: clueRoom});
+                                    _self.data.usedClues.level1.push(clueRoom);
                                     _self.functionPerformed = true;
                                     _self.broadcast('clue', {
                                         player: playerId,
@@ -1048,10 +1051,12 @@ Game.prototype = {
                                 var masterPlayer = _players[_order[_progress.room][_progress.player] - 1],
                                     resultLevel = roomFunction == 'upgrade' ? (oldClues[0] + oldClues[1]) :
                                         Math.abs(oldClues[0] - oldClues[1]);
+                                var clueRoom = _clues["level" + resultLevel].splice(0, 1)[0];
                                 masterPlayer.gainClue({
                                     level: resultLevel,
-                                    room: _clues["level" + resultLevel].splice(0, 1)[0]
+                                    room: clueRoom
                                 });
+                                _self.data.usedClues["level" + resultLevel].push(clueRoom);
                                 _self.broadcast('action', {
                                     type: roomFunction,
                                     result: true,

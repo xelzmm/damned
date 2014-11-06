@@ -3,7 +3,14 @@
     <title>密室惊魂 - 上帝视角</title>
 </head>
 <h1>【<%=game.socketRoom%>】号房间 - 上帝视角</h1>
-<% var i; %>
+<%
+var i;
+var role = {
+    'victim': '受害者',
+    'victim-ex': 'EX受害者',
+    'traitor': '奸徒'
+};
+%>
 <h3>玩家: <%= game.clients.length %></h3>
 <% if(!game.started) { %>
     <ul>
@@ -14,7 +21,9 @@
                 sHeaders = client.handshake.headers,
                 clientIp = sHeaders['x-forwarded-for'] ? sHeaders['x-forwarded-for'] : client.client.conn.remoteAddress;
     %>
-            <li><%= client.playerName %> <%= clientIp %> <%= client.playerReady ? '已准备' : '' %></li>
+            <li>
+                <%= client.playerName %> <%= clientIp %> <%= client.playerReady ? '已准备' : '' %>
+            </li>
 
     <%
         }
@@ -31,7 +40,13 @@
             sHeaders = client.handshake.headers;
             clientIp = sHeaders['x-forwarded-for'] ? sHeaders['x-forwarded-for'] : client.client.conn.remoteAddress;
     %>
-            <li>【<%= player.id %>】<%= player.name %> <%= player.role %> <%= clientIp %></li>
+            <li>【<%= player.id %>】号玩家： <%= player.name %>
+                <ul>
+                    <li>角色：【<%= role[player.role] %>】 <% if(player.hasKey) { %> 有钥匙 <% } %></li>
+                    <li>IP：<%= clientIp %></li>
+                    <% if(!!player.clue) { %> <li>线索卡：<%= player.clue.level %> 级，<%= player.clue.room %></li> <% } %>
+                </ul>
+            </li>
     <%
         }
     }
@@ -39,6 +54,51 @@
     </ul>
     <h3>开始时间 - <%= game.startTime %></h3>
     <h3>安全房间 - <%= game.data.safeRoom %></h3>
+    <h3>已使用线索卡</h3>
+        <ul>
+            <li>【1】级线索卡：<%= game.data.usedClues.level1 %></li>
+            <li>【2】级线索卡：<%= game.data.usedClues.level2 %></li>
+            <li>【3】级线索卡：<%= game.data.usedClues.level3 %></li>
+        </ul>
+<%
+    var roomsLeft = [1,2,3,4,5,6,7,8,9,10,11,12], index;
+    var level1 = game.data.usedClues.level1,
+            level2 = game.data.usedClues.level2,
+            level3 = game.data.usedClues.level3;
+    for(i in level1) {
+        if(level1.hasOwnProperty(i)) {
+            index = roomsLeft.indexOf(level1[i]);
+            if(index >= 0) {
+                roomsLeft.splice(index, 1);
+            }
+        }
+    }
+    var j;
+    for(i in level2) {
+        if(level2.hasOwnProperty(i)) {
+            for(j in game.data.rooms) {
+                if(game.data.rooms.hasOwnProperty(j) && game.data.rooms[j].color == level2[i]) {
+                    index = roomsLeft.indexOf(parseInt(j));
+                    if(index >= 0) {
+                        roomsLeft.splice(index, 1);
+                    }
+                }
+            }
+        }
+    }
+    if(level3.length > 0) {
+        for(j in game.data.rooms) {
+            if(game.data.rooms.hasOwnProperty(j) && game.data.rooms[j].hasLock == (level3[0] == 'hasLock')) {
+                index = roomsLeft.indexOf(parseInt(j));
+                if(index >= 0) {
+                    roomsLeft.splice(index, 1);
+                }
+            }
+        }
+    }
+%>
+    <h3>未排除的房间 - <%= roomsLeft %></h3>
+    <h3>剩余线索卡</h3>
     <ul>
         <li>【1】级线索卡：<%= game.data.clues.level1 %></li>
         <li>【2】级线索卡：<%= game.data.clues.level2 %></li>

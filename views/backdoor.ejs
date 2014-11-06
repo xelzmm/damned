@@ -10,6 +10,24 @@ var role = {
     'victim-ex': 'EX受害者',
     'traitor': '奸徒'
 };
+Date.prototype.format = function (format) {
+    var o = {
+        "M+": this.getMonth() + 1, //month
+        "d+": this.getDate(), //day
+        "h+": this.getHours(), //hour
+        "m+": this.getMinutes(), //minute
+        "s+": this.getSeconds(), //second
+        "q+": Math.floor((this.getMonth() + 3) / 3), //quarter
+        "S": this.getMilliseconds() //millisecond
+    };
+    if (/(y+)/.test(format)) format = format.replace(RegExp.$1,
+            (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    for (var k in o)if (new RegExp("(" + k + ")").test(format))
+        format = format.replace(RegExp.$1,
+                        RegExp.$1.length == 1 ? o[k] :
+                        ("00" + o[k]).substr(("" + o[k]).length));
+    return format;
+};
 %>
 <h3>玩家: <%= game.clients.length %></h3>
 <% if(!game.started) { %>
@@ -52,9 +70,34 @@ var role = {
     }
     %>
     </ul>
-    <h3>开始时间 - <%= game.startTime %></h3>
+    <h3>开始时间 - <%= game.startTime.format('hh:mm:ss') %></h3>
+    <h3>游戏进度</h3>
+    <ul>
+        <li>当前回合： <%= game.data.progress.round %></li>
+        <%
+            var stageName = {
+                prepare: '准备',
+                speak: '发言',
+                move: '移动',
+                time: '时间',
+                perform: '执行',
+                thinking: '思考'
+            };
+        %>
+        <li>当前阶段： <%= stageName[game.data.progress.stage] %></li>
+        <%
+            var bombStatus = {
+                0: '未拆',
+                1: '已拆一次',
+                2: '已拆两次',
+                '-1': '第一次拆弹失败',
+                '-2': '第二次拆弹失败'
+            };
+        %>
+        <li>拆弹情况： <%= bombStatus[game.data.progress.bomb] %></li>
+    </ul>
     <h3>安全房间 - <%= game.data.safeRoom %></h3>
-    <h3>已使用线索卡</h3>
+    <h3>已发放线索卡</h3>
         <ul>
             <li>【1】级线索卡：<%= game.data.usedClues.level1 %></li>
             <li>【2】级线索卡：<%= game.data.usedClues.level2 %></li>
@@ -97,7 +140,24 @@ var role = {
         }
     }
 %>
-    <h3>未排除的房间 - <%= roomsLeft %></h3>
+    <h3>未排除的房间</h3>
+    <ul>
+<%
+    var colors = {
+        green: '绿色',
+        red: '红色',
+        blue: '蓝色',
+        yellow: '黄色'
+    };
+    for(i in roomsLeft) {
+        if(roomsLeft.hasOwnProperty(i)) {
+%>
+        <li>【<%= roomsLeft[i] %>】号房间 <%= colors[game.data.rooms[roomsLeft[i]].color] %> <%= game.data.rooms[roomsLeft[i]].hasLock ? '有锁' : '无锁' %></li>
+<%
+        }
+    }
+%>
+    </ul>
     <h3>剩余线索卡</h3>
     <ul>
         <li>【1】级线索卡：<%= game.data.clues.level1 %></li>

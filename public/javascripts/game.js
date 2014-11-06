@@ -966,7 +966,7 @@ var init = function() {
                                 break;
                             case 'disarm':
                                 if (me.role.indexOf('victim') == 0) {
-                                    alert('即将进行拆弹，你是受害者，点击确定予以配合！');
+                                    alert('即将进行拆弹，你的身份是受害者(受害者必须配合)，点击确定予以配合！');
                                     decision = true;
                                 } else {
                                     decision = confirm('是否配合进行拆弹？\n【确定】代表配合，【取消】代表破坏。');

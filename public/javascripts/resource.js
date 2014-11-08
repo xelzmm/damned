@@ -626,10 +626,10 @@ Room.prototype = {
                 }
             }
         }
-        if(wannaLock && !canLock) {
-            notice('已经有【3】个房间被锁上，本次移动过程中，你无法再锁上任何房间。');
-        }
-        return optionalMovements;
+//        if(wannaLock && !canLock) {
+//            notice('已经有【3】个房间被锁上，本次移动过程中，你无法再锁上任何房间。');
+//        }
+        return {movements: optionalMovements, cannotLock: wannaLock && !canLock};
     },
     genPosition: function (playerId) {
         var index = this.players.indexOf(playerId),

@@ -97,12 +97,14 @@ var initRoomMap = function() {
             area.onclick = function(roomId) {
                 return function() {
                     if(!Game.canMove) return;
-                    var optionalMovements = Game.rooms[me.room].routesToRoom(roomId, me.hasKey);
+                    var routes = Game.rooms[me.room].routesToRoom(roomId, me.hasKey);
+                    var optionalMovements = routes.movements;
                     if(optionalMovements.length == 0) {
                         print('您无法' + (roomId == me.room ? '留在' : '移动到') + Room.nameOf(roomId) + '，请重新选择！');
                         return;
                     }
                     if(!confirm('确定' + (roomId == me.room ? '留在' : '移动到') + Room.nameOf(roomId) + '？' +
+                        (routes.cannotLock ? '\n已经有【3】个房间被锁上，本次移动过程中，你无法再锁上任何房间。' : '') +
                         (roomId == 0 && !!Game.elements.posion && !me.injured && Game.elements.posion.style.opacity != '0'
                             ? '\n你将会受到大厅【毒雾】感染！' : ''))) return;
                     var emitMove = function(movements) {

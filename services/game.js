@@ -154,10 +154,12 @@ Game.prototype = {
         _clues.level3 = [_rooms[safeRoomId].hasLock ? 'noLock' : 'hasLock'];
 
         this.data.usedClues = {level1: [], level2: [], level3: []};
-        var _roles = ['traitor'];
+        var _roles = [];
         _roles.push(Math.random() < 0.1 * _clients.length || this.testMode ? 'victim-ex' : 'victim');
         for (i=1; i<=_playerCount - 1; i++ ) _roles.push('victim');
         if(!this.testMode) _roles.push('victim');
+        _roles.push('traitor');
+        _roles.sort(shuffle);
         _roles.sort(shuffle);
         _clients.sort(shuffle);
         for(i in _clients) {

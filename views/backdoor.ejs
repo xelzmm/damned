@@ -96,7 +96,15 @@ Date.prototype.format = function (format) {
         %>
         <li>拆弹情况： <%= bombStatus[game.data.progress.bomb] %></li>
     </ul>
-    <h3>安全房间 - <%= game.data.safeRoom %></h3>
+<%
+    var colors = {
+        green: '绿色',
+        red: '红色',
+        blue: '蓝色',
+        yellow: '黄色'
+    };
+%>
+    <h3>安全房间 - 【<%= game.data.safeRoom %>】号 <%= colors[game.data.rooms[game.data.safeRoom].color] %> <%= game.data.rooms[game.data.safeRoom].hasLock ? '有锁' : '无锁' %></h3>
     <h3>已发放线索卡</h3>
         <ul>
             <li>【1】级线索卡：<%= game.data.usedClues.level1 %></li>
@@ -143,12 +151,6 @@ Date.prototype.format = function (format) {
     <h3>未排除的房间</h3>
     <ul>
 <%
-    var colors = {
-        green: '绿色',
-        red: '红色',
-        blue: '蓝色',
-        yellow: '黄色'
-    };
     for(i in roomsLeft) {
         if(roomsLeft.hasOwnProperty(i)) {
 %>

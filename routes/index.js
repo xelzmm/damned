@@ -40,8 +40,12 @@ router.get('/watch/:roomId', function(req, res) {
 });
 
 router.get('/backdoor', function(req, res) {
-    if(data.key !== undefined && req.query.key == data.key && games.hasOwnProperty(req.query.room)) {
-        res.render('backdoor', {game: games[req.query.room]});
+    if(data.key !== undefined && req.query.key == data.key) {
+        if(games.hasOwnProperty(req.query.room)) {
+            res.render('backdoor', {game: games[req.query.room]});
+        } else {
+            res.send('There is no backdoor!');
+        }
     } else {
         res.redirect(302, '/');
     }

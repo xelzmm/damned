@@ -83,8 +83,9 @@ Game.prototype = {
         var _players = this.players;
         var _playerCount = _clients.length;
         var i;
-        var shuffle = function() {
-            return Math.random()>.5 ? -1 : 1;
+        var shuffle = function(o){
+            for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x){}
+            return o;
         };
         var _data = this.data;
         var roomColors = [
@@ -92,7 +93,7 @@ Game.prototype = {
             'red', 'green', 'blue', 'yellow',
             'red', 'green', 'blue', 'yellow'
         ];
-        roomColors.sort(shuffle);
+        shuffle(roomColors);
         var roomFunctions = [
             'upgrade-large', 'upgrade-small',
             'downgrade-large', 'downgrade-small',
@@ -101,12 +102,12 @@ Game.prototype = {
             'detoxify-large', 'detoxify-small',
             'disarm-large', 'disarm-small'
         ];
-        roomFunctions.sort(shuffle);
+        shuffle(roomFunctions);
         var roomLocks = [
             'empty', 'empty', 'empty', 'empty', 'empty', 'empty',
             'locked', 'locked', 'locked', 'locked', 'locked', 'locked'
         ];
-        roomLocks.sort(shuffle);
+        shuffle(roomLocks);
 
         var _rooms = _data.rooms = [];
         // 大厅
@@ -133,8 +134,8 @@ Game.prototype = {
         _clues.level2 = ['yellow', 'red', 'blue', 'green'];
         var safeRoomId = this.data.safeRoom = parseInt(Math.random() * 12) + 1;
         if(this.testMode) {
-            _clues.level1.sort(shuffle);
-            _clues.level2.sort(shuffle);
+            shuffle(_clues.level1);
+            shuffle(_clues.level2);
         }
         if(_clients.length > 5 || this.testMode) {
             _clues.level1.unshift(13);
@@ -146,22 +147,23 @@ Game.prototype = {
             _clues.level2.unshift('black');
         }
         if(!this.testMode) {
-            _clues.level1.sort(shuffle);
-            _clues.level2.sort(shuffle);
+            shuffle(_clues.level1);
+            shuffle(_clues.level2);
         }
         _clues.level1.splice(_clues.level1.indexOf(safeRoomId), 1);
         _clues.level2.splice(_clues.level2.indexOf(_rooms[safeRoomId].color), 1);
         _clues.level3 = [_rooms[safeRoomId].hasLock ? 'noLock' : 'hasLock'];
 
         this.data.usedClues = {level1: [], level2: [], level3: []};
-        var _roles = [];
-        _roles.push(Math.random() < 0.1 * _clients.length || this.testMode ? 'victim-ex' : 'victim');
-        for (i=1; i<=_playerCount - 1; i++ ) _roles.push('victim');
-        if(!this.testMode) _roles.push('victim');
+        var victims = shuffle(['victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim-ex']);
+        var _roles = victims.splice(0, this.testMode ? _clients.length - 1 : _clients.length);
+        if(this.testMode && _roles.indexOf('victim-ex') < 0) {
+            _roles.splice(Math.floor(Math.random() * _roles.length), 1, 'victim-ex');
+        }
         _roles.push('traitor');
-        _roles.sort(shuffle);
-        _roles.sort(shuffle);
-        _clients.sort(shuffle);
+        shuffle(_roles);
+        this.debug('random roles: ' + JSON.stringify(_roles.slice(0, _clients.length), null, 0));
+        shuffle(_clients);
         for(i in _clients) {
             if(_clients.hasOwnProperty(i)) {
                 _clients[i].playerReady = false;

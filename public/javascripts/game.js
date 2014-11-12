@@ -275,7 +275,7 @@ var init = function() {
     window.socket = io('ws://' + window.location.hostname + (window.location.hostname == 'msjh.aliapp.com' ? '' : ':4000'));
 
     var input = document.getElementById('input');
-    var speakInterval, speakIdle = 0, maxSpeakIdle = 15;
+    var speakInterval, speakIdle = 0, maxSpeakIdle = 15, alertLimit = 5;
     var lastInput = '';
     var speakCheck = function() {
         speakIdle = 0;
@@ -286,8 +286,8 @@ var init = function() {
             } else {
                 speakIdle++;
             }
-            if(maxSpeakIdle - speakIdle == 5) {
-                print((maxSpeakIdle - speakIdle) + ' 秒内无输入，将会自动结束发言。');
+            if(maxSpeakIdle - speakIdle == alertLimit) {
+                print('您已经超过' + (maxSpeakIdle - alertLimit) + '秒没有任何输入动作，' + alertLimit + '秒后将自动结束发言。');
             } else if(maxSpeakIdle - speakIdle == 0){
                 releaseGameHandle();
                 socket.emit('speak', '\1timeout');

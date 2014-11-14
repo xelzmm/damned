@@ -804,8 +804,6 @@ Game.prototype = {
                 break;
             case 'destroy': // 设定销毁线索的超时AI
             case 'watch': // 设定查看线索的超时AI
-            case 'give': // 设定转让key的超时AI
-            case 'request': // 设定索取key的超时AI
                 _self.updateGameAndAwaitNext(function () {
                     socket.removeAllListeners('challenge');
                     _self.broadcast('timeout', player.id);
@@ -830,17 +828,26 @@ Game.prototype = {
                                 clue: _self.players[targetPlayerId - 1].clue
                             });
                             break;
-                        case 'give':
-                        case 'request':
-                            _self.broadcast('key', {
-                                type: question,
-                                agree: question == 'give',
-                                player: player.id,
-                                fromPlayer: options.fromPlayer
-                            });
                     }
                 });
                 break;
+            case 'give': // 设定转让key的超时AI
+            case 'request': // 设定索取key的超时AI
+                _self.awaitNext(function () {
+                    socket.removeAllListeners('challenge');
+                    _self.broadcast('timeout', player.id);
+                    player.debug('response challenge [' + question + '] timeout');
+                    if(question == 'give') { // 给予超时自动接受，索要超时自动拒绝
+                        var srcPlayer = _self.players[options.fromPlayer - 1];
+                        srcPlayer.transformKey(player);
+                    }
+                    _self.broadcast('key', {
+                        type: question,
+                        agree: question == 'give',
+                        player: player.id,
+                        fromPlayer: options.fromPlayer
+                    });
+                });
         }
         _self.checkConnectionAndDo(function() {
             _self.debug('Challenge player ' + player.id + ' with [' + question + ']');
@@ -1127,8 +1134,6 @@ Game.prototype = {
     },
     updateGameAndAwaitNext: function(timeoutHandler, delay) {
         var _self = this;
-//        if(!(this.data.progress.stage == 'perform' && this.data.progress.room != null))
-//        this.broadcast('update', this.data.progress);
         this.checkConnectionAndDo(function() {
             _self.updateGame();
             _self.timeoutId = setTimeout(function(){
@@ -1140,6 +1145,17 @@ Game.prototype = {
                 } else {
                     _self.nextStep();
                 }
+            }, _self.data.progress.time * 1000);
+        });
+    },
+    awaitNext: function(timeoutHandler) {
+        var _self = this;
+        this.checkConnectionAndDo(function() {
+            _self.timeoutId = setTimeout(function(){
+                timeoutHandler();
+                _self.timeoutId = setTimeout(function () {
+                    _self.nextStep();
+                }, _self.config.notifyTime * 1000);
             }, _self.data.progress.time * 1000);
         });
     },

@@ -968,12 +968,23 @@ var init = function() {
         } else if(data.participants) {
             updateTimer(data.participants, data.time);
             var action = {
-                'disarm': '拆弹',
+                'disarm': '合力拆弹',
                 'upgrade': '升级线索卡',
                 'downgrade': '降级线索卡',
-                'vote': '投票分配钥匙',
-                'who': '选择抢谁的钥匙'
+                'vote': '投票抢钥匙',
+                'who': '投票决定抢谁的钥匙'
             }[data.options.actionType];
+            if(data.options.actionType == 'vote' && !Game.keyOwner) {
+                for (i in data.participants) {
+                    if (data.participants.hasOwnProperty(i)) {
+                        if(Game.players[data.participants[i] - 1].hasKey) {
+                            Game.keyOwner = Game.players[data.participants[i] - 1];
+                            break;
+                        }
+                    }
+                }
+                notice('现在开始抢' + Game.keyOwner.getDisplayName() + '的钥匙。');
+            }
             if(data.participants.indexOf(me.id) >= 0) {
                 var others = data.participants.concat();
                 others.splice(data.participants.indexOf(me.id), 1);
@@ -1020,16 +1031,6 @@ var init = function() {
                         } while(decision != 0 && (data.participants.indexOf(decision) < 0 || !Game.players[decision - 1].hasKey) );
                         break;
                     case 'vote':
-                        if(!Game.keyOwner) {
-                            for (i in data.participants) {
-                                if (data.participants.hasOwnProperty(i)) {
-                                    if(Game.players[data.participants[i] - 1].hasKey) {
-                                        Game.keyOwner = Game.players[data.participants[i] - 1];
-                                        break;
-                                    }
-                                }
-                            }
-                        }
                         msg = '请投票决定谁最终持有' + Game.keyOwner.getDisplayName() + '的钥匙：\n【0】：弃权';
                         for(i in data.participants) {
                             if(data.participants.hasOwnProperty(i)) {

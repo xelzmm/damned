@@ -287,7 +287,7 @@ var init = function() {
                 speakIdle++;
             }
             if(maxSpeakIdle - speakIdle == alertLimit) {
-                print('您已经超过' + (maxSpeakIdle - alertLimit) + '秒没有任何输入动作，' + alertLimit + '秒后将自动结束发言。');
+                print('您已经超过【' + (maxSpeakIdle - alertLimit) + '】秒没有任何输入动作，【' + alertLimit + '】秒后将自动结束发言。');
             } else if(maxSpeakIdle - speakIdle == 0){
                 releaseGameHandle();
                 socket.emit('speak', '\1timeout');
@@ -649,7 +649,7 @@ var init = function() {
                 if(progress.stage == 'speak' || progress.stage == 'move') {
                     if(progress.round == 6 && progress.bomb != 2 || progress.round == 7 && progress.bomb == 2) {
                         print('请注意：本回合移动后将是最后一次执行房间功能！' + (progress.bomb == 1 ? '除非再次【拆弹】成功，游戏将会增加一回合。' : ''), 'notice speak');
-                        print('如无特殊行动，建议回到大厅(不考虑锁的情况下大厅可以到达任意房间)，为下回合最终的逃离做准备！');
+                        notice('如无特殊行动，建议回到大厅(不考虑锁的情况下大厅可以到达任意房间)，为下回合最终的逃离做准备！');
                     }
                     if(progress.round == 7 && progress.bomb != 2 || progress.round == 8 && progress.bomb == 2) {
                         print('请注意：当前为逃生前一回合，房间功能不再执行！', 'notice speak');

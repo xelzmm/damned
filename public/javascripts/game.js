@@ -865,25 +865,29 @@ var init = function() {
                 player.debug('已解毒，让过治疗房间执行权。');
                 break;
             case 'empty-clue-pool':
-                player.debug('无法获得线索卡，因为【1】级线索卡已经没有了。');
+                player.debug('无法获得线索卡，因为【1】级线索卡已经没有了，跳过房间功能执行。');
                 break;
             case 'no-player-to-watch':
-                player.debug('无法执行监视功能，因为没人拥有线索卡。');
+                player.debug('无法执行监视功能，因为没人拥有线索卡(监视房内的玩家即使有线索卡也不能被监视)，跳过房间功能执行。');
                 break;
             case 'player-no-clue':
-                player.debug('没有线索卡，无法进行线索合成。');
+                player.debug('没有线索卡，无法进行线索合成，让过房间功能执行权。');
                 break;
             case 'no-valid-solution':
-                player.debug('无法进行线索合成，因为没有可合成的方案，让过房间执行权。');
+                player.debug('无法进行线索合成，因为没有可与之合成的方案或者可合成的目标线索卡已经没有了，让过房间功能执行权。');
                 break;
             case 'can-not-disarm':
-                player.debug('无法发起拆弹，因为' + (Game.progress.bomb < 0 ? '控制器已经被破坏！' : '炸弹已解除，无需再次拆弹。'));
+                player.debug('无法发起拆弹，因为' + (Game.progress.bomb < 0 ? '控制器已经被破坏！' : '炸弹已解除，无需再次拆弹，') + '跳过房间功能执行。');
                 break;
             case 'second-disarm-room':
                 player.debug('在第二个拆弹房间，跳过房间功能执行。');
                 break;
             case 'no-enough-player':
-                player.debug('无法发起拆弹，因为人数不足！');
+                player.debug('无法发起拆弹，当前为【' + Game.players.length + '】人局第【' + (Game.progress.bomb + 1) + '】次拆弹，需要【' +
+                    (Game.progress.bomb == 0 ?
+                        (Game.players.length >= 8 ? 3 : 2) :
+                        (Game.players.length >= 9 ? 4 : (Game.players.length >= 6 ? 3 : 2))
+                        ) + '】人配合，但人数不足！跳过房间功能执行。');
                 break;
         }
     });
@@ -908,6 +912,14 @@ var init = function() {
                             if (options.hasOwnProperty(i)) {
                                 player = Game.players[options[i] - 1];
                                 choices += '\n' + player.getDisplayName() + ', Lv' + player.clue.level + (!!player.watchedMarker ? ', 已被查看过' : '');
+                            }
+                        }
+                        for (i in Game.players) {
+                            if (Game.players.hasOwnProperty(i)) {
+                                player = Game.players[i];
+                                if(Game.rooms[player.room].function == 'watch' && player.clue) {
+                                    choices += '\n' + player.getDisplayName() + ', Lv' + player.clue.level + ', 在监视房内，无法被监视。';
+                                }
                             }
                         }
                         do {
@@ -1097,6 +1109,7 @@ var init = function() {
                     notice('拆弹第【' + (Game.progress.bomb == 0 ? '一' : '二') + '】次' + (action.result ? '【成功】！' : '【失败】！'));
                     if(!action.result) {
                         Game.elements.bomb.className = 'bomb-invalid';
+                        notice('看来本局有【奸徒】混迹在人群中！');
                     } else {
                         Game.elements.bomb.style.left = (GameConfig.bombBoard.x + action.bomb * GameConfig.bombBoard.step) + 'px';
                         if(action.bomb == 2) {

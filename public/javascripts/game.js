@@ -526,7 +526,7 @@ var init = function() {
                 alert('你是【' + me.id + '】号玩家，你的身份是【受害者】!\n找出安全房间逃离吧！');
             } else if (me.role == 'victim-ex') {
                 print('解除身上的剧毒，并找出安全房间，和大家一起逃离！', 'self speak');
-                print('你也可以单独逃离，独自获胜！', 'self speak');
+                print('你也可以单独逃离(当且仅当只有你一人逃离)，独自获胜！', 'self speak');
                 alert('你是【' + me.id + '】号玩家，你的身份是【EX受害者】!\n找出安全房间逃离吧！');
             } else {
                 print('安全房间是 【' + safeRoom + '】 号房间，想尽一切办法，阻止大家逃离！', 'self speak');
@@ -647,6 +647,10 @@ var init = function() {
                 var chatBoard = document.getElementById('chatBoard');
                 chatBoard.scrollTop = chatBoard.scrollHeight;
                 if(progress.stage == 'speak' || progress.stage == 'move') {
+                    if(progress.round == 6 && progress.bomb != 2 || progress.round == 7 && progress.bomb == 2) {
+                        print('请注意：本回合移动后将是最后一次执行房间功能！' + (progress.bomb == 1 ? '除非再次【拆弹】成功，游戏将会增加一回合。' : ''), 'notice speak');
+                        print('如无特殊行动，建议回到大厅(不考虑锁的情况下大厅可以到达任意房间)，为下回合最终的逃离做准备！');
+                    }
                     if(progress.round == 7 && progress.bomb != 2 || progress.round == 8 && progress.bomb == 2) {
                         print('请注意：当前为逃生前一回合，房间功能不再执行！', 'notice speak');
                         if(progress.stage == 'move') {
@@ -1114,7 +1118,7 @@ var init = function() {
                         Game.elements.bomb.style.left = (GameConfig.bombBoard.x + action.bomb * GameConfig.bombBoard.step) + 'px';
                         if(action.bomb == 2) {
                             Game.elements.roundBoard.style.opacity = '0';
-                            notice('游戏将在第【9】回合结束！');
+                            notice('定时炸弹被拆除了，这为大家争取到了时间！游戏增加一回合，将在第【9】回合结束！');
                         }
                     }
             }

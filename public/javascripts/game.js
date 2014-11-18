@@ -599,7 +599,7 @@ var init = function() {
                 }
                 print(GameConfig.stage[progress.stage] + '顺序：【' + _orderString.substr(0, _orderString.length - 1) + '】');
                 if(progress.stage == 'move' && progress.bomb >= 0 && progress.bomb <= 1 && progress.round < 7) {
-                    print('提示：本回合拆弹需要【' +
+                    print('提示：本次拆弹需要【' +
                         (progress.bomb == 0 ?
                             (Game.players.length >= 8 ? 3 : 2) :
                             (Game.players.length >= 9 ? 4 : (Game.players.length >= 6 ? 3 : 2))
@@ -692,7 +692,8 @@ var init = function() {
                                             if (!decision) return;
                                         } while (targetPlayer.indexOf(parseInt(decision)) < 0);
                                     }
-                                    var message = prompt('即将向' + Game.players[decision - 1].getDisplayName() + (currentPlayer.hasKey ? '赠予':'索要') + '钥匙，请输入附言：');
+                                    var message = prompt('即将向' + Game.players[decision - 1].getDisplayName() + (currentPlayer.hasKey ? '赠予':'索要') + '钥匙，请输入附言，留空视作取消：');
+                                    if(!message) return;
                                     keyTransformButton.onclick = null;
                                     keyTransformButton.style.display = 'none';
                                     print('你的请求将在发言结束后向' + Game.players[decision - 1].getDisplayName() + '发出。');
@@ -960,7 +961,7 @@ var init = function() {
                 var msg = '请等待' + Game.players[data.player - 1].getDisplayName();
                 switch(question) {
                     case 'who':
-                        msg += '选择与谁' + (Game.rooms[me.room]["function"] == 'upgrade' ? '升级' : '降级') + '线索卡。';
+                        msg += '选择与谁' + (Game.rooms[Game.players[data.player - 1].room]["function"] == 'upgrade' ? '升级' : '降级') + '线索卡。';
                         break;
                     case 'destroy':
                         msg += '选择是否销毁手中的线索卡。';

@@ -1314,6 +1314,8 @@ var initPlayGround = function(rooms, players) {
     Game.started = true;
     Game.rooms = [];
     Game.elements = [];
+    document.getElementById('disarm1').innerHTML = "" + (players.length >= 8 ? 3 : 2);
+    document.getElementById('disarm2').innerHTML = "" + (players.length >= 9 ? 4 : (players.length >= 6 ? 3 : 2));
     for(i in rooms) {
         if(rooms.hasOwnProperty(i)) {
             var _room = rooms[i];

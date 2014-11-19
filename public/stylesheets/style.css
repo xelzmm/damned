@@ -121,6 +121,23 @@ a {
     z-index: 0;
 }
 
+#disarmIndicator {
+    position: absolute;
+    left: 888px;
+    top: 1015px;
+    width: 140px;
+    height: 38px;
+}
+
+#disarmIndicator > div {
+    display: inline-block;
+    text-align: center;
+    width: 48px;
+    height: 38px;
+    font-size: 16px;
+    margin-left: 15px;
+}
+
 #chatArea {
     position: relative;
     overflow: hidden;

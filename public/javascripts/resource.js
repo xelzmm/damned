@@ -317,7 +317,7 @@ Player.prototype = {
         }
     },
     move: function (movements, rooms) {
-        var _room = rooms[this.room], msg, _self = this;
+        var originRoom = rooms[this.room], _room = rooms[this.room], msg, _self = this;
         var movement = movements[0],
             _toRoom = rooms[movement.to],
             lockAction = movement.lockAction;
@@ -326,9 +326,6 @@ Player.prototype = {
             _self.room = _toRoom.id;
             _room.removePlayer(_self.id);
             _toRoom.addPlayer(_self.id);
-//            var _position = _toRoom.genPosition(_self.id);
-//            _self.playerMarker.style.left = _position.x + 'px';
-//            _self.playerMarker.style.top = _position.y + 'px';
         } else {
             msg = '留在了' + Room.nameOf(_self.room);
         }
@@ -346,43 +343,45 @@ Player.prototype = {
                 _room.lock();
                 break;
             case undefined:
-                msg += '.';
+                msg += '。';
                 break;
         }
-        _self.debug(msg);
         if (movements.length == 2) {
             _room = _toRoom;
             movement = movements[1];
             _toRoom = rooms[movement.to];
             lockAction = movement.lockAction;
+            msg = '离开了' + Room.nameOf(originRoom.id) + '，进入' + Room.nameOf(_toRoom.id);
+            switch (lockAction) {
+                case 'lock':
+                    msg += '，并将其【上锁】。';
+                    break;
+                case 'unlock':
+                    msg += '，并将其【解锁】。';
+                    break;
+                case undefined:
+                    if(movements[0].lockAction == '-lock') {
+                        msg += '，并回头【锁上】' + Room.nameOf(originRoom.id);
+                    }
+                    msg += '。';
+            }
             setTimeout(function () {
-                msg = '离开了' + Room.nameOf(_room.id) + '，进入' + Room.nameOf(_toRoom.id);
                 _self.room = _toRoom.id;
                 _room.removePlayer(_self.id);
                 _toRoom.addPlayer(_self.id);
-//                var _position = _toRoom.genPosition(_self.id);
-//                _self.playerMarker.style.left = _position.x + 'px';
-//                _self.playerMarker.style.top = _position.y + 'px';
                 switch (lockAction) {
                     case 'lock':
-                        msg += '，并将其【上锁】。';
                         _toRoom.lock();
                         break;
                     case 'unlock':
-                        msg += '，并将其【解锁】。';
                         _toRoom.unlock();
                         break;
-//                    case '-lock':
-//                        msg += '，并回头【锁上】' + Room.nameOf(_room.id) + '。';
-//                        _room.lock();
-//                        break;
-                    case undefined:
-                        msg += '.';
+                    default:
                         break;
                 }
-                _self.debug(msg);
-            }, 300);
+            }, 200);
         }
+        _self.debug(msg);
     }
 };
 

@@ -144,6 +144,7 @@ var initRoomMap = function() {
 gameResource.src="/images/game.gif";
 gameResource.onload = function() {
     removeNode(document.getElementById('loading'));
+    document.getElementById('mapArea').style.display = 'block';
     document.getElementById('chatArea').style.display = 'block';
     init();
 };

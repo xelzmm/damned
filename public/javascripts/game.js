@@ -379,7 +379,9 @@ var init = function() {
     socket.on('data', function(data){
         print('游戏正在进行中。');
         gameRoom.hide();
+        Game.clueCounts = data.clueCounts;
         initPlayGround(data.rooms, data.players);
+        updateClueCounts();
         for(var i in Game.players) {
             if(Game.players.hasOwnProperty(i)) {
                 var player = Game.players[i];
@@ -508,7 +510,9 @@ var init = function() {
         var rooms = data.rooms, players = data.players, playerId = data.playerId, safeRoom = data.safeRoom;
         gameRoom.hide();
         Game.testMode = data.testMode;
+        Game.clueCounts = data.clueCounts;
         initPlayGround(rooms, players);
+        updateClueCounts();
         notice('游戏开始了！总共有【' + players.length + '】名玩家。');
         for(var i in players) {
             if(players.hasOwnProperty(i)) {
@@ -616,6 +620,8 @@ var init = function() {
                         Game.elements.timer.style.left = (GameConfig.timerBoard.x + (progress.round - 1) * GameConfig.timerBoard.step) + 'px';
                     }
                 } else if(progress.stage == 'thinking') {
+                    Game.clueCounts = progress.clueCounts;
+                    updateClueCounts();
                     print('当前剩余线索卡：');
                     print('【1】级线索卡：' + progress.clueCounts[0] + '张');
                     print('【2】级线索卡：' + progress.clueCounts[1] + '张');
@@ -837,6 +843,8 @@ var init = function() {
         var playerId = data.player, type = data.type, player = _players[playerId - 1];
         switch(type) {
             case 'gain':
+                Game.clueCounts[data.clue.level - 1]--;
+                updateClueCounts();
                 if(playerId != me.id)
                     player.gainClue(data.clue);
                 break;
@@ -1107,7 +1115,11 @@ var init = function() {
                     if(action.result) {
                         Game.players[action.participants[0] - 1].loseClue();
                         Game.players[action.participants[1] - 1].loseClue();
-                        Game.players[action.gain.player - 1].gainClue({level: action.gain.level});
+                        Game.clueCounts[action.gain.level - 1]--;
+                        updateClueCounts();
+                        if(action.gain.player != me.id) {
+                            Game.players[action.gain.player - 1].gainClue({level: action.gain.level});
+                        }
                     }
                     break;
                 case 'disarm':
@@ -1282,6 +1294,11 @@ var joinGame = function() {
 //    if(isNaN(room)) room = 0;
     socket.emit('join', {room: Game.roomId, mode: Game.mode});
 //    socket.emit('ready');
+};
+var updateClueCounts = function() {
+    document.getElementById('clue1').innerHTML = "" + Game.clueCounts[0];
+    document.getElementById('clue2').innerHTML = "" + Game.clueCounts[1];
+    document.getElementById('clue3').innerHTML = "" + Game.clueCounts[2];
 };
 var initPlayGround = function(rooms, players) {
     var i;

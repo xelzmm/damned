@@ -197,6 +197,11 @@ Game.prototype = {
                     rooms: _rooms,
                     players: this.prunePlayers(i),
                     playerId: parseInt(i) + 1,
+                    clueCounts: [
+                        _clues.level1.length,
+                        _clues.level2.length,
+                        _clues.level3.length
+                    ],
                     safeRoom: _players[i].role == 'traitor' ? safeRoomId : undefined
                 });
             }
@@ -1212,6 +1217,11 @@ Game.prototype = {
             socket.emit('data', {
                 rooms: this.data.rooms,
                 players: this.prunePlayers(0),
+                clueCounts: [
+                    this.data.clues.level1.length,
+                    this.data.clues.level2.length,
+                    this.data.clues.level3.length
+                ],
                 progress: this.data.progress
             });
         }

@@ -138,6 +138,16 @@ a {
     margin-left: 15px;
 }
 
+#clueIndicator {
+    padding: 12px 2px 10px 10px;
+    position: absolute;
+    text-align: center;
+    right: 0;
+    top: 380px;
+    font-size: 24px;
+    background-color: #ddeeff;
+}
+
 #chatArea {
     position: relative;
     overflow: hidden;

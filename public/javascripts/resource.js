@@ -505,7 +505,7 @@ Room.prototype = {
                         to: undefined,
                         lockAction: undefined
                     }
-                ], '留在' + this.getDisplayName() + '。'));
+                ], '留在' + this.getDisplayName()));
             }
             if (this.hasLock && hasKey) {
                 if (!this.locked) wannaLock = true;
@@ -515,14 +515,14 @@ Room.prototype = {
                             to: undefined,
                             lockAction: 'lock'
                         }
-                    ], '留在' + this.getDisplayName() + '，并将其【锁上】。'));
+                    ], '留在' + this.getDisplayName() + '，并将其【锁上】'));
                 } else if (this.locked) {
                     optionalMovements.push(build([
                         {
                             to: undefined,
                             lockAction: 'unlock'
                         }
-                    ], '留在' + this.getDisplayName() + '，并将其【解锁】。'));
+                    ], '留在' + this.getDisplayName() + '，并将其【解锁】'));
                 }
             }
         } else {
@@ -539,7 +539,7 @@ Room.prototype = {
                                         to: _room.id,
                                         lockAction: undefined
                                     }
-                                ], '进入' + Room.nameOf(_room.id) + '。'));
+                                ], '进入' + Room.nameOf(_room.id)));
                             }
                             if (_room.hasLock && hasKey) {
                                 if (!_room.locked) wannaLock = true;
@@ -549,14 +549,14 @@ Room.prototype = {
                                             to: _room.id,
                                             lockAction: 'lock'
                                         }
-                                    ], '进入' + Room.nameOf(_room.id) + '，并将其【锁上】。'));
+                                    ], '进入' + Room.nameOf(_room.id) + '，并将其【锁上】'));
                                 } else if (_room.locked) {
                                     optionalMovements.push(build([
                                         {
                                             to: _room.id,
                                             lockAction: 'unlock'
                                         }
-                                    ], '进入' + Room.nameOf(_room.id) + '，并将其【解锁】。'));
+                                    ], '进入' + Room.nameOf(_room.id) + '，并将其【解锁】'));
                                 }
                             }
                             if (this.hasLock && !_room.locked && hasKey) wannaLock = true;
@@ -566,7 +566,7 @@ Room.prototype = {
                                         to: _room.id,
                                         lockAction: '-lock'
                                     }
-                                ], '进入' + Room.nameOf(_room.id) + '，并回头【锁上】' + this.getDisplayName() + '。'));
+                                ], '进入' + Room.nameOf(_room.id) + '，并回头【锁上】' + this.getDisplayName()));
                             }
                         }
                     } else {
@@ -581,7 +581,7 @@ Room.prototype = {
                                             optionalMovements.push(build([
                                                 {to: _room.id, lockAction: undefined},
                                                 {to: _room2.id, lockAction: undefined}
-                                            ], '经过 ' + _room.id + ' 号房间到达' + Room.nameOf(_room2.id) + '。'));
+                                            ], '进入' + Room.nameOf(_room2.id)));
                                         }
                                         if (hasKey) {
                                             if (!_room2.locked) {
@@ -591,15 +591,8 @@ Room.prototype = {
                                                     optionalMovements.push(build([
                                                         {to: _room.id, lockAction: '-lock'},
                                                         {to: _room2.id, lockAction: undefined}
-                                                    ], '经过 ' + _room.id + ' 号房间到达' + Room.nameOf(_room2.id) + '，并回头【锁上】' + this.getDisplayName() + '。'));
+                                                    ], '进入' + Room.nameOf(_room2.id) + '，并回头【锁上】' + this.getDisplayName()));
                                                 }
-//                                                if (_room.hasLock) wannaLock = true;
-//                                                if (_room.hasLock && canLock) {
-//                                                    optionalMovements.push(build([
-//                                                        {to: _room.id, lockAction: undefined},
-//                                                        {to: _room2.id, lockAction: '-lock'}
-//                                                    ], '经过 ' + _room.id + ' 号房间到达' + Room.nameOf(_room2.id) + '号房间，并回头【锁上】' + Room.nameOf(_room.id) + '号房间。'));
-//                                                }
                                             }
                                             if (_room2.hasLock) {
                                                 if (!_room2.locked) wannaLock = true;
@@ -608,13 +601,13 @@ Room.prototype = {
                                                     optionalMovements.push(build([
                                                         {to: _room.id, lockAction: undefined},
                                                         {to: _room2.id, lockAction: 'lock'}
-                                                    ], '经过 ' + _room.id + ' 号房间到达' + Room.nameOf(_room2.id) + '号房间，并将其【锁上】。'));
+                                                    ], '进入' + Room.nameOf(_room2.id) + '，并将其【锁上】'));
                                                 } else if (_room2.locked && !through4) {
                                                     through4 = true;
                                                     optionalMovements.push(build([
                                                         {to: _room.id, lockAction: undefined},
                                                         {to: _room2.id, lockAction: 'unlock'}
-                                                    ], '经过 ' + _room.id + ' 号房间到达' + Room.nameOf(_room2.id) + '号房间，并将其【解锁】。'));
+                                                    ], '进入' + Room.nameOf(_room2.id) + '，并将其【解锁】'));
                                                 }
                                             }
                                         }
@@ -626,9 +619,6 @@ Room.prototype = {
                 }
             }
         }
-//        if(wannaLock && !canLock) {
-//            notice('已经有【3】个房间被锁上，本次移动过程中，你无法再锁上任何房间。');
-//        }
         return {movements: optionalMovements, cannotLock: wannaLock && !canLock};
     },
     genPosition: function (playerId) {

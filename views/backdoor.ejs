@@ -60,7 +60,7 @@ Date.prototype.format = function (format) {
     %>
             <li>【<%= player.id %>】号玩家： <%= player.name %>
                 <ul>
-                    <li>角色：【<%= role[player.role] %>】 <% if(player.hasKey) { %> 有钥匙 <% } %></li>
+                    <li>角色：【<%= role[player.role] %>】 <% if(player.hasKey) { %> 有钥匙 <% } %> <% if(!player.injured) { %> 已解毒 <% } %></li>
                     <li>IP：<%= clientIp %></li>
                     <% if(!!player.clue) { %> <li>线索卡：<%= player.clue.level %> 级，<%= player.clue.room %></li> <% } %>
                 </ul>

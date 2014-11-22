@@ -214,6 +214,11 @@ Game.prototype = {
                     rooms: _rooms,
                     players: this.prunePlayers(0),
                     playerId: 0,
+                    clueCounts: [
+                        _clues.level1.length,
+                        _clues.level2.length,
+                        _clues.level3.length
+                    ],
                     safeRoom: undefined
                 });
             }

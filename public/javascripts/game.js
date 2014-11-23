@@ -279,6 +279,7 @@ var init = function() {
     var speakInterval, speakIdle = 0, maxSpeakIdle = 15, alertLimit = 5;
     var lastInput = '';
     var speakCheck = function() {
+        if(Game.roomId == 0) return;
         speakIdle = 0;
         speakInterval = setInterval(function() {
             if(lastInput != input.value) {
@@ -449,7 +450,7 @@ var init = function() {
         gameRoom.removePlayer(data);
     });
     socket.on('room', function(room, players, testMode) {
-        print('你已加入【' + room + '】号游戏房间。');
+            print(Game.roomId != 0 ? '你已加入【' + room + '】号游戏房间。' : '你进入了【教学房间】。');
         window.gameRoom = new GameRoom(room);
         for(var i in players) {
             if(players.hasOwnProperty(i)) {
@@ -457,7 +458,7 @@ var init = function() {
                 gameRoom.addPlayer(player.name, player.clientId, player.ready);
             }
         }
-        if(Game.mode == 'play') {
+        if(Game.mode == 'play' && Game.roomId != 0) {
             print('复制本页地址 ' + window.location.href + ' 给好友一起来玩吧！');
         } else if(Game.mode == 'watch'){
             print('当前为观战模式。', 'self speak');
@@ -621,12 +622,14 @@ var init = function() {
                         Game.elements.timer.style.left = (GameConfig.timerBoard.x + (progress.round - 1) * GameConfig.timerBoard.step) + 'px';
                     }
                 } else if(progress.stage == 'thinking') {
-                    Game.clueCounts = progress.clueCounts;
-                    updateClueCounts();
-                    print('当前剩余线索卡：');
-                    print('【1】级线索卡：' + progress.clueCounts[0] + '张');
-                    print('【2】级线索卡：' + progress.clueCounts[1] + '张');
-                    print('【3】级线索卡：' + progress.clueCounts[2] + '张');
+                    if(progress.clueCounts) {
+                        Game.clueCounts = progress.clueCounts;
+                        updateClueCounts();
+                        print('当前剩余线索卡：');
+                        print('【1】级线索卡：' + progress.clueCounts[0] + '张');
+                        print('【2】级线索卡：' + progress.clueCounts[1] + '张');
+                        print('【3】级线索卡：' + progress.clueCounts[2] + '张');
+                    }
                     if(progress.bomb >= 0 && progress.bomb <= 1 && progress.round < 7) {
                         print('下次拆弹需要【' +
                             (progress.bomb == 0 ?
@@ -912,7 +915,7 @@ var init = function() {
         var question = data.question, decision;
         if(data.player) {
             updateTimer([data.player], data.time);
-            if (data.player == me.id) {
+            if (data.player == me.id && Game.roomId != 0) {
                 var options = data.options;
                 var choices = '', i, player;
                 switch (question) {
@@ -1127,7 +1130,7 @@ var init = function() {
                     notice('拆弹第【' + (Game.progress.bomb == 0 ? '一' : '二') + '】次' + (action.result ? '【成功】！' : '【失败】！'));
                     if(!action.result) {
                         Game.elements.bomb.className = 'bomb-invalid';
-                        notice('看来本局有【奸徒】混迹在人群中！');
+                        if(me.role != 'traitor')notice('看来本局有【奸徒】混迹在人群中！');
                     } else {
                         Game.elements.bomb.style.left = (GameConfig.bombBoard.x + action.bomb * GameConfig.bombBoard.step) + 'px';
                         if(action.bomb == 2) {
@@ -1253,7 +1256,7 @@ var resetGame = function() {
     document.getElementById('keyTransform').style.display = 'none';
     document.getElementById('keyVote').style.display = 'none';
     var resetButton = document.getElementById('resetButton');
-    resetButton.style.display = 'inline';
+    if(Game.roomId != 0)resetButton.style.display = 'inline';
     stopTimer();
     resetButton.onclick = function() {
         gameRoom.display();

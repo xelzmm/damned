@@ -77,7 +77,7 @@
           started: false
       }
   </script>
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="<% if (roomId != 0) { %>/socket.io/socket.io.js<%} else {%>/javascripts/tutorial.js<%}%>"></script>
   <script src="/javascripts/resource.js"></script>
   <script src="/javascripts/game.js"></script>
 </html>

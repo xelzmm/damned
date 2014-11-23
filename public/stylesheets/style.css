@@ -235,6 +235,14 @@ a {
     font-size: 16px;
 }
 
+#chatBoard>div>span.hint {
+    color: yellow;
+}
+
+#chatBoard>div>span.tips {
+    color: palegreen;
+}
+
 #chatBoard>div>span.stage {
     color: orange;
     border: orange 1px dashed;

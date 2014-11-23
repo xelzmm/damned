@@ -21,6 +21,10 @@ router.get('/test', function(req, res) {
     res.redirect(302, '/game/' + room);
 });
 
+router.get('/tutorial', function(req, res) {
+    res.render('game', {roomId: 0, mode: 'play'});
+});
+
 router.get('/game/:roomId', function(req, res) {
     var roomId = req.params.roomId;
     if(!games.hasOwnProperty(roomId)) {

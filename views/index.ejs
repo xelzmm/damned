@@ -65,7 +65,10 @@
       <div id="rooms">
           <ul class="list">
               <li class="list-header">游戏房间</li>
-              <% var count = 0;%>
+              <li>
+                  <a href="/tutorial">教学房间</a>
+              </li>
+              <% var count = 1;%>
               <% for (var roomId in games) {
                      if(games.hasOwnProperty(roomId) && games[roomId].clients.length > 0) {
                          count ++;%>

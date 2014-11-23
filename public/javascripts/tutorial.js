@@ -9,7 +9,7 @@ MockSocket.prototype = {
         }
         if (!this.$events[name]) {
             this.$events[name] = fn;
-        } else if (Object.prototype.toString.call(this.$events[name]) === '[Object Array]') {
+        } else if (Object.prototype.toString.call(this.$events[name]) === '[object Array]') {
             this.$events[name].push(fn);
         } else {
             this.$events[name] = [this.$events[name], fn];
@@ -27,7 +27,7 @@ MockSocket.prototype = {
         var args = [].slice.call(arguments, 1);
         if ('function' == typeof handler) {
             handler.apply(this, args);
-        } else if (Object.prototype.toString.call(handler) === '[Object Array]') {
+        } else if (Object.prototype.toString.call(handler) === '[object Array]') {
             var listeners = handler.slice();
             for (var i = 0, l = listeners.length; i < l; i++) {
                 listeners[i].apply(this, args);

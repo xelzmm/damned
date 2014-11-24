@@ -97,6 +97,10 @@ var initRoomMap = function() {
             area.onclick = function(roomId) {
                 return function() {
                     if(!Game.canMove) return;
+                    if(Game.roomId == 0 && socket.tutorialMoves[Game.progress.round] != roomId) {
+                        print('请点击' + Room.nameOf(socket.tutorialMoves[Game.progress.round]) + '进行移动！');
+                        return;
+                    }
                     var routes = Game.rooms[me.room].routesToRoom(roomId, me.hasKey);
                     var optionalMovements = routes.movements;
                     if(optionalMovements.length == 0) {
@@ -110,7 +114,10 @@ var initRoomMap = function() {
                     var emitMove = function(movements) {
                         socket.emit('move', movements);
                     };
-                    if(optionalMovements.length == 1) {
+                    if(Game.roomId == 0) {
+                        socket.pause = false;
+                    }
+                    if(optionalMovements.length == 1 || Game.roomId == 0) {
                         emitMove(optionalMovements[0].movements);
                         return;
                     }
@@ -743,6 +750,9 @@ var init = function() {
                         notice('请点击房间进行移动，停留请点击所处房间。');
                         roomMap.style.zIndex = '100';
                         Game.canMove = true;
+                        if(Game.roomId == 0){
+                            socket.pause = true;
+                        }
                         break;
                 }
             } else {

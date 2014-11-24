@@ -1,6 +1,20 @@
 /**
  * Created by xelz on 14-11-22.
  */
+document.getElementById('send').style.display = 'none';
+document.getElementById('cls').style.display = 'none';
+var pauseButton = document.createElement('button');
+pauseButton.innerHTML = '暂停';
+document.getElementById('buttonContainer').appendChild(pauseButton);
+pauseButton.onclick = function() {
+    if(socket.pause) {
+        socket.pause = false;
+        this.innerHTML = '暂停';
+    } else {
+        socket.pause = true;
+        this.innerHTML = '继续';
+    }
+};
 var MockSocket = function() {};
 MockSocket.prototype = {
     on: function (name, fn) {
@@ -99,6 +113,7 @@ var io = function() {
             }
         }
     });
+    socket.tutorialMoves = [0, 4, 8, 0, 1, 4, 3, 7];
     return socket;
 };
 var scripts = [
@@ -132,6 +147,7 @@ var scripts = [
     [3, ['update', {"round":1,"stage":"move","room":null,"player":null,"time":3,"bomb":0}]],
     [4, ['notice', "移动顺序与发言顺序一样，同样遵循密室法则。"]],
     [8, ['notice', "进入有共同边的相邻房间视为走1步，一次移动可以走1~2步，没有锁的情况下【大厅】可以到达任何房间。"]],
+    [1, ['update', {"round":1,"stage":"move","room":0,"player":0,"time":30,"bomb":0}]],
     [3, ['move', {player: 1, movements: [{to: 3}, {to: 4}]}]],
     [3, ['move', {player: 2, movements: [{to: 3}]}]],
     [3, ['move', {player: 3, movements: [{to: 6}, {to: 5}]}]],
@@ -196,6 +212,7 @@ var scripts = [
     [3, ['move', {player: 5, movements: [{to: 3}]}]],
     [2, ['move', {player: 2, movements: [{to: 0}, {to: 7, lockAction: 'unlock'}]}]],
     [5, ['think', "2号利用移动顺序的时间差帮我解开了7号房间！我可以去8号房间解毒了!"]],
+    [1, ['update', {"round":2,"stage":"move","room":4,"player":0,"time":30,"bomb":1}]],
     [3, ['move', {player: 1, movements: [{to: 7}, {to: 8, lockAction: 'unlock'}]}]],
     [2, ['move', {player: 3, movements: [{to: 6}, {to: 0}]}]],
     [8, ['think', "为什么3号不去拆弹房间？如果他去6号拆弹房间，6号就可以去3号拆弹房间，【3，5，6】号玩家合力拆弹可以增加逃走的时间！"]],
@@ -246,6 +263,7 @@ var scripts = [
     [3, ['move', {player: 5, movements: [{to: 0}, {to: 7}]}]],
     [3, ['move', {player: 4, movements: [{to: 3}]}]],
     [3, ['move', {player: 2, movements: [{to: 8}]}]],
+    [1, ['update', {"round":3,"stage":"move","room":8,"player":0,"time":30,"bomb":1}]],
     [3, ['move', {player: 1, movements: [{to: 7}, {to: 0}]}]],
     [3, ['move', {player: 6, movements: [{to: 10}, {to: 11, lockAction: 'unlock'}]}]],
     [10, ['think', "还好6号选择去治疗，如果他去了6号拆弹房间那么3号就会破坏掉那我们的行动，时间就浪费了，现在又多一个治疗房间可以使用了，6号做得好呀！"]],
@@ -297,6 +315,7 @@ var scripts = [
     [4, ['think', "对的！给3号些压力让他乖乖的!"]],
     // R4 move
     [3, ['update', {"round":4,"stage":"move","room":null,"player":null,"time":3,"bomb":1}]],
+    [1, ['update', {"round":4,"stage":"move","room":0,"player":0,"time":30,"bomb":1}]],
     [3, ['move', {player: 1, movements: [{to: 3}, {to: 1}]}]],
     [3, ['move', {player: 3, movements: [{to: 4}]}]],
     [3, ['move', {player: 4, movements: [{to: 1}]}]],
@@ -360,6 +379,7 @@ var scripts = [
     [3, ['update', {"round":5,"stage":"move","room":null,"player":null,"time":3,"bomb":1}]],
     [3, ['move', {player: 2, movements: [{to: 3}, {to: 2}]}]],
     [3, ['move', {player: 4, movements: [{to: 3}, {to: 2}]}]],
+    [1, ['update', {"round":5,"stage":"move","room":1,"player":1,"time":30,"bomb":1}]],
     [3, ['move', {player: 1, movements: [{to: 3}, {to: 4}]}]],
     [3, ['move', {player: 3, movements: [{to: 7}, {to: 11}]}]],
     [3, ['move', {player: 6, movements: [{to: 0}]}]],
@@ -418,6 +438,7 @@ var scripts = [
     [3, ['move', {player: 6, movements: [{to: 3}]}]],
     [3, ['move', {player: 2, movements: [{to: 6}, {to: 5}]}]],
     [3, ['move', {player: 4, movements: [{to: 3}, {to: 4}]}]],
+    [1, ['update', {"round":6,"stage":"move","room":4,"player":0,"time":30,"bomb":1}]],
     [3, ['move', {player: 1, movements: [{to: 3}]}]],
     [8, ['think', "这次3号不能再破坏我们的拆弹了，只要再拆1次我们就有多1个回合的逃生时间，这样子我们全部都可以去到安全房间逃生了！"]],
     [3, ['move', {player: 5, movements: [{to: 6}]}]],
@@ -471,7 +492,8 @@ var scripts = [
     [3, ['think', "哎..."]],
     // R7 move
     [3, ['update', {"round":7,"stage":"move","room":null,"player":null,"time":3,"bomb":-2}]],
-    [7, ['notice', "最后一次移动了，本次移动之后将直接进入逃生状态，不再执行任何房间功能！"]],
+//    [7, ['notice', "最后一次移动了，本次移动之后将直接进入逃生状态，不再执行任何房间功能！"]],
+    [1, ['update', {"round":7,"stage":"move","room":3,"player":0,"time":30,"bomb":-2}]],
     [3, ['move', {player: 1, movements: [{to: 0}, {to: 7}]}]],
     [8, ['think', "如果我们在第六回合的时候认真思考现在就不会导致团队灭亡了..., 只差一步我就到出口了... "]],
     [3, ['move', {player: 6, movements: [{to: 0}]}]],
@@ -529,8 +551,9 @@ var startTutorial = function() {
     var i = 0, script = scripts[i];
     var delay = 3, event = script[1];
     var timer = 0;
+    socket.pause = false;
     var interval = setInterval(function(){
-        if(++timer < delay) return;
+        if(++timer < delay || socket.pause) return;
         timer = 0;
         socket.mockEvent.apply(socket, event);
         delay = script[0];

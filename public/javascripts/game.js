@@ -653,7 +653,7 @@ var init = function() {
             }
             if(me.id == currentPlayer.id) {
                 document.title = '* Damned | Player ' + me.id + ' | Room ' + me.room;
-                notice('轮到你【' + GameConfig.stage[progress.stage] + '】了.' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
+                notice('轮到' + currentRoom.getDisplayName() + '·你【' + GameConfig.stage[progress.stage] + '】了.' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
                 var chatBoard = document.getElementById('chatBoard');
                 chatBoard.scrollTop = chatBoard.scrollHeight;
                 if(progress.stage == 'speak' || progress.stage == 'move') {
@@ -746,7 +746,7 @@ var init = function() {
                         break;
                 }
             } else {
-                print('现在是' + currentPlayer.getDisplayName() + '的【' + GameConfig.stage[progress.stage] + '】时间. ' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
+                print('现在是' + currentRoom.getDisplayName() + '·' + currentPlayer.getDisplayName() + '的【' + GameConfig.stage[progress.stage] + '】时间. ' + (progress.time == 1 ? '' : ' 限时 ' + progress.time + ' 秒.'));
             }
         }
     });
@@ -1014,7 +1014,7 @@ var init = function() {
                 }
                 notice('现在开始抢' + Game.keyOwner.getDisplayName() + '的钥匙。');
             }
-            if(data.participants.indexOf(me.id) >= 0) {
+            if(data.participants.indexOf(me.id) >= 0 && Game.roomId != 0) {
                 var others = data.participants.concat();
                 others.splice(data.participants.indexOf(me.id), 1);
                 print('你将与【' + others + '】一起【' + action + '】。');

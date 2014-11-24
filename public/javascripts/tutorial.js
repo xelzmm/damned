@@ -62,7 +62,42 @@ var io = function() {
         print("提示：" + content, 'tips', true);
     });
     socket.on('challenge', function(data) {
-
+        if(data.player && data.player == me.id) {
+            switch (data.question) {
+                case 'request':
+                    print('请选择是否同意将钥匙给予' + Game.players[data.options.fromPlayer - 1].getDisplayName());
+                    do {
+                        var decision = confirm('是否同意将钥匙给予' + Game.players[data.options.fromPlayer - 1].getDisplayName() + '?' + '\n(请点击确定，同意给予。)');
+                    } while(!decision);
+                    break;
+            }
+        } else if(data.participants && data.participants.indexOf(me.id) >= 0) {
+            var action = {
+                'disarm': '合力拆弹',
+                'upgrade': '升级线索卡',
+                'downgrade': '降级线索卡',
+                'vote': '投票抢钥匙',
+                'who': '投票决定抢谁的钥匙'
+            }[data.options.actionType];
+            var others = data.participants.concat();
+            others.splice(data.participants.indexOf(me.id), 1);
+            print('你将与【' + others + '】一起【' + action + '】。');
+            switch (data.options.actionType) {
+                case 'upgrade':
+                    var functionType = Game.rooms[me.room]["function"] == 'upgrade' ? '升级' : '降级';
+                    var masterPlayerId = data.options.masterPlayer;
+                    do {
+                        decision = confirm('是否配合【' + functionType +
+                            '】线索卡?\n合成后的线索卡将归' + Game.players[masterPlayerId - 1].getDisplayName() + '所有！' +
+                            '\n【确定】代表配合，【取消】代表破坏。' + '\n(请选择确定，配合升级)');
+                    } while (!decision);
+                    notice('你选择了【' + (decision ? '配合' : '破坏') + '】' + functionType + '线索卡行动！');
+                    break;
+                case 'disarm':
+                    alert('即将进行拆弹，你的身份是受害者(受害者必须配合)，点击确定予以配合！');
+                    break;
+            }
+        }
     });
     return socket;
 };
@@ -277,7 +312,7 @@ var scripts = [
     [7, ['notice', "【升级】房间功能：两张低等级线索卡，升级为一张高等级线索卡。升级结果为两张线索卡级别相加。"]],
     [7, ['notice', "你将和4号升级线索卡，1级+1级 = 2级，升级后你们将失去手中的1级线索卡，升级得到的2级线索卡归4号所有。"]],
     [3, ['think', "线索很重要，我同意配合4号升级！"]],
-    //TODO 升级线索卡challenge
+    [6, ['challenge', {participants: [1,4], question: 'action', options: {masterPlayer: 4, actionType: 'upgrade'}, time: 15}]],
     [3, ['action', {type: 'upgrade', result: true, gain: {player: 4, level: 2}, participants: [1, 4]}]],
     [1, ['update', {"round":5,"stage":"perform","room":4,"player":0,"time":1,"bomb":1}]],
     [3, ['clue', {player: 3, type: 'gain', clue: {level: 1}}]],
@@ -301,7 +336,8 @@ var scripts = [
     [5, ['speak', {player: 4, content: "这回合我要再去升级Lv3线索卡，2号你和我配合吧！3号一边去！"}]],
     [5, ['notice', '游戏中请注意文明发言，理性游戏。']],
     [10, ['speak', {player: 4, content: "另外，我建议1号把钥匙给我，一旦最后一回合集中大厅逃生时3号把安全房间锁上，我可以在后手将其打开，这样4 5 6共3人可以逃生。"}]],
-    //TODO 索要钥匙challenge
+    [6, ['think', "有道理，小号码的2号已经有钥匙了，那我就把钥匙给4号吧。"]],
+    [3, ['challenge', {type: 'request', fromPlayer: 4}]],
     [3, ['key', {type: 'request', agree: true, player: 1, fromPlayer: 4}]],
     [1, ['update', {"round":5,"stage":"speak","room":1,"player":1,"time":110,"bomb":1}]],
     [3, ['speak', {player: 1, content: "很好！我们现在很接近答案了！"}]],

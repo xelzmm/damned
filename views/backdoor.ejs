@@ -84,6 +84,7 @@ Date.prototype.format = function (format) {
     <h3>开始时间 - <%= game.startTime.format('hh:mm:ss') %></h3>
     <h3>游戏进度</h3>
     <ul>
+        <li>游戏时长： <%= parseInt((new Date() - game.startTime) / 60000) %> 分钟</li>
         <li>当前回合： <%= game.data.progress.round %></li>
         <%
             var stageName = {

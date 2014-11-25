@@ -1,6 +1,10 @@
 <html>
 <head>
     <title>密室惊魂 - 上帝视角</title>
+    <style>
+        table {border-collapse:collapse; text-align: center;}
+        td {padding: 2px 10px;}
+    </style>
 </head>
 <h1>【<%=game.socketRoom%>】号房间 - 上帝视角</h1>
 <%
@@ -50,6 +54,9 @@ Date.prototype.format = function (format) {
     </ul>
 <% } else { %>
     <ul>
+        <table border="1px" cellspacing="0px">
+            <thead><tr><td>号码</td><td>昵称</td><td>身份</td><td>钥匙</td><td>解毒</td><td>线索卡</td><td>IP</td></tr></thead>
+            <tbody>
     <%
     for(i in game.clients) {
         if(game.clients.hasOwnProperty(i)) {
@@ -58,17 +65,21 @@ Date.prototype.format = function (format) {
             sHeaders = client.handshake.headers;
             clientIp = sHeaders['x-forwarded-for'] ? sHeaders['x-forwarded-for'] : client.client.conn.remoteAddress;
     %>
-            <li>【<%= player.id %>】号玩家： <%= player.name %>
-                <ul>
-                    <li>角色：【<%= role[player.role] %>】 <% if(player.hasKey) { %> 有钥匙 <% } %> <% if(!player.injured) { %> 已解毒 <% } %></li>
-                    <li>IP：<%= clientIp %></li>
-                    <% if(!!player.clue) { %> <li>线索卡：<%= player.clue.level %> 级，<%= player.clue.room %></li> <% } %>
-                </ul>
-            </li>
+            <tr>
+                <td>【<%= player.id %>】</td>
+                <td><%= player.name %></td>
+                <td><%= role[player.role] %></td>
+                <td><% if(player.hasKey) { %> 有 <% } %></td>
+                <td><% if(!player.injured) { %> 是 <% } %></td>
+                <td><% if(!!player.clue) { %> <%= player.clue.level %> 级，<%= player.clue.room %> <% } %></td>
+                <td><%= clientIp %></td>
+            </tr>
     <%
         }
     }
     %>
+            </tbody>
+        </table>
     </ul>
     <h3>开始时间 - <%= game.startTime.format('hh:mm:ss') %></h3>
     <h3>游戏进度</h3>
@@ -150,15 +161,24 @@ Date.prototype.format = function (format) {
 %>
     <h3>未排除的房间</h3>
     <ul>
+        <table border="1px" cellspacing="0px">
+            <thead><tr><td>号码</td><td>颜色</td><td>是否有锁</td></tr></thead>
+            <tbody>
 <%
     for(i in roomsLeft) {
         if(roomsLeft.hasOwnProperty(i)) {
 %>
-        <li>【<%= roomsLeft[i] %>】号房间 <%= colors[game.data.rooms[roomsLeft[i]].color] %> <%= game.data.rooms[roomsLeft[i]].hasLock ? '有锁' : '无锁' %></li>
+        <tr>
+            <td>【<%= roomsLeft[i] %>】</td>
+            <td><span style="color:<%= game.data.rooms[roomsLeft[i]].color %>;"><%= colors[game.data.rooms[roomsLeft[i]].color] %></span></td>
+            <td><span style="color:<%= game.data.rooms[roomsLeft[i]].hasLock ? 'black' : 'white' %>;"><%= game.data.rooms[roomsLeft[i]].hasLock ? '有锁' : '无锁' %></span></td>
+        </tr>
 <%
         }
     }
 %>
+            </tbody>
+        </table>
     </ul>
     <h3>剩余线索卡</h3>
     <ul>

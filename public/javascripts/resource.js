@@ -98,7 +98,7 @@ var GameConfig = {
         perform: '执行',
         thinking: '思考'
     },
-    function: {
+    "function": {
         clue: '线索',
         upgrade: '升级',
         downgrade: '降级',
@@ -395,9 +395,9 @@ var Room = function (room) {
 Room.prototype = {
     getDisplayName: function() {
         if(this.id == 0) {
-            return '【' + GameConfig.function.hall + '】(' + this.rule[0].toUpperCase() + ') ';
+            return '【' + GameConfig["function"].hall + '】(' + this.rule[0].toUpperCase() + ') ';
         } else {
-            return '【' + this.id + '】号' + GameConfig.function[this.function] + ' (' + (this.rule[0].toUpperCase()) + ') 房间';
+            return '【' + this.id + '】号' + GameConfig["function"][this["function"]] + ' (' + (this.rule[0].toUpperCase()) + ') 房间';
         }
     },
     debug: function (msg) {
@@ -654,3 +654,6 @@ Room.route = [
     [10]              //12
 ];
 
+String.prototype.trim = function(){
+    return this.replace(/^\s+(.*?)\s+$/,"$1")
+};

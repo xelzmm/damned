@@ -5,13 +5,15 @@
       <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no">
     <link rel='stylesheet' href='/stylesheets/index.css' />
      <script>
+         String.prototype.trim = function(){
+             return this.replace(/^\s+(.*?)\s+$/,"$1")
+         };
          function setCookie(cname, cvalue, exdays) {
              var d = new Date();
              d.setTime(d.getTime() + (exdays*24*60*60*1000));
              var expires = "expires="+d.toUTCString();
              document.cookie = cname + "=" + encodeURIComponent(cvalue) + "; " + expires + '; path=/';
          }
-
          function getCookie(cname) {
              var name = cname + "=";
              var ca = document.cookie.split(';');

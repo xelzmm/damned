@@ -944,7 +944,7 @@ var init = function() {
                         for (i in Game.players) {
                             if (Game.players.hasOwnProperty(i)) {
                                 player = Game.players[i];
-                                if(player.id != me.id && Game.rooms[player.room].function == 'watch' && player.clue) {
+                                if(player.id != me.id && Game.rooms[player.room]["function"] == 'watch' && player.clue) {
                                     choices += '\n' + player.getDisplayName() + ', Lv' + player.clue.level + ', 在监视房内, 无法被监视。';
                                 }
                             }

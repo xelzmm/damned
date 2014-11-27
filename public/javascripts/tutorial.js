@@ -109,6 +109,7 @@ var io = function() {
                     break;
                 case 'disarm':
                     alert('即将进行拆弹，你的身份是受害者(受害者必须配合)，点击确定予以配合！');
+                    notice('你选择了【配合】拆弹行动！');
                     break;
             }
         }
@@ -122,6 +123,7 @@ var scripts = [
     [6, ['notice', "发言顺序为从大厅(0号房间)内的玩家开始，然后是1号房间，2号房间...12号房间 依次发言。"]],
     [8, ['notice', "同一房间内有多个玩家，根据密室法则，房间标记为【S】(small) 的按照玩家号码 “从小到大” 的顺序发言，【L】(large) 反之。"]],
     [1, ['update', {"round":1,"stage":"speak","room":0,"player":0,"time":70,"bomb":0}]],
+    [6, ['notice', "游戏中有N个【受害者】和至多1个【奸徒】(就是说可能没有奸徒，也可能有1个奸徒)。"]],
     [10, ['notice', "你的身份是受害者，你的目标是：通过获取线索，找出唯一的安全房间，【解毒】后从安全房间逃出密室。密室中的所有房间都有神奇的功能，等着你去探索！"]],
     [12, ['think', "由于我是1号，我的号码在【S】房间里面的效果最好，所以我去4号S房间，既可以拿线索，又可以获得钥匙，其它人就算过来也是有S房优势的我获得线索。"]],
     [5, ['speak', {player: 1, content: "我是一个受害者, 我要找出奸徒并到达安全房间，请大家相信我的身份。"}]],
@@ -129,11 +131,12 @@ var scripts = [
     [1, ['update', {"round":1,"stage":"speak","room":0,"player":1,"time":70,"bomb":0}]],
     [4, ['speak', {player: 2, content: "房间里有炸弹太危险了,我要去拆除它！"}]],
     [1, ['update', {"round":1,"stage":"speak","room":0,"player":2,"time":70,"bomb":0}]],
-    [7, ['speak', {player: 3, content: "我不相信1号，1号的优势太大的了, 但他要去抢锁匙的话我也无法阻止他, 但我可以去监控他获得的线索卡内容!  "}]],
+    [7, ['speak', {player: 3, content: "我不相信1号，1号的优势太大了, 但他要去抢锁匙的话我也无法阻止他, 但我可以去监控他获得的线索卡内容!  "}]],
     [3, ['think', "哼，3号玩家这么不信任我。"]],
     [3, ['speak', {player: 3, content: "我要移动到5号房间去监视他! "}]],
     [1, ['update', {"round":1,"stage":"speak","room":0,"player":3,"time":70,"bomb":0}]],
     [3, ['speak', {player: 4, content: "这里到处都上锁了我什么地方都不能去! "}]],
+    [8, ['notice', "上锁的房间不能进入，如果持有钥匙，则可以开锁进入。无论是否有钥匙，都无法【经过】上锁的房间进入另一个房间。"]],
     [5, ['speak', {player: 4, content: "1号不如你不要去4号房间了，让给我去拿线索好不好呀？ "}]],
     [3, ['speak', {player: 4, content: "我想我还是去拆炸弹好了~！ "}]],
     [3, ['think', "4号玩家到底是什么人呢?"]],
@@ -163,24 +166,27 @@ var scripts = [
     [10, ['notice', "房间功能的执行，也是按照密室法则，但是一个房间内只有1名玩家可以执行房间功能，【S】房间就是房间内号码最小的玩家获得执行权，【L】反之。"]],
     [10, ['notice', "一般情况下，【大厅】是没有功能的，因此直接跳过。 【1】号房间及【2】号房间里面没有玩家，因此也直接跳过。"]],
     [3, ['key', {type: 'gain', player: 2}]],
-    [6, ['notice', "获得房间功能执行权的玩家，可以同时获得房间内的钥匙，并永久持有。"]],
+    [8, ['notice', "获得房间功能执行权的玩家，可以同时获得房间内的钥匙，并永久持有。钥匙用于将房间上锁、解锁"]],
     [1, ['update', {"round":2,"stage":"perform","room":3,"player":0,"time":15,"bomb":0}]],
     [3, ['challenge', {participants: [2,6], question: 'action', options: {masterPlayer: 2, actionType: 'disarm'}, time: 15}]],
     [4, ['notice', "拆弹需要两个【拆弹】房间都有人，且总人数满足一定条件，才可以发起。"]],
     [6, ['notice', "游戏总人数不同，拆弹需要的人数也不同，游戏区右下角的拆弹面板会有具体人数的提示。"]],
     [3, ['action', {type: 'disarm', result: true, bomb: 1}]],
     [8, ['notice', "拆弹时，受害者只能【配合】，奸徒可以选择【破坏】或者【配合】。成功拆弹两次，游戏将增加一回合。"]],
+    [7, ['notice', "如果拆弹失败，则说明必然有【奸徒】参与，如果成功，则不能确定是否都是【受害者】"]],
     [3, ['key', {type: 'gain', player: 1}]],
     [1, ['update', {"round":2,"stage":"perform","room":4,"player":0,"time":1,"bomb":1}]],
     [1, ['clue', {player: 1, type: 'gain', clue: {level: 1}}]],
     [1, ['clue', {type: 'receive', clue: {level: 1, room: 3}}]],
     [5, ['notice', "【1】级线索卡，可以帮你排除一个不安全的房间。"]],
     [5, ['notice', "你获得的线索，将会直接标记在自己的线索区(游戏地图上方)。"]],
+    [10, ['notice', "每个人最多持有1张任意级别的线索卡。已经有线索卡的玩家进入线索房间，只能选择是否【销毁】为下次获取线索卡腾出空位。"]],
     [1, ['update', {"round":2,"stage":"perform","room":5,"player":0,"time":1,"bomb":1}]],
     [3, ['clue', {type: 'watch', player: 3, target: 1}]],
+    [7, ['notice', "监视房间，用于查看另外一名玩家的线索卡，但不能监视同样在监视房间的玩家。"]],
     [3, ['key', {type: 'gain', player: 6}]],
     [3, ['skip', {player: 6, reason: 'second-disarm-room'}]],
-    [6, ['notice', "两个拆弹房间是一起结算的，所以号码大的拆弹房间直接跳过。"]],
+    [6, ['notice', "两个拆弹房间是一起结算的，所以第二个拆弹房间直接跳过行动结算。"]],
     // R2 thinking
     [15, ['update', {"round":2,"stage":"thinking","room":null,"player":null,"time":15,"bomb":1}]],
     // R2 speak
@@ -328,7 +334,7 @@ var scripts = [
     // R5 perform
     [3, ['update', {"round":5,"stage":"perform","room":null,"player":null,"time":3,"bomb":1}]],
     [1, ['update', {"round":5,"stage":"perform","room":1,"player":0,"time":1,"bomb":1}]],
-    [7, ['notice', "【升级】房间功能：两张低等级线索卡，升级为一张高等级线索卡。升级结果为两张线索卡级别相加。"]],
+    [7, ['notice', "【升级】房间功能：在同一个升级房间内的两张低等级线索卡，升级为一张高等级线索卡。升级结果为两张线索卡级别相加。"]],
     [7, ['notice', "你将和4号升级线索卡，1级+1级 = 2级，升级后你们将失去手中的1级线索卡，升级得到的2级线索卡归4号所有。"]],
     [3, ['think', "线索很重要，我同意配合4号升级！"]],
     [6, ['challenge', {participants: [1,4], question: 'action', options: {masterPlayer: 4, actionType: 'upgrade'}, time: 15}]],

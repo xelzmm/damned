@@ -100,6 +100,16 @@ a {
     height: 1091px;
 }
 
+#tooltip {
+    position: absolute;
+    max-width: 250px;
+    background-color: black;
+    opacity: 0.8;
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+}
+
 #elementBoard {
     position:absolute;
     z-index: 10;

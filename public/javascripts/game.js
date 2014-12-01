@@ -82,6 +82,18 @@ var initElementStyle = function() {
     }
 };
 
+var showTooltip = function(msg, x, y) {
+    var toolTip = document.getElementById('tooltip');
+    toolTip.innerHTML = msg;
+    toolTip.style.left = x + 'px';
+    toolTip.style.top = y + 'px';
+    toolTip.style.display = 'block';
+};
+var hideTooltip = function() {
+    var toolTip = document.getElementById('tooltip');
+    toolTip.style.display = 'none';
+};
+
 var initRoomMap = function() {
     var map = document.createElement('map');
     map.name = 'map';
@@ -138,8 +150,19 @@ var initRoomMap = function() {
                             return;
                         }
                     }while(true);
-                }
+                };
             }(i);
+            area.onmouseover = function(roomId) {
+                return function(e) {
+                    if(!Game.started) return;
+                    var _function = Game.rooms[roomId]["function"];
+                    showTooltip(Room.nameOf(roomId) + '<br><br>' + GameConfig.tooltip[_function], e.x, e.y);
+                };
+            }(i);
+            area.onmouseout = function() {
+                if(!Game.started) return;
+                hideTooltip();
+            };
             map.appendChild(area);
         }
     }

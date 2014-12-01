@@ -107,6 +107,15 @@ var GameConfig = {
         detoxify: '治疗',
         hall: '大厅'
     },
+    tooltip: {
+        clue: '如果你没有线索，则获得一张线索;<br>如果你有线索，则可以选择销毁手中的线索，如果销毁，不能立即获得新的线索。',
+        upgrade: '同在此房间内的两张低等级线索卡，升级为一张高等级线索卡：<br>1级 + 1级 = 2级；<br>1级 + 2级 = 3级；<br>升级后原线索卡消失，房间功能执行者获得升级后的线索卡。',
+        downgrade: '同在此房间内的两张高等级线索卡，降级为一张低等级线索卡：<br>3级 - 1级 = 2级；<br>3级 - 2级 = 1级；<br>2级 - 1级 = 1级；<br>降级后原线索卡消失，房间功能执行者获得降级后的线索卡。',
+        disarm: '两个拆弹房间都有人，且总人数满足拆弹最低人数，则全部参与拆弹。<br>受害者只能配合，而奸徒可以选择破坏。<br>成功拆弹两次，游戏增加一回合。',
+        watch: '查看另一名不在监视房间内的玩家的线索卡。',
+        detoxify: '解除自己身上的剧毒。',
+        hall: '没有功能，可以无条件停留。'
+    },
     role: {
         "victim-ex": 'EX受害者',
         victim: '受害者',
@@ -416,7 +425,7 @@ Room.prototype = {
     },
     loseKey: function () {
         this.hasKey = false;
-        this.lockMarker.style.opacity = '0';
+        this.lockMarker.style.display = 'none';
     },
 
     markDangerous: function (dangerous) {

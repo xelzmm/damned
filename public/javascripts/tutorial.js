@@ -17,6 +17,7 @@ pauseButton.onclick = function() {
 };
 var MockSocket = function() {};
 MockSocket.prototype = {
+    id: 6,
     on: function (name, fn) {
         if (!this.$events) {
             this.$events = {};
@@ -61,7 +62,7 @@ MockSocket.prototype = {
                 {clientId: '4', name: '医生', ready: true},
                 {clientId: '5', name: '律师', ready: true}
             ], false);
-            socket.mockEvent('join', {name: socket.name, clientId: '6', mode: 'play'});
+            socket.mockEvent('join', {name: socket.name, clientId: socket.id, mode: 'play'});
         } else if(name == 'ready') {
             startTutorial();
         }

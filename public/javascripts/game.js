@@ -478,6 +478,8 @@ var init = function() {
         if(data.mode == 'play') {
             print('玩家：' + data.name + ' 进入游戏。');
             gameRoom.addPlayer(data.name, data.clientId, false);
+            if(Game.roomId != 0 && socket.io.engine.id == data.clientId)
+                gameRoom.pendingToLeave();
         } else if(data.mode == 'watch'){
             print('观众：' + data.name + ' 进入游戏。');
         }
@@ -513,6 +515,10 @@ var init = function() {
                 return;
             }
             if(!this.getAttribute('ready')) {
+                if(gameRoom.leaveTimeout) {
+                    clearTimeout(gameRoom.leaveTimeout);
+                    delete gameRoom.leaveTimeout;
+                }
                 socket.emit('ready');
                 this.setAttribute('ready', 'ready');
                 this.innerHTML = '取消';
@@ -1435,6 +1441,7 @@ GameRoom.prototype = {
         this.players[clientId] = {name: name, ready: false};
         var roomPlayer = document.createElement('div');
         roomPlayer.className = 'room-player';
+        if(ready) roomPlayer.setAttribute('ready', 'ready');
         roomPlayer.innerHTML = '<span>' + name + '</span>' + (ready ? '<span>已准备</span>' : '');
         this.players[clientId].marker = roomPlayer;
         document.getElementById('roomPlayers').appendChild(roomPlayer);
@@ -1452,13 +1459,16 @@ GameRoom.prototype = {
             for(var i in this.players) {
                 if(this.players.hasOwnProperty(i)) {
                     count++;
-                    if(this.players[i].marker.innerHTML.indexOf('已准备') < 0) {
+                    if(!this.players[i].marker.getAttribute('ready')) {
                         allReady = false;
                     }
                 }
             }
-            if(allReady && count >= 5) {
-                notice('当前为【' + count + '】人局，任意玩家重新准备即可开始。');
+            if(count >= 5) {
+                if(allReady)
+                    notice('当前为【' + count + '】人局，任意玩家重新准备即可开始。');
+                else
+                    this.pendingToLeave();
             }
         } else { // 观战离开
             print('观众：' + data.name + ' 离开游戏。');
@@ -1473,14 +1483,45 @@ GameRoom.prototype = {
             }
         }
     },
+    pendingToLeave: function() {
+        if(this.players.hasOwnProperty(socket.io.engine.id) && !document.getElementById('readyButton').getAttribute('ready')) {
+            var allReady = true, count = 0;
+            for(var i in this.players) {
+                if(this.players.hasOwnProperty(i)) {
+                    count++;
+                    if(!this.players[i].marker.getAttribute('ready') && i != socket.io.engine.id) {
+                        allReady = false;
+                    }
+                }
+            }
+            if(count >= 5 && allReady) {
+                notice('其他玩家都已准备完毕，15秒内不准备，将自动被服务器踢出！');
+                this.leaveTimeout = setTimeout(function() {
+                    if(!Game.started) {
+                        socket.emit('leave');
+                        alert('您长时间不准备，被服务器踢出。');
+                        window.location.href = '/';
+                    }
+                }, 15000);
+            }
+        }
+    },
     playerReady: function(clientId) {
         if(clientId in this.players) {
             this.players[clientId].marker.innerHTML += '<span>已准备</span>';
+            this.players[clientId].marker.setAttribute('ready', 'ready');
+            if(clientId != socket.io.engine.id)
+                this.pendingToLeave();
         }
     },
     playerUnready: function(clientId) {
         if(clientId in this.players) {
             this.players[clientId].marker.innerHTML = '<span>' + this.players[clientId].name + '</span>';
+            this.players[clientId].marker.removeAttribute('ready');
+            if(this.leaveTimeout) {
+                clearTimeout(this.leaveTimeout);
+                delete this.leaveTimeout;
+            }
         }
     },
     display: function() {

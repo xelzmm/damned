@@ -18,6 +18,10 @@ var drawResource = function (resourceName, x, y) {
 var removeNode = function(node) {
     node.parentNode.removeChild(node);
 };
+var isMobile = function() {
+    var userAgent = navigator.userAgent;
+    return !!(userAgent.match(/iPad|iPhone|iPod|Android/i));
+}();
 var drawElement = function (resourceName, x, y) {
     var container = document.getElementById('elementContainer');
     var img = document.createElement('div');
@@ -152,17 +156,19 @@ var initRoomMap = function() {
                     }while(true);
                 };
             }(i);
-            area.onmouseover = function(roomId) {
-                return function(e) {
-                    if(!Game.started) return;
-                    var _function = Game.rooms[roomId]["function"];
-                    showTooltip(Room.nameOf(roomId) + '<br><br>' + GameConfig.tooltip[_function], e.x, e.y);
+            if(!isMobile) {
+                area.onmouseover = function (roomId) {
+                    return function (e) {
+                        if (!Game.started) return;
+                        var _function = Game.rooms[roomId]["function"];
+                        showTooltip(Room.nameOf(roomId) + '<br><br>' + GameConfig.tooltip[_function], e.x, e.y);
+                    };
+                }(i);
+                area.onmouseout = function () {
+                    if (!Game.started) return;
+                    hideTooltip();
                 };
-            }(i);
-            area.onmouseout = function() {
-                if(!Game.started) return;
-                hideTooltip();
-            };
+            }
             map.appendChild(area);
         }
     }

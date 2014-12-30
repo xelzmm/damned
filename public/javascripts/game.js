@@ -601,7 +601,7 @@ var init = function() {
             if(players.length >= 8) print('本局增加【大厅毒雾】功能，停留大厅将会中毒', 'player');
             if(players.length >= 9) print('本局增加【2】级线索卡：【黑色】房间危险', 'player');
         }
-        notice('本局【拆弹】第一次需要【' + (players.length >= 8 ? 3 : 2) + '】人配合，第二次需要【' +
+        if(players.length >= 5)notice('本局【拆弹】第一次需要【' + (players.length >= 8 ? 3 : 2) + '】人配合，第二次需要【' +
             (players.length >= 9 ? 4 : (players.length >= 6 ? 3 : 2)) + '】人配合!');
         print('进入第【1】回合.');
         window.onbeforeunload = function() {
@@ -1195,14 +1195,14 @@ var init = function() {
                 var player = result.players[i];
                 print('【' + player.id + '】号玩家：【' +
                     GameConfig.role[player.role] + '】' +
-                    (Game.started ?
+                    (Game.started && !Game.paused?
                     (player.role == 'traitor' ? '生存' :
                         (player.inSafeRoom ? ('身处安全房间，' + (player.detoxified ? '逃生' : '中毒死亡')) :
                         '身处危险房间，死亡')
                         ) : ''), 'player');
             }
         }
-        if(Game.started) {
+        if(Game.started && !Game.paused) {
             var msg;
             switch(result.winner) {
                 case 'victim':
@@ -1380,8 +1380,10 @@ var initPlayGround = function(rooms, players) {
     Game.started = true;
     Game.rooms = [];
     Game.elements = [];
-    document.getElementById('disarm1').innerHTML = "" + (players.length >= 8 ? 3 : 2);
-    document.getElementById('disarm2').innerHTML = "" + (players.length >= 9 ? 4 : (players.length >= 6 ? 3 : 2));
+    if(players.length >= 5) {
+        document.getElementById('disarm1').innerHTML = "" + (players.length >= 8 ? 3 : 2);
+        document.getElementById('disarm2').innerHTML = "" + (players.length >= 9 ? 4 : (players.length >= 6 ? 3 : 2));
+    }
     for(i in rooms) {
         if(rooms.hasOwnProperty(i)) {
             var _room = rooms[i];
@@ -1395,7 +1397,7 @@ var initPlayGround = function(rooms, players) {
                 }
             } else {
                 _room.dangerousMarker = drawElement(_room.dangerous, GameConfig.dangerousBoard.x + GameConfig.dangerousBoard.step * _room.id, GameConfig.dangerousBoard.y);
-                _room.dangerousMarker.onclick = (function(room) {
+                if(_room.dangerous != 'confirmed')_room.dangerousMarker.onclick = (function(room) {
                     return function() {
                         room.markDangerous();
                     };
@@ -1416,7 +1418,7 @@ var initPlayGround = function(rooms, players) {
     // 进度指示
     Game.elements.timer = drawElement('timer', GameConfig.timerBoard.x, GameConfig.timerBoard.y);
     // 炸弹指示
-    Game.elements.bomb = drawElement('bomb', GameConfig.bombBoard.x, GameConfig.bombBoard.y);
+    Game.elements.bomb = drawElement(players.length < 5 ? 'bomb-invalid' : 'bomb', GameConfig.bombBoard.x, GameConfig.bombBoard.y);
     Game.players = [];
     for (i in players) {
         if(players.hasOwnProperty(i)) {
@@ -1464,7 +1466,7 @@ GameRoom.prototype = {
                     }
                 }
             }
-            if(count >= 5) {
+            if(count >= 3) {
                 if(allReady)
                     notice('当前为【' + count + '】人局，任意玩家重新准备即可开始。');
                 else
@@ -1494,7 +1496,7 @@ GameRoom.prototype = {
                     }
                 }
             }
-            if(count >= 5 && allReady) {
+            if(count >= 3 && allReady) {
                 notice('其他玩家都已准备完毕，15秒内不准备，将自动被服务器踢出！');
                 this.leaveTimeout = setTimeout(function() {
                     if(!Game.started) {

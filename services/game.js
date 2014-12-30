@@ -45,7 +45,7 @@ var Game = function(room, io, testMode) {
             thinkingTime: 15,
             notifyTime: 1,
             chooseTime: 15,
-            minimumPlayerCount: 5,
+            minimumPlayerCount: 3,
             maximumPlayerCount: 9
         };
     }
@@ -81,69 +81,97 @@ Game.prototype = {
         this.startTime = new Date();
         var _clients = this.clients;
         var _players = this.players;
-        var _playerCount = _clients.length;
+        var _playerCount = _clients.length, miniGame = _playerCount < 5;
         var i;
         var shuffle = function(o){
             for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x){}
             return o;
         };
         var _data = this.data;
+
+        // ====== room colors ======
         var roomColors = [
             'red', 'green', 'blue', 'yellow',
             'red', 'green', 'blue', 'yellow',
             'red', 'green', 'blue', 'yellow'
         ];
+        if(miniGame) roomColors.length = 8;
         shuffle(roomColors);
+        if(miniGame) {
+            roomColors.splice(0, 0, 'red');
+            roomColors.splice(4, 0, 'green');
+            roomColors.splice(7, 0, 'blue');
+            roomColors.splice(11, 0, 'yellow');
+        }
+
+        // ====== room functions ======
         var roomFunctions = [
             'upgrade-large', 'upgrade-small',
-            'downgrade-large', 'downgrade-small',
             'clue-large', 'clue-small',
             'watch-large', 'watch-small',
             'detoxify-large', 'detoxify-small',
+            'downgrade-large', 'downgrade-small',
             'disarm-large', 'disarm-small'
         ];
+        if(miniGame) roomFunctions.length = 8;
         shuffle(roomFunctions);
+        if(miniGame) {
+            roomFunctions.splice(0, 0, 'disarm-small');
+            roomFunctions.splice(4, 0, 'downgrade-small');
+            roomFunctions.splice(7, 0, 'downgrade-large');
+            roomFunctions.splice(11, 0, 'disarm-large');
+        }
+
+        // ====== room locks ======
         var roomLocks = [
             'empty', 'empty', 'empty', 'empty', 'empty', 'empty',
             'locked', 'locked', 'locked', 'locked', 'locked', 'locked'
         ];
         shuffle(roomLocks);
+        if(miniGame) {
+            roomLocks = [
+                'locked', 'empty', 'empty', 'empty', 'locked', 'empty',
+                'empty', 'locked', 'empty', 'empty', 'empty', 'locked'];
+        }
 
         var _rooms = _data.rooms = [];
-        // 大厅
+        // ====== hall ======
         _rooms[0] = new Room(0, this.socketRoom, 'hall-' + ['small', 'large'][parseInt(Math.random() * 2)],
             'black', 'empty', 'confirmed', []);
 
+        // hall placeholder, make no sense
         roomColors.unshift('black');
         roomFunctions.unshift('hall-small');
         roomLocks.unshift('empty');
         var _lockedCount = 0, _emptyCount = 0;
         for(i = 1; i <= 12; i++) {
-            if (roomLocks[i] == 'empty' && _emptyCount < 3) { // 房间号大的3把钥匙拿走，小的3把留下
+            if (roomLocks[i] == 'empty' && _emptyCount < 3 && !miniGame) { // 房间号大的3把钥匙拿走，小的3把留下
                 _emptyCount ++;
                 roomLocks[i] = 'key';
-            } else if (roomLocks[i] == 'locked' && _lockedCount < 3) { // 房间号大的3把锁锁上，小的3把打开
+            } else if (roomLocks[i] == 'locked' && _lockedCount < 3 && !miniGame) { // 房间号大的3把锁锁上，小的3把打开
                 _lockedCount ++;
                 roomLocks[i] = 'unlocked';
             }
-            _rooms[i] = new Room(i, this.socketRoom, roomFunctions[i], roomColors[i], roomLocks[i], 'unknown', []);
+            var dangerous = [1,5,8,12].indexOf(i) >= 0 ? 'confirmed' : 'unknown';
+            _rooms[i] = new Room(i, this.socketRoom, roomFunctions[i], roomColors[i], roomLocks[i], dangerous, []);
         }
 
         var _clues = _data.clues = {};
         _clues.level1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+        if(miniGame) _clues.level1 = [2, 3, 4, 6, 7, 9, 10, 11];
         _clues.level2 = ['yellow', 'red', 'blue', 'green'];
-        var safeRoomId = this.data.safeRoom = parseInt(Math.random() * 12) + 1;
+        var safeRoomId = this.data.safeRoom = _clues.level1[parseInt(Math.random() * _clues.level1.length)];
         if(this.testMode) {
             shuffle(_clues.level1);
             shuffle(_clues.level2);
         }
-        if(_clients.length > 5 || this.testMode) {
+        if(_playerCount > 5 || this.testMode) {
             _clues.level1.unshift(13);
         }
-        if(_clients.length > 6 || this.testMode) {
+        if(_playerCount > 6 || this.testMode) {
             _clues.level1.unshift(0);
         }
-        if(_clients.length > 8 || this.testMode) {
+        if(_playerCount > 8 || this.testMode) {
             _clues.level2.unshift('black');
         }
         if(!this.testMode) {
@@ -153,16 +181,18 @@ Game.prototype = {
         _clues.level1.splice(_clues.level1.indexOf(safeRoomId), 1);
         _clues.level2.splice(_clues.level2.indexOf(_rooms[safeRoomId].color), 1);
         _clues.level3 = [_rooms[safeRoomId].hasLock ? 'noLock' : 'hasLock'];
+        if(miniGame) _clues.level3 = [];
 
         this.data.usedClues = {level1: [], level2: [], level3: []};
         var victims = shuffle(['victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim-ex']);
-        var _roles = victims.splice(0, this.testMode ? _clients.length - 1 : _clients.length);
+        if(miniGame) victims = ['victim', 'victim', 'victim', 'victim'];
+        var _roles = victims.splice(0, this.testMode ? _playerCount - 1 : _playerCount);
         if(this.testMode && _roles.indexOf('victim-ex') < 0) {
             _roles.splice(Math.floor(Math.random() * _roles.length), 1, 'victim-ex');
         }
         _roles.push('traitor');
         shuffle(_roles);
-        this.debug('random roles: ' + JSON.stringify(_roles.slice(0, _clients.length), null, 0));
+        this.debug('random roles: ' + JSON.stringify(_roles.slice(0, _playerCount), null, 0));
         shuffle(_clients);
         for(i in _clients) {
             if(_clients.hasOwnProperty(i)) {
@@ -234,6 +264,7 @@ Game.prototype = {
 //        }
 
         _data.progress = {round: 0, stage:'prepare', room: null, player: null, time:0, bomb: 0};
+        if(miniGame) _data.progress.bomb = -1;
 
 //        for(i in _clients) {
 //            if (_clients.hasOwnProperty(i)) {
@@ -295,7 +326,7 @@ Game.prototype = {
             }
         }
         var winner = 'none';
-        if (escapedPlayers.length >= _players.length - (traitor == undefined ? 0 : 1) - 2) {
+        if (escapedPlayers.length >= _players.length - (traitor == undefined ? 0 : 1) - (this.players.length >= 5 ? 2 : 1)) {
             winner = 'victim';
         } else if (ex != undefined && escapedPlayers.indexOf(ex) == 0 && escapedPlayers.length == 1){
             if (traitor != undefined) winner = 'ex+traitor';

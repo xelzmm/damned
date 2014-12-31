@@ -152,7 +152,8 @@ Game.prototype = {
                 _lockedCount ++;
                 roomLocks[i] = 'unlocked';
             }
-            var dangerous = [1,5,8,12].indexOf(i) >= 0 ? 'confirmed' : 'unknown';
+            var dangerous = 'unknown';
+            if(miniGame && [1,5,8,12].indexOf(i) >= 0) dangerous = 'confirmed';
             _rooms[i] = new Room(i, this.socketRoom, roomFunctions[i], roomColors[i], roomLocks[i], dangerous, []);
         }
 

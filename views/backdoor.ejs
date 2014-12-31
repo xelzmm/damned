@@ -171,7 +171,7 @@ Date.prototype.format = function (format) {
         if(roomsLeft.hasOwnProperty(i)) {
 %>
         <tr>
-            <td>【<%= roomsLeft[i] %>】</td>
+            <td><span<% if (roomsLeft[i] == game.data.safeRoom) { %> style="background-color: yellow;"<% } %>>【<%= roomsLeft[i] %>】</span></td>
             <td><span style="color:<%= game.data.rooms[roomsLeft[i]].color %>;"><%= colors[game.data.rooms[roomsLeft[i]].color] %></span></td>
             <td><span style="color:<%= game.data.rooms[roomsLeft[i]].hasLock ? 'black' : 'white' %>;"><%= game.data.rooms[roomsLeft[i]].hasLock ? '有锁' : '无锁' %></span></td>
         </tr>

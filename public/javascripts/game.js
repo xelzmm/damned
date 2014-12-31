@@ -1466,7 +1466,7 @@ GameRoom.prototype = {
                     }
                 }
             }
-            if(count >= 5) {
+            if(count >= 3) {
                 if(allReady)
                     notice('当前为【' + count + '】人局，任意玩家重新准备即可开始。');
                 else

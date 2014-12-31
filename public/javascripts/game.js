@@ -1466,7 +1466,7 @@ GameRoom.prototype = {
                     }
                 }
             }
-            if(count >= 3) {
+            if(count >= 5) {
                 if(allReady)
                     notice('当前为【' + count + '】人局，任意玩家重新准备即可开始。');
                 else
@@ -1496,7 +1496,7 @@ GameRoom.prototype = {
                     }
                 }
             }
-            if(count >= 3 && allReady) {
+            if(count >= 5 && allReady) {
                 notice('其他玩家都已准备完毕，15秒内不准备，将自动被服务器踢出！');
                 this.leaveTimeout = setTimeout(function() {
                     if(!Game.started) {

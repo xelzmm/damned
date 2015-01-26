@@ -301,7 +301,7 @@ Game.prototype = {
         for(i in safeRoom.players) {
             if(safeRoom.players.hasOwnProperty(i)) {
                 player = _players[safeRoom.players[i] - 1];
-                if(!player.injured && player.role.indexOf('victim') == 0) escapedPlayers.push(player);
+                if(!player.injured && player.role.indexOf('victim') == 0) escapedPlayers.push(player.id);
             }
         }
         var traitor = undefined, ex = undefined;
@@ -329,7 +329,7 @@ Game.prototype = {
         var winner = 'none';
         if (escapedPlayers.length >= _players.length - (traitor == undefined ? 0 : 1) - (this.players.length >= 5 ? 2 : 1)) {
             winner = 'victim';
-        } else if (ex != undefined && escapedPlayers.indexOf(ex) == 0 && escapedPlayers.length == 1){
+        } else if (escapedPlayers.length == 1 && ex != undefined && escapedPlayers.indexOf(ex) == 0){
             if (traitor != undefined) winner = 'ex+traitor';
             else winner = 'ex';
         } else if (traitor != undefined){

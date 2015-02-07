@@ -664,6 +664,9 @@ Game.prototype = {
                         }
                         var participants = room.players.concat(anotherDisarmRoom.players);
                         this.askForAction(player.id, participants);
+                        if(!this.data.disarmParticipants)
+                            this.data.disarmParticipants = [];
+                        this.data.disarmParticipants.push(participants);
                         break;
                 }
                 return;

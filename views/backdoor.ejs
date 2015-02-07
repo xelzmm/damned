@@ -106,7 +106,17 @@ Date.prototype.format = function (format) {
                 '-2': '第二次拆弹失败'
             };
         %>
-        <% if(game.players.length >=  5) { %><li>拆弹情况： <%= bombStatus[game.data.progress.bomb] %></li><% } %>
+        <% if(game.players.length >=  5) { %>
+            <li>拆弹情况： <%= bombStatus[game.data.progress.bomb] %></li>
+            <% if(!!game.data.disarmParticipants) { %>
+        <ul>
+            <li> 第一次拆弹人员： <%= game.data.disarmParticipants[0] %></li>
+            <% if(game.data.disarmParticipants.length == 2) { %>
+            <li> 第二次拆弹人员： <%= game.data.disarmParticipants[1] %></li>
+            <% } %>
+        </ul>
+            <% } %>
+        <% } %>
     </ul>
 <%
     var colors = {

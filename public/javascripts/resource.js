@@ -50,7 +50,49 @@ var GameConfig = {
         "detoxify-small": {x: 1374, y: 795, w: 224, h: 168},
         "disarm-large": {x: 1617, y: 795, w: 224, h: 168},
         "disarm-small": {x: 1859, y: 795, w: 224, h: 168},
-        "posion": {x: 2267, y:236, w: 90, h: 90}
+        "posion": {x: 2267, y:236, w: 90, h: 90},
+        "card-role-back": {x: 1660, y: 1138, w: 60, h: 82},
+        "card-role-victim": {x: 1720, y: 1138, w: 60, h: 82},
+        "card-role-traitor": {x: 1780, y: 1138, w: 60, h: 82},
+        "card-role-ex-victim": {x: 1840, y: 1138, w: 60, h: 82},
+        "card-number-1": {x: 1180, y: 974, w: 60, h: 82},
+        "card-number-2": {x: 1240, y: 974, w: 60, h: 82},
+        "card-number-3": {x: 1300, y: 974, w: 60, h: 82},
+        "card-number-4": {x: 1360, y: 974, w: 60, h: 82},
+        "card-number-5": {x: 1420, y: 974, w: 60, h: 82},
+        "card-number-6": {x: 1480, y: 974, w: 60, h: 82},
+        "card-number-7": {x: 1540, y: 974, w: 60, h: 82},
+        "card-number-8": {x: 1600, y: 974, w: 60, h: 82},
+        "card-number-9": {x: 1660, y: 974, w: 60, h: 82},
+        "card-clue-back-1": {x: 1120, y: 1056, w: 60, h: 82},
+        "card-clue-1": {x: 1180, y: 1056, w: 60, h: 82},
+        "card-clue-2": {x: 1240, y: 1056, w: 60, h: 82},
+        "card-clue-3": {x: 1300, y: 1056, w: 60, h: 82},
+        "card-clue-4": {x: 1360, y: 1056, w: 60, h: 82},
+        "card-clue-5": {x: 1420, y: 1056, w: 60, h: 82},
+        "card-clue-6": {x: 1480, y: 1056, w: 60, h: 82},
+        "card-clue-7": {x: 1540, y: 1056, w: 60, h: 82},
+        "card-clue-8": {x: 1600, y: 1056, w: 60, h: 82},
+        "card-clue-9": {x: 1660, y: 1056, w: 60, h: 82},
+        "card-clue-10": {x: 1720, y: 1056, w: 60, h: 82},
+        "card-clue-11": {x: 1780, y: 1056, w: 60, h: 82},
+        "card-clue-12": {x: 1840, y: 1056, w: 60, h: 82},
+        "card-clue-13": {x: 1120, y: 1138, w: 60, h: 82},
+        "card-clue-0": {x: 1120, y: 974, w: 60, h: 82},
+        "card-clue-back-2": {x: 1300, y: 1138, w: 60, h: 82},
+        "card-clue-red": {x: 1360, y: 1138, w: 60, h: 82},
+        "card-clue-yellow": {x: 1420, y: 1138, w: 60, h: 82},
+        "card-clue-blue": {x: 1480, y: 1138, w: 60, h: 82},
+        "card-clue-green": {x: 1540, y: 1138, w: 60, h: 82},
+        "card-clue-black": {x: 1600, y: 1138, w: 60, h: 82},
+        "card-clue-back-3": {x: 1720, y: 974, w: 60, h: 82},
+        "card-clue-noLock": {x: 1780, y: 974, w: 60, h: 82},
+        "card-clue-hasLock": {x: 1840, y: 974, w: 60, h: 82}
+    },
+    cardPosition: {
+        number: {x: 1029, y: 879},
+        role: {x: 965, y: 879},
+        clue: {x: 901, y: 879}
     },
     roomPosition: [
         {x: 410, y: 399}, // 0
@@ -286,8 +328,16 @@ Player.prototype = {
             clueMarker.title = clueMarker.alt = '【' + clue.level + '】级线索卡';
             this.playerMarker.appendChild(clueMarker);
         }
-        if (clue.room)
+        if (clue.room) {
             this.markDangerous(clue);
+            Game.elements.clueCard = drawElement('card-clue-' + clue.room, GameConfig.cardPosition.clue.x, GameConfig.cardPosition.clue.y);
+            setTimeout(function() {
+                Game.elements.clueCard.className = 'card-clue-back-' + clue.level;
+                Game.elements.clueCard.onclick = function() {
+                    this.className = this.className.indexOf('back') > 0 ? 'card-clue-' + clue.room : 'card-clue-back-' + clue.level;
+                }
+            }, 5000);
+        }
     },
     markDangerous: function (clue) {
         var i;
@@ -323,6 +373,9 @@ Player.prototype = {
         if (this.watchedMarker) {
             removeNode(this.watchedMarker);
             delete this.watchedMarker;
+        }
+        if(this.id == me.id) {
+            removeNode(Game.elements.clueCard);
         }
     },
     move: function (movements, rooms) {

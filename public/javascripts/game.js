@@ -567,7 +567,6 @@ var init = function() {
             document.getElementById('readyButton').removeAttribute('ready');
             document.getElementById('readyButton').innerHTML = '准备';
             window.me = Game.players[playerId - 1];
-            var me = players[playerId - 1];
             print('你是【' + me.id + '】号玩家，你的身份是【' + GameConfig.role[me.role] + '】!', 'self speak');
             if (me.role == 'victim') {
                 print('解除身上的剧毒，并找出安全房间，和大家一起逃离！', 'self speak');
@@ -582,6 +581,14 @@ var init = function() {
             }
             notice('提示1：点击线索标记区可以切换线索标记状态。');
             notice('提示2：发言中包含"over"字样或者提交空发言可以提前结束发言。');
+            drawElement('card-number-' + me.id, GameConfig.cardPosition.number.x, GameConfig.cardPosition.number.y);
+            Game.elements.roleCard = drawElement('card-role-' + me.role, GameConfig.cardPosition.role.x, GameConfig.cardPosition.role.y);
+            setTimeout(function() {
+                Game.elements.roleCard.className = 'card-role-back';
+                Game.elements.roleCard.onclick = function() {
+                    this.className = this.className == 'card-role-back' ? 'card-role-' + me.role : 'card-role-back';
+                }
+            }, 5000);
         } else {
             var resetButton = document.getElementById('resetButton');
             resetButton.onclick = null;

@@ -4,3 +4,5 @@ node_modules
 .svn
 damned.psd
 damned.iml
+*.psd
+resources

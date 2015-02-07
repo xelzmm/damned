@@ -458,7 +458,7 @@ var init = function() {
         if(progress.bomb == 2) {
             Game.elements.roundBoard.style.opacity = '0';
         }
-        if((!!Game.elements.posion) && progress.round == 6) { // 逃生回合
+        if((!!Game.elements.posion) && (progress.round > 6 || (progress.round == 6 && (progress.stage == 'thinking'|| progress.stage == 'speak')))) { // 逃生回合
             Game.elements.posion.style.opacity = '0';
         }
         if(['speak', 'move', 'perform'].indexOf(progress.stage) >= 0) {

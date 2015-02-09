@@ -161,7 +161,11 @@ var initRoomMap = function() {
                     return function (e) {
                         if (!Game.started) return;
                         var _function = Game.rooms[roomId]["function"];
-                        showTooltip(Room.nameOf(roomId) + '<br><br>' + GameConfig.tooltip[_function], e.x, e.y);
+                        if (_function == 'hall' && !!Game.elements.posion && Game.elements.posion.style.opacity != '0') {
+                            showTooltip('【毒雾大厅】(' + Game.rooms[roomId].rule[0].toUpperCase() + ') <br><br>' + GameConfig.tooltip.poison, e.x, e.y);
+                        } else {
+                            showTooltip(Room.nameOf(roomId) + '<br><br>' + GameConfig.tooltip[_function], e.x, e.y);
+                        }
                     };
                 }(i);
                 area.onmouseout = function () {
@@ -458,7 +462,7 @@ var init = function() {
         if(progress.bomb == 2) {
             Game.elements.roundBoard.style.opacity = '0';
         }
-        if((!!Game.elements.posion) && (progress.round > 6 || (progress.round == 6 && (progress.stage == 'thinking'|| progress.stage == 'speak')))) { // 逃生回合
+        if((!!Game.elements.posion) && (progress.round > 6 || (progress.round == 6 && (progress.stage != 'time' && progress.stage != 'perform')))) { // 逃生回合
             Game.elements.posion.style.opacity = '0';
         }
         if(['speak', 'move', 'perform'].indexOf(progress.stage) >= 0) {

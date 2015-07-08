@@ -1246,9 +1246,9 @@ Game.prototype = {
             this.pendingHandler = handler;
         }
     },
-    addwatcher: function(socket) {
+    addWatcher: function(socket) {
         var _room = this.socketRoom;
-        this.debug('add client ' + socket.id + ' to room ' + _room + 'in [watch] mode');
+        this.debug('add client ' + socket.id + ' to room ' + _room + 'in [watc0h] mode');
         var _watchers = this.watchers;
         var _clients = this.clients;
         socket.socketRoom = _room;

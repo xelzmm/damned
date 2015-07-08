@@ -52,7 +52,7 @@ var server = function() {
                 if(mode == 'play') {
                     games[room].add(socket);
                 } else if(mode == 'watch') {
-                    games[room].addWather(socket);
+                    games[room].addWatcher(socket);
                 }
             }
         });

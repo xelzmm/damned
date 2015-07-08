@@ -10,6 +10,7 @@
 <%
 var i;
 var role = {
+    'victim-sp': 'SP暗警',
     'victim': '受害者',
     'victim-ex': 'EX受害者',
     'traitor': '奸徒'
@@ -99,20 +100,28 @@ Date.prototype.format = function (format) {
         <li>当前阶段： <%= stageName[game.data.progress.stage] %></li>
         <%
             var bombStatus = {
-                0: '未拆',
+                0: '尚未拆弹',
                 1: '已拆一次',
-                2: '已拆两次',
+                2: '成功拆除',
                 '-1': '第一次拆弹失败',
                 '-2': '第二次拆弹失败'
             };
         %>
         <% if(game.players.length >=  5) { %>
             <li>拆弹情况： <%= bombStatus[game.data.progress.bomb] %></li>
-            <% if(!!game.data.disarmParticipants) { %>
+            <% if(!!game.data.disarmActions) { %>
         <ul>
-            <li> 第一次拆弹玩家： <%= game.data.disarmParticipants[0] %></li>
-            <% if(game.data.disarmParticipants.length == 2) { %>
-            <li> 第二次拆弹玩家： <%= game.data.disarmParticipants[1] %></li>
+            <li> 第一次拆弹：
+                <% for (player in game.data.disarmActions[0]) { %>
+                【<%= player %>】<%= game.data.disarmActions[0][player] ? "配合" : "破坏" %> &nbsp;
+                <% } %>
+            </li>
+            <% if(game.data.disarmActions.length == 2) { %>
+                <li> 第二次拆弹：
+                    <% for (player in game.data.disarmActions[1]) {%>
+                    【<%= player %>】<%= game.data.disarmActions[1][player] ? "配合" : "破坏" %> &nbsp;
+                    <% } %>
+                </li>
             <% } %>
         </ul>
             <% } %>

@@ -394,9 +394,19 @@ sup {
 <li>EX单独胜利，代表奸徒(若有)胜利，受害者失败</li>
 </ul></li>
 </ul></li>
+<li><code>SP暗警</code>目标：解除身上的剧毒，并通过获取线索找出安全房间逃生
+
+<ul>
+<li>SP暗警属于普通受害者的一员</li>
+<li>SP暗警可以在拆弹时进行伏击(出<code>破坏</code>卡)，如若此做
+
+<ul>
+<li>若有奸徒选择破坏，则伏击成功，炸弹直接被解除，游戏增加一回合</li>
+<li>若无奸徒破坏，则因暗警失误造成拆弹失败</li>
 </ul></li>
-<li>一定几率出现<code>EX受害者</code>，人数越多几率越大</li>
-<li><code>奸徒</code>数量为0或者1</li>
+</ul></li>
+</ul></li>
+<li>一定几率出现<code>EX受害者</code>/<code>SP暗警</code>/<code>奸徒</code>，人数越多几率越大</li>
 <li>扩展规则
 
 <ul>
@@ -404,6 +414,7 @@ sup {
 <li>7人局增加<code>大厅危险</code>一级线索卡，用于增加难度</li>
 <li>8人局增加大厅<code>毒雾</code>功能，用于增加难度</li>
 <li>9人局增加<code>黑色房间危险</code>二级线索卡，用于增加难度</li>
+<li>增加的线索卡无线索意义，但可以用于升级、降级、销毁</li>
 </ul></li>
 </ul>
 
@@ -504,7 +515,7 @@ sup {
 <li>【L】代表房间内号码最大的玩家获得执行权</li>
 <li>【S】代表房间内号码最小的玩家获得执行权</li>
 </ul></li>
-<li>如遇以下几种情况，<code>让过</code>执行权给下一位玩家(若有)
+<li>如遇以下几种情况，<code>让过</code>执行权给房间内下一位玩家(若有)
 
 <ul>
 <li>玩家在解毒房间，但已经解毒</li>
@@ -525,7 +536,11 @@ sup {
 <ul>
 <li>限时<code>15秒</code></li>
 <li>分别询问参与行动的玩家<code>配合</code>还是<code>破坏</code></li>
-<li>至少有1人<code>破坏</code>，则行动失败</li>
+<li>至少有1人<code>破坏</code>，则行动失败
+
+<ul>
+<li>特殊情况，拆弹时，如有两个<code>破坏</code>，即<code>奸徒</code>与<code>SP暗警</code>都<code>破坏</code>，视作<code>SP暗警</code>破坏了<code>奸徒</code>的行动，炸弹直接被解除，游戏增加一回合</li>
+</ul></li>
 </ul></li>
 <li>房间功能，以下省略的主语均代指<code>获得房间功能执行权的玩家</code>
 
@@ -579,7 +594,7 @@ sup {
 
 <ul>
 <li>两个拆弹房间<code>各至少1人</code>，才可发起拆弹</li>
-<li>两个拆弹房间<code>总人数</code>达到以下标准，才可发起拆弹
+<li>两个拆弹房间<code>总人数</code>大于等于以下标准，才可发起拆弹
 
 <ul>
 <li>5人局 第一次2人，第二次2人</li>
@@ -589,9 +604,9 @@ sup {
 <li>9人局 第一次3人，第二次4人</li>
 </ul></li>
 <li>如成功发起，则两个拆弹房间内的<code>所有玩家</code>，进入<code>行动</code>步骤</li>
-<li>受害者只能<code>配合</code>，只有<code>奸徒</code>有<code>破坏</code>权利</li>
-<li>至多可以拆弹两次，若两次均成功，游戏<code>增加一回合</code></li>
-<li>如拆弹失败，控制器被<code>永久破坏</code>，不可再次拆弹 </li>
+<li><code>受害者</code>及<code>EX受害者</code>只能<code>配合</code>，<code>奸徒</code>和<code>SP暗警</code>可以<code>破坏</code></li>
+<li>至多可以拆弹两次，若两次均成功，或暗警伏击成功，游戏<code>增加一回合</code></li>
+<li>如拆弹失败，控制器被<code>永久破坏</code>，不可再次拆弹<br></li>
 </ul></li>
 </ul></li>
 </ul>
@@ -612,7 +627,7 @@ sup {
 <li>去掉<code>拆弹</code>房间、<code>降级</code>房间</li>
 <li>去掉<code>钥匙</code>及<code>锁</code>功能</li>
 <li>去掉<code>3级线索卡</code></li>
-<li>去掉<code>EX受害者</code></li>
+<li>去掉<code>EX受害者</code>、<code>SP暗警</code></li>
 <li>回合数固定为<code>8</code></li>
 <li>受害者胜利条件变为<code>逃生人数 &gt;= 受害者总人数 - 1</code></li>
 </ul>

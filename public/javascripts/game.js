@@ -313,7 +313,7 @@ var init = function() {
 
     drawResource("playground", 0, 0);
 
-    window.socket = io('ws://' + window.location.hostname + (window.location.hostname == 'msjh.aliapp.com' ? '' : ':4000'));
+    window.socket = io('ws://' + window.location.hostname + (window.location.hostname.indexOf('aliapp.com') >= 0 ? '' : ':4000'));
 
     var input = document.getElementById('input');
     var speakInterval, speakIdle = 0, maxSpeakIdle = 15, alertLimit = 5;
@@ -421,6 +421,7 @@ var init = function() {
     socket.on('data', function(data){
         print('游戏正在进行中。');
         gameRoom.hide();
+        Game.testMode = data.testMode;
         Game.clueCounts = data.clueCounts;
         initPlayGround(data.rooms, data.players);
         updateClueCounts();
@@ -579,6 +580,10 @@ var init = function() {
                 print('解除身上的剧毒，并找出安全房间，和大家一起逃离！', 'self speak');
                 print('你也可以单独逃离(当且仅当只有你一人逃离)，独自获胜！', 'self speak');
                 alert('你是【' + me.id + '】号玩家，你的身份是【EX受害者】!\n找出安全房间逃离吧！');
+            } else if (me.role == 'victim-sp') {
+                print('解除身上的剧毒，并找出安全房间，和大家一起逃离！', 'self speak');
+                print('你可以在拆弹时伏击奸徒，为大家争取时间！', 'self speak');
+                alert('你是【' + me.id + '】号玩家，你的身份是【SP暗警】!\n找出安全房间逃离吧！');
             } else {
                 print('安全房间是 【' + safeRoom + '】 号房间，想尽一切办法，阻止大家逃离！', 'self speak');
                 alert('你是【' + me.id + '号】玩家，你的身份是【奸徒】!\n安全房间是 【' + safeRoom + '】 号房间！');
@@ -597,13 +602,15 @@ var init = function() {
             var resetButton = document.getElementById('resetButton');
             resetButton.onclick = null;
             resetButton.style.display = 'none';
-            window.me = {id: 0, room: Game.roomId, role: 'wather'};
+            window.me = {id: 0, room: Game.roomId, role: 'watcher'};
         }
         if(Game.testMode) {
             print('=== 请注意，当前为测试模式！===', 'player speak');
-            print('【1】级线索卡固定为: 0,13,x,...', 'player speak');
-            print('【2】级线索卡固定为: 黑色,xx,...', 'player speak');
-            print('【奸徒】固定1名，【EX受害者】固定1名', 'player speak');
+            print('【1】级线索卡包含【大厅】,【13】', 'player speak');
+            print('【2】级线索卡包含【黑色】', 'player speak');
+            print('【奸徒】固定1名', 'player speak');
+            print('【SP暗警】固定1名', 'player speak');
+            print('【EX受害者】固定1名', 'player speak');
             print('【大厅毒雾】开启，逃生前一回合解除。', 'player speak');
             print('=== 请注意，当前为测试模式！===', 'player speak');
         } else {
@@ -1090,10 +1097,14 @@ var init = function() {
                                 break;
                             case 'disarm':
                                 if (me.role.indexOf('victim') == 0) {
-                                    alert('即将进行拆弹，你的身份是受害者(受害者必须配合)，点击确定予以配合！');
-                                    decision = true;
+                                    if (me.role == 'victim-sp') {
+                                        decision = confirm('是否配合进行拆弹？\n【确定】代表配合，【取消】代表伏击奸徒。\n\n伏击：如果奸徒破坏拆弹，你将成功阻止，否则拆弹会因你的破坏而失败！');
+                                    } else {
+                                        alert('即将进行拆弹，你的身份是受害者(受害者必须配合)，点击确定予以配合！');
+                                        decision = true;
+                                    }
                                 } else {
-                                    decision = confirm('是否配合进行拆弹？\n【确定】代表配合，【取消】代表破坏。');
+                                    decision = confirm('是否配合进行拆弹？\n【确定】代表配合，【取消】代表破坏。\n\n当有暗警伏击时，你的破坏将被阻止，若你配合，拆弹将会因为暗警的失误而失败！');
                                 }
                                 notice('你选择了【' + (decision ? '配合' : '破坏') + '】拆弹行动！');
                                 break;
@@ -1186,9 +1197,20 @@ var init = function() {
                     notice('拆弹第【' + (Game.progress.bomb == 0 ? '一' : '二') + '】次' + (action.result ? '【成功】！' : '【失败】！'));
                     if(!action.result) {
                         Game.elements.bomb.className = 'bomb-invalid';
-                        if(me.role != 'traitor')notice('看来本局有【奸徒】混迹在人群中！');
+                        if(me.role == 'victim' || me.role == 'victim-ex') {
+                            notice('看来有【奸徒】或者【SP暗警】潜伏在人群中！');
+                        }
                     } else {
                         Game.elements.bomb.style.left = (GameConfig.bombBoard.x + action.bomb * GameConfig.bombBoard.step) + 'px';
+                        var msg;
+                        if (action.falseCount == 2) {
+                            msg = '有【奸徒】破坏拆弹，但是被【SP暗警】成功伏击！';
+                            notice(msg);
+                            alert(msg);
+                        } else {
+                            msg = '大家齐心协力【配合】了拆弹，没有人进行【破坏】！';
+                            notice(msg);
+                        }
                         if(action.bomb == 2) {
                             Game.elements.roundBoard.style.opacity = '0';
                             notice('定时炸弹被拆除了，这为大家争取到了时间！游戏增加一回合，将在第【9】回合结束！');
@@ -1228,7 +1250,7 @@ var init = function() {
                 case 'ex':
                     if(me.role == 'victim-ex') {
                         msg = '你 (EX受害者) 胜利，成功独自逃生！';
-                    } else if(me.role == 'victim'){
+                    } else if(me.role.indexOf('victim') == 0){
                         msg = '你 (受害者) 失败了！EX受害者独自逃生。';
                     } else if(me.role == 'watcher') {
                         msg = 'EX受害者 胜利，成功独自逃生！';
@@ -1239,7 +1261,7 @@ var init = function() {
                         msg = '你 (EX受害者) 成功独自逃生！和 奸徒 一起获得了胜利。';
                     } else if(me.role == 'traitor') {
                         msg = '你 (奸徒) 获得了胜利！EX受害者 独自逃生。';
-                    } else if(me.role == 'victim'){
+                    } else if(me.role.indexOf('victim') == 0){
                         msg = '你 (受害者) 失败了！EX受害者 和 奸徒 一起获得了胜利。';
                     } else if(me.role == 'watcher') {
                         msg = 'EX受害者 独自逃生，和 奸徒 一起获得了胜利。';
@@ -1477,7 +1499,7 @@ GameRoom.prototype = {
                     }
                 }
             }
-            if(count >= 3) {
+            if(count >= 3 && !Game.testMode) {
                 if(allReady)
                     notice('当前为【' + count + '】人局，任意玩家重新准备即可开始。');
                 else

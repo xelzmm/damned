@@ -162,10 +162,10 @@ Game.prototype = {
         if(miniGame) _clues.level1 = [2, 3, 4, 6, 7, 9, 10, 11];
         _clues.level2 = ['yellow', 'red', 'blue', 'green'];
         var safeRoomId = this.data.safeRoom = _clues.level1[parseInt(Math.random() * _clues.level1.length)];
-        if(this.testMode) {
-            shuffle(_clues.level1);
-            shuffle(_clues.level2);
-        }
+        //if(this.testMode) {
+        //    shuffle(_clues.level1);
+        //    shuffle(_clues.level2);
+        //}
         if(_playerCount > 5 || this.testMode) {
             _clues.level1.unshift(13);
         }
@@ -175,21 +175,24 @@ Game.prototype = {
         if(_playerCount > 8 || this.testMode) {
             _clues.level2.unshift('black');
         }
-        if(!this.testMode) {
+        //if(!this.testMode) {
             shuffle(_clues.level1);
             shuffle(_clues.level2);
-        }
+        //}
         _clues.level1.splice(_clues.level1.indexOf(safeRoomId), 1);
         _clues.level2.splice(_clues.level2.indexOf(_rooms[safeRoomId].color), 1);
         _clues.level3 = [_rooms[safeRoomId].hasLock ? 'noLock' : 'hasLock'];
         if(miniGame) _clues.level3 = [];
 
         this.data.usedClues = {level1: [], level2: [], level3: []};
-        var victims = shuffle(['victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim-ex']);
+        var victims = shuffle(['victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim-ex', 'victim-sp']);
         if(miniGame) victims = ['victim', 'victim', 'victim', 'victim'];
-        var _roles = victims.splice(0, this.testMode ? _playerCount - 1 : _playerCount);
-        if(this.testMode && _roles.indexOf('victim-ex') < 0) {
-            _roles.splice(Math.floor(Math.random() * _roles.length), 1, 'victim-ex');
+        var _roles = victims.splice(0, _playerCount);
+        if(this.testMode) {
+            victims = ['victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim'];
+            _roles = victims.splice(0, _playerCount - 3);
+            _roles.splice(Math.floor(Math.random() * (_roles.length + 1)), 0, 'victim-ex');
+            _roles.splice(Math.floor(Math.random() * (_roles.length + 1)), 0, 'victim-sp');
         }
         _roles.push('traitor');
         shuffle(_roles);
@@ -664,9 +667,9 @@ Game.prototype = {
                         }
                         var participants = room.players.concat(anotherDisarmRoom.players);
                         this.askForAction(player.id, participants);
-                        if(!this.data.disarmParticipants)
-                            this.data.disarmParticipants = [];
-                        this.data.disarmParticipants.push(participants);
+                        //if(!this.data.disarmParticipants)
+                        //    this.data.disarmParticipants = [];
+                        //this.data.disarmParticipants.push(participants);
                         break;
                 }
                 return;
@@ -919,8 +922,8 @@ Game.prototype = {
                             case 'upgrade':
                                 if(!_self.checkMsgType(decision, 'boolean')) return;
                                 socket.removeAllListeners('challenge');
-                                if (options.actionType == 'disarm' && player.role.indexOf('victim') == 0) {
-                                    decision = true;
+                                if (options.actionType == 'disarm' && (player.role == 'victim' || player.role == 'victim-ex')) {
+                                    decision = true; //受害者及EX强制同意拆弹
                                 }
                                 break;
                             case 'who':
@@ -986,8 +989,8 @@ Game.prototype = {
                         if(_self.data.progress.stage == 'speak') {
                             _self.actions[i] = 0; // 投票弃权
                         } else if(_self.data.rooms[_self.data.progress.room].function == 'disarm'
-                            && _self.players[parseInt(i) - 1].role.indexOf('victim') == 0) {
-                            _self.actions[i] = true; // 受害者强制拆弹
+                            && (_self.players[parseInt(i) - 1].role == 'victim' || _self.players[parseInt(i) - 1].role == 'victim-ex')) {
+                            _self.actions[i] = true; // 受害者(包括EX)强制拆弹, 暗警victim-sp不强制
                         }
                         _self.broadcast('timeout', i);
                         _self.clients[parseInt(i) - 1].removeAllListeners('challenge');
@@ -999,7 +1002,7 @@ Game.prototype = {
         });
     },
     performAction: function() {
-        var allResponsed = true, actionResult = true;
+        var allResponsed = true, actionResult = true, falseCount = 0;
         for(var i in this.actions) {
             if(this.actions.hasOwnProperty(i)){
                 if(this.actions[i] == 'tbd') {
@@ -1008,15 +1011,19 @@ Game.prototype = {
                 }
                 if(this.actions[i] === false) {
                     actionResult = false;
+                    falseCount++;
                 }
             }
         }
         this.debug('Actions: ' + JSON.stringify(this.actions, null, 0));
         if(allResponsed) {
             clearTimeout(this.chooseTimeoutId);
-            this.debug('All players responsed, action result: ' + actionResult);
             var roomFunction = this.data.rooms[this.data.progress.room].function;
             var _self = this;
+            if(actionResult == false && roomFunction == 'disarm' && falseCount == 2) {
+                actionResult = true;
+            }
+            this.debug('All players responsed, action result: ' + actionResult);
             this.checkConnectionAndDo(function() {
                 if(_self.data.progress.stage == 'speak') {
                     var voteResult = {};
@@ -1136,12 +1143,18 @@ Game.prototype = {
                         case 'disarm':
                             if (actionResult) {
                                 _self.data.progress.bomb += 1;
+                                if(falseCount == 2) {
+                                    _self.data.progress.bomb = 2;
+                                }
                             } else {
                                 _self.data.progress.bomb = -1 - _self.data.progress.bomb;
                             }
+                            if(!_self.data.disarmActions) _self.data.disarmActions = [];
+                            _self.data.disarmActions.push(_self.actions);
                             _self.broadcast('action', {
                                 type: 'disarm',
                                 result: actionResult,
+                                falseCount: falseCount,
                                 bomb: _self.data.progress.bomb
                             });
                     }
@@ -1233,7 +1246,7 @@ Game.prototype = {
             this.pendingHandler = handler;
         }
     },
-    addWather: function(socket) {
+    addwatcher: function(socket) {
         var _room = this.socketRoom;
         this.debug('add client ' + socket.id + ' to room ' + _room + 'in [watch] mode');
         var _watchers = this.watchers;
@@ -1305,14 +1318,14 @@ Game.prototype = {
     remove: function(socket, force) {
         var _room = this.socketRoom;
         this.debug('remove client ' + socket.id + ' from room ' + _room);
-        var _clients = this.clients, _wathers = this.watchers;
+        var _clients = this.clients, _watchers = this.watchers;
         delete socket.socketRoom; // 标示这个socket已经掉线
         socket.leave(_room);
         var _self = this;
-        if(_wathers.indexOf(socket) >= 0) {
-            this.debug('client ' + socket.id + 'is wather');
+        if(_watchers.indexOf(socket) >= 0) {
+            this.debug('client ' + socket.id + 'is watcher');
             this.broadcast('leave', {name: socket.playerName, clientId:socket.id});
-            _wathers.splice(_wathers.indexOf(socket), 1);
+            _watchers.splice(_watchers.indexOf(socket), 1);
         } else if(_clients.indexOf(socket) >= 0) {
             if (this.started) {
                 if (force) {

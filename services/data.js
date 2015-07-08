@@ -3,6 +3,7 @@
  */
 
 var data = {
+    key: 'msxxxxxooooojh',
     games: {},
     io: undefined
 };

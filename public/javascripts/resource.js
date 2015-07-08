@@ -51,10 +51,11 @@ var GameConfig = {
         "disarm-large": {x: 1617, y: 795, w: 224, h: 168},
         "disarm-small": {x: 1859, y: 795, w: 224, h: 168},
         "posion": {x: 2267, y:236, w: 90, h: 90},
-        "card-role-back": {x: 1900, y: 1056, w: 60, h: 82},
-        "card-role-victim": {x: 1900, y: 974, w: 60, h: 82},
-        "card-role-traitor": {x: 1960, y: 1056, w: 60, h: 82},
-        "card-role-victim-ex": {x: 1900, y: 1138, w: 60, h: 82},
+        "card-role-back": {x: 1960, y: 1056, w: 60, h: 82},
+        "card-role-victim": {x: 1960, y: 974, w: 60, h: 82},
+        "card-role-traitor": {x: 2020, y: 1056, w: 60, h: 82},
+        "card-role-victim-ex": {x: 1960, y: 1138, w: 60, h: 82},
+        "card-role-victim-sp": {x: 1900, y: 1056, w: 60, h: 82},
         "card-number-1": {x: 1180, y: 974, w: 60, h: 82},
         "card-number-2": {x: 1240, y: 974, w: 60, h: 82},
         "card-number-3": {x: 1300, y: 974, w: 60, h: 82},
@@ -160,6 +161,7 @@ var GameConfig = {
         poison: '进入并停留在大厅将会收到毒雾感染，经过大厅去别的房间不受影响。'
     },
     role: {
+        "victim-sp": 'SP暗警',
         "victim-ex": 'EX受害者',
         victim: '受害者',
         traitor:'奸徒'

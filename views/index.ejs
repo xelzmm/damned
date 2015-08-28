@@ -60,7 +60,7 @@
       <div id="header">
           <div id="name"></div>
           <div id="action">
-              <a href="/create" target="_self"> 创建房间 </a>
+              <a href="#" onclick="showCreatePanel()" target="_self"> 创建房间 </a>
               <a href="#" onclick="alter()"> 改名 </a>
           </div>
       </div>
@@ -85,8 +85,40 @@
               <li class="list-header">共 <%= count %> 个房间</li>
           </ul>
       </div>
+      <div id="create">
+          <span id="createTitle"> 创建房间 </span>
+          <span id="close" onclick="closeCreatePanel()">×</span>
+          <br />
+          <form action="/create" method="POST">
+          <ul id="createOptions">
+              <li>
+                  <span>暗警身份</span>
+                  <input type="radio" name="sp" value="true" checked="checked"/>开启
+                  <input type="radio" name="sp" value="false"/>关闭
+              </li>
+              <li>
+                  <span>发言时间</span>
+                  <select name="speak">
+                      <option value="30">30s + 5s</option>
+                      <option value="60">60s + 10s</option>
+                  </select>
+              </li>
+              <li>
+                  <input type="submit" id="createButton" value="创建"></input>
+              </li>
+          </ul>
+          </form>
+      </div>
       <span id="copyright">Powered By <a href="http://weibo.com/xelz"> xelz </a>| 游戏版权归<a href="http://weibo.com/13room"> 创游文化 </a>所有</span>
   </div>
-  <script type="text/javascript">setTimeout(function(){window.location.href = window.location.href;}, 5000);</script>
+  <script type="text/javascript">
+      setTimeout(function(){window.location.href = window.location.href;}, 500000);
+      function showCreatePanel() {
+          document.getElementById("create").style.display = "block";
+      }
+      function closeCreatePanel() {
+          document.getElementById("create").style.display = "none";
+      }
+  </script>
   </body>
 </html>

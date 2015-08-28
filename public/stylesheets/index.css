@@ -4,6 +4,7 @@ html, body {
     height: 100%;
     margin: 0;
     background-color: black;
+    position: relative;
 }
 
 #logo {
@@ -95,7 +96,7 @@ li.list-header {
     color: rgb(153, 153, 153);
     display: block;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: bold;
     height: 20px;
     line-height: 20px;
@@ -119,3 +120,43 @@ li{
 #copyright a:hover {
     color: white;
 }
+
+#create {
+    position: absolute;
+    left: 12.5%;
+    top: 265px;
+    width: 75%;
+    background-color: rgb(77, 77, 77);
+    border:1px solid rgb(227, 227, 227);
+    border-radius: 4px;
+    color: rgb(233, 233, 233);
+    display: none;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    height: 120px;
+    line-height: 16px;
+    padding: 8px 0;
+}
+
+#close {
+    font-size: 20px;
+    float: right;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+#createTitle {
+    font-size: 16px;
+    margin-right: -30px;
+}
+
+#createOptions {
+    list-style: none outside none;
+    float: left;
+}
+
+#createButton {
+    width: 50%;
+    margin-top: 5px;
+}
+

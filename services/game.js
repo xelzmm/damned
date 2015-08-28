@@ -7,7 +7,7 @@ var debug = require('debug'),
     gameDebug = debug('damned:game'),
     playerDebug = debug('damned:player'),
     roomDebug = debug('damned:room');
-var Game = function(room, io, testMode) {
+var Game = function(room, io, testMode, config) {
     this.data = {};
     this.players = [];
     this.clients = [];
@@ -32,21 +32,23 @@ var Game = function(room, io, testMode) {
             notifyTime: 1,
             chooseTime: 15,
             minimumPlayerCount: 5,
-            maximumPlayerCount: 9
+            maximumPlayerCount: 9,
+            sp: true
         };
         gameDebug('test mode on.');
     } else {
         this.config = {
             stageChangeNotifyTime: 3,
-            speakTime: 60,
-            speakTimeStep: 10,
+            speakTime: config.speak,
+            speakTimeStep: config.speak / 6,
             moveTime: 30,
             performTime: 30,
             thinkingTime: 15,
             notifyTime: 1,
             chooseTime: 15,
             minimumPlayerCount: 3,
-            maximumPlayerCount: 9
+            maximumPlayerCount: 9,
+            sp: config.sp
         };
     }
     var _self = this;
@@ -185,7 +187,9 @@ Game.prototype = {
         if(miniGame) _clues.level3 = [];
 
         this.data.usedClues = {level1: [], level2: [], level3: []};
-        var victims = shuffle(['victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim-ex', 'victim-sp']);
+        var victims = ['victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim', 'victim-ex'];
+        if(this.config.sp) victims.push('victim-sp');
+        victims = shuffle(victims);
         if(miniGame) victims = ['victim', 'victim', 'victim', 'victim'];
         var _roles = victims.splice(0, _playerCount);
         if(this.testMode) {

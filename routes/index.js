@@ -9,15 +9,20 @@ router.get('/', function(req, res) {
 });
 
 var roomId = 0;
-router.get('/create', function(req, res) {
-    var room = ++roomId;
-    games[room] = new game(room, data.io, false);
-    res.redirect(302, '/game/' + room);
+router.post('/create', function(req, res) {
+    var sp = req.body.sp, speak = req.body.speak;
+    if((sp == "true" || sp == "false") && (speak == "30" || speak == "60")) {
+        var room = ++roomId;
+        games[room] = new game(room, data.io, false, {sp: sp == "true", speak: parseInt(speak)});
+        res.redirect(302, '/game/' + room);
+    } else {
+        res.redirect(302, '/');
+    }
 });
 
 router.get('/test', function(req, res) {
     var room = ++roomId;
-    games[room] = new game(room, data.io, true);
+    games[room] = new game(room, data.io, true, {});
     res.redirect(302, '/game/' + room);
 });
 

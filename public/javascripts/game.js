@@ -1362,12 +1362,7 @@ var setCookie = function (cname, cvalue, exdays) {
 var joinGame = function() {
     var username = getCookie('name');
     if(username == '') {
-        do {
-            if (username == null || username.trim() == '') {
-                username = 'player_' + new Date().getTime() % 10000;
-            }
-            username = prompt('请设定你的昵称(16个字符以内)：', username.trim());
-        } while (username == null || username.trim() == '' || username.trim().length > 16);
+        username = '路人_' + new Date().getTime() % 10000;
     }
     setCookie("name", username.trim(), 365);
     notice(username + '，欢迎你进入密室惊魂。');

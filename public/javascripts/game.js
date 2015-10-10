@@ -492,8 +492,12 @@ var init = function() {
     socket.on('leave', function(data) {
         gameRoom.removePlayer(data);
     });
-    socket.on('room', function(room, players, testMode) {
-            print(Game.roomId != 0 ? '你已加入【' + room + '】号游戏房间。' : '你进入了【教学房间】。');
+    socket.on('room', function(room, players, testMode, config) {
+        print(Game.roomId != 0 ? '你已加入【' + room + '】号游戏房间。' : '你进入了【教学房间】。');
+        if(config) {
+            if(config.sp) print("当前房间已加入【SP暗警】角色。", "notice");
+            print("本房间发言时间为【" + config.speakTime + "s】, 每回合增加【" + config.speakTime / 6 + "s】。")
+        }
         window.gameRoom = new GameRoom(room);
         for(var i in players) {
             if(players.hasOwnProperty(i)) {

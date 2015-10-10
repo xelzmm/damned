@@ -1313,7 +1313,7 @@ Game.prototype = {
                 });
             }
         }
-        socket.emit('room', _room, _players, this.testMode);
+        socket.emit('room', _room, _players, this.testMode, this.config);
         socket.join(_room);
         _clients.push(socket);
         this.broadcast('join', {name: socket.playerName, clientId: socket.id, mode: 'play'});

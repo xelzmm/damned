@@ -126,10 +126,23 @@ Game.prototype = {
 
         // ====== room locks ======
         var roomLocks = [
-            'empty', 'empty', 'empty', 'empty', 'empty', 'empty',
-            'locked', 'locked', 'locked', 'locked', 'locked', 'locked'
+            'empty', 'empty', 'empty', 'key', 'key', 'key',
+            'locked', 'locked', 'locked', 'unlocked', 'unlocked', 'unlocked'
         ];
-        shuffle(roomLocks);
+        do {
+            shuffle(roomLocks);
+            var deadlockCount = 0;
+            if(roomLocks[0] == 'key' && roomLocks[2] == 'locked') deadlockCount++;
+            if(roomLocks[4] == 'key' && roomLocks[5] == 'locked') deadlockCount++;
+            if(roomLocks[7] == 'key' && roomLocks[6] == 'locked') deadlockCount++;
+            if(roomLocks[11] == 'key' && roomLocks[9] == 'locked') deadlockCount++;
+            if(roomLocks[1] == 'key' && roomLocks[2] == 'locked' && roomLocks[5] == 'locked') deadlockCount++;
+            if(roomLocks[3] == 'key' && roomLocks[2] == 'locked' && roomLocks[6] == 'locked') deadlockCount++;
+            if(roomLocks[8] == 'key' && roomLocks[5] == 'locked' && roomLocks[9] == 'locked') deadlockCount++;
+            if(roomLocks[10] == 'key' && roomLocks[9] == 'locked' && roomLocks[6] == 'locked') deadlockCount++;
+            if(deadlockCount > 0)this.debug("deadlock keys: " + deadlockCount);
+        } while(deadlockCount == 3);
+
         if(miniGame) {
             roomLocks = [
                 'locked', 'empty', 'empty', 'empty', 'locked', 'empty',
@@ -145,15 +158,15 @@ Game.prototype = {
         roomColors.unshift('black');
         roomFunctions.unshift('hall-small');
         roomLocks.unshift('empty');
-        var _lockedCount = 0, _emptyCount = 0;
+        //var _lockedCount = 0, _emptyCount = 0;
         for(i = 1; i <= 12; i++) {
-            if (roomLocks[i] == 'empty' && _emptyCount < 3 && !miniGame) { // 房间号大的3把钥匙拿走，小的3把留下
-                _emptyCount ++;
-                roomLocks[i] = 'key';
-            } else if (roomLocks[i] == 'locked' && _lockedCount < 3 && !miniGame) { // 房间号大的3把锁锁上，小的3把打开
-                _lockedCount ++;
-                roomLocks[i] = 'unlocked';
-            }
+            //if (roomLocks[i] == 'empty' && _emptyCount < 3 && !miniGame) { // 房间号大的3把钥匙拿走，小的3把留下
+            //    _emptyCount ++;
+            //    roomLocks[i] = 'key';
+            //} else if (roomLocks[i] == 'locked' && _lockedCount < 3 && !miniGame) { // 房间号大的3把锁锁上，小的3把打开
+            //    _lockedCount ++;
+            //    roomLocks[i] = 'unlocked';
+            //}
             var dangerous = 'unknown';
             if(miniGame && [1,5,8,12].indexOf(i) >= 0) dangerous = 'confirmed';
             _rooms[i] = new Room(i, this.socketRoom, roomFunctions[i], roomColors[i], roomLocks[i], dangerous, []);

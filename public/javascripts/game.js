@@ -88,10 +88,12 @@ var initElementStyle = function() {
 
 var showTooltip = function(msg, x, y) {
     var toolTip = document.getElementById('tooltip');
-    toolTip.innerHTML = msg;
-    toolTip.style.left = x + 'px';
-    toolTip.style.top = y + 'px';
-    toolTip.style.display = 'block';
+    if(msg) {
+        toolTip.innerHTML = msg;
+        toolTip.style.display = 'block';
+    }
+    toolTip.style.left = (x + 2) + 'px';
+    toolTip.style.top = (y + 2) + 'px';
 };
 var hideTooltip = function() {
     var toolTip = document.getElementById('tooltip');
@@ -157,9 +159,10 @@ var initRoomMap = function() {
                 };
             }(i);
             if(!isMobile) {
-                area.onmouseover = function (roomId) {
+                area.onmousemove = function (roomId) {
                     return function (e) {
                         if (!Game.started) return;
+                        e = e || event;
                         var _function = Game.rooms[roomId]["function"];
                         if (_function == 'hall' && !!Game.elements.posion && Game.elements.posion.style.opacity != '0') {
                             showTooltip('【毒雾大厅】(' + Game.rooms[roomId].rule[0].toUpperCase() + ') <br><br>' + GameConfig.tooltip.poison, e.x, e.y);
@@ -168,10 +171,15 @@ var initRoomMap = function() {
                         }
                     };
                 }(i);
-                area.onmouseout = function () {
+                area.onmouseout = function (e) {
                     if (!Game.started) return;
-                    hideTooltip();
+                    e = e || event;
+                    if(e.relatedTarget.id != 'tooltip')
+                        hideTooltip();
+                    else
+                        showTooltip(undefined, e.x, e.y);
                 };
+
             }
             map.appendChild(area);
         }

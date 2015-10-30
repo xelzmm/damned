@@ -74,8 +74,6 @@
               <li>
                   <a href="<% if (!games[roomId].started){ %>/game/<%= roomId %><%} else {%>#<%}%>" target="_self">
                       <%= roomId %> 号房间
-                      <% if (games[roomId].config.sp){ %> #SP#<%}%>
-                      #<%= games[roomId].config.speakTime %>s#
                       [<%= games[roomId].clients.length %>人]
                       <% if (games[roomId].started){ %> [游戏中]<%}%>
                   </a>
